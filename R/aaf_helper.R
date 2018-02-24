@@ -15,6 +15,8 @@
 #'   P_FD        P_CD    P_BD    drinker PCC.drk
 #'   Binge bndry G.shape G.scale nc      df
 #'   p_bat       R1      R2
+#'
+#'@export
 
 
 
@@ -56,35 +58,38 @@ combine <- function(C, PX) {
 #'@param R2 The ratio (P_BD - P_BAT)/ (P_CD - P_BAT)
 #'@param PR The function P(x)(RR(X)-1), P is adjusted gamma distribution, RR is relative risk
 #'@param PB The function P(X)(RB(X)-1), P is adjusted gamma distribution, RB is binge-adjusted relative risk
-#'@param bb The binge drinking definition (g/day) [[Only used when lb<bb<ub]]
+#'@param bb The binge drinking definition (g/day)
 #'@param lb Lower bound of interval
 #'@param ub Upper bound of interval
 #'
-#'
+#'@export
 
 compute_interval_aaf <- function(
   R1, R2,
   PR, PB,
   bb, lb, ub
 ) {
-
-  integral <- -1
-  if((lb < bb)&&(bb < ub)) {
-    integral <-
-      (R1      * integrate(PR,lb,bb)$value) +
-      (R2      * integrate(PB,lb,bb)$value) +
-      integrate(PB,bb,ub)$value
+  integrand <- function(x) {
+    (x <= bb)*(R1*PR(x) + R2*PB(x)) + (bb < x)*PB(x)
   }
-  else {
-    integral <-
-      (R1      * integrate(PR,lb,ub)$value) +
-      (R2      * integrate(PB,lb,ub)$value)
-  }
-  return(integral)
+  integrate(integrand, lb, ub)$value
+  # integral <- -1
+  # if((lb < bb)&&(bb < ub)) {
+  #   integral <-
+  #     integrate(function(x) ) + , lb, bb)$value
+  #     (R1      * integrate(PR,lb,bb)$value) +
+  #     (R2      * integrate(PB,lb,bb)$value) +
+  #     integrate(PB,bb,ub)$value
+  # }
+  # else {
+  #   integral <-
+  #     integrate(function(x) R1*PR(x) + R2*PB(x), lb, ub)$value
+  # }
+  # return(integral)
 }
 
 #' Compute AAF from inputs given as a list L
-#'
+#'@export
 
 
 compute_aaf <- function(L) {

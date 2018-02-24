@@ -8,7 +8,7 @@
 #' Gamma parameters are derivable entirely from prevalence and consumption,
 #' no additional input is necessary.
 #'
-#' @param pc_input is assumed type data.table with variable list of c(Year,
+#'@param pc_input is assumed type data.table with variable list of c(Year,
 #' Region, Gender, Age_group, Population, PCC_litres_year, Correctio\
 #' n_factor, Relative_consumption, P_LA, P_FD, P_CD, P_BD).
 #' Variables added to this list in the returned data.table are c(PCC_among_dri\
@@ -17,12 +17,13 @@
 #'
 #' Note that the bundled data set pc_default satisfies these constraints.
 #'
-#' @return A data.table with columns Year, Region, Gender, Age_group, Population,
+#'@return A data.table with columns Year, Region, Gender, Age_group, Population,
 #' PCC_litres_year, Correction_factor, Relative_consumption, P_LA, P_FD, P_CD,
 #' P_BD, PCC_among_drinkers, Gamma_shape, Gamma_scale, nc, df, p_bat, R1, R2
 #'
-#' @import data.table
+#'@import data.table
 #'
+#'@export
 
 derive_params_from_pc <- function(pc = intermahpr::pc_default){
   DT <- data.table::data.table(pc)
@@ -48,8 +49,8 @@ derive_params_from_pc <- function(pc = intermahpr::pc_default){
   # First, the by-gender linear relationship between sigma**2 and mu**2
   DT[Gender == "Female", `:=`(gamma_constant = 1.258**2,
                               bb = intermahpr_constants$fbb)]
-  DT[Gender == "Male", `:=`(gamma_constant = 1.171**2,
-                            bb = intermahpr_constants$mbb)]
+  DT[Gender == "Male",   `:=`(gamma_constant = 1.171**2,
+                              bb = intermahpr_constants$mbb)]
 
   # Used to compute Gamma shape and scale parameters
   DT[, Gamma_shape := 1/gamma_constant]

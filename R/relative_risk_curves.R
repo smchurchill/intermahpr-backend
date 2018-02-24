@@ -251,7 +251,7 @@ rr_chooser <- function(row) {
 #'@param extrapolation Either TRUE(linear) or FALSE(capped) used for extrapolating the RR after 150 (100 for IHD)
 #'
 #'
-#'
+#'@export
 
 deduce_relative_risk_curves_from_rr <- function(RR = intermahpr::rr_default, x_in = TRUE) {
     RR$extrapolation <- x_in

@@ -15,7 +15,7 @@ compute_interval_aaf(R1, R2, PR, PB, bb, lb, ub)
 
 \item{PB}{The function P(X)(RB(X)-1), P is adjusted gamma distribution, RB is binge-adjusted relative risk}
 
-\item{bb}{The binge drinking definition (g/day) [[Only used when lb<bb<ub]]}
+\item{bb}{The binge drinking definition (g/day)}
 
 \item{lb}{Lower bound of interval}
 
