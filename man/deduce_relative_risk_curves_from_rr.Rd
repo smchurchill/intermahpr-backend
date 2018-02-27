@@ -2,7 +2,8 @@
 % Please edit documentation in R/relative_risk_curves.R
 \name{deduce_relative_risk_curves_from_rr}
 \alias{deduce_relative_risk_curves_from_rr}
-\title{Get a list of Former Drinker Relative Risks, Relative Risk Curves, and Binge Risk Curves}
+\title{Get a list of Former Drinker Relative Risks, Relative Risk Curves, and Binge
+Risk Curves}
 \usage{
 deduce_relative_risk_curves_from_rr(RR = intermahpr::rr_default,
   x_in = TRUE)
@@ -11,8 +12,10 @@ deduce_relative_risk_curves_from_rr(RR = intermahpr::rr_default,
 \item{RR}{A data table of relative risk information formatted as demanded in
 the InterMAHP comprehensive guide}
 
-\item{extrapolation}{Either TRUE(linear) or FALSE(capped) used for extrapolating the RR after 150 (100 for IHD)}
+\item{extrapolation}{Either TRUE(linear) or FALSE(capped) used for
+extrapolating the RR after 150 (100 for IHD)}
 }
 \description{
-Get a list of Former Drinker Relative Risks, Relative Risk Curves, and Binge Risk Curves
+Get a list of Former Drinker Relative Risks, Relative Risk Curves, and Binge
+Risk Curves
 }

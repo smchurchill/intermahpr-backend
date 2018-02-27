@@ -7,7 +7,10 @@
 hypertension_f_rr(x)
 }
 \arguments{
-\item{x}{A vector of x values at which to evaluate the RR function}
+\item{x}{A vector of x values at which to evaluate the RR function
+
+
+0.0025 = 1/400}
 }
 \description{
 Special Spline Female Hypertension Relative Risk Function

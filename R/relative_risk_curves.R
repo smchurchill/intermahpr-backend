@@ -27,10 +27,11 @@ hiv_m_rr <- function(x) {
 #'@param x A vector of x values at which to evaluate the RR function
 #'
 #'
-#'
+#' 0.0025 = 1/400
 #'
 
 hypertension_f_rr <- function(x){
+
   spline =
     (x<75)*(
       (x> 0)*0*x +
@@ -38,7 +39,7 @@ hypertension_f_rr <- function(x){
           -0.0154196*x +
             0.0217586*(
               x^3 + 1*(x-20)^3 - 2*(x-10)^3
-            )/400
+            )*0.0025
         )
     )+
     (x>=75)*(0.9649937)
@@ -49,7 +50,8 @@ hypertension_f_rr <- function(x){
 #'
 #'@param x A vector of x values at which to evaluate the RR function
 #'
-#'
+#' 0.01851852 = 1/54
+#' 0.0001777778 = 1/(75^2)
 #'
 #'
 
@@ -58,9 +60,9 @@ hypertension_m_rr <- function(x){
     (x>0)*(0.0150537*x -
              0.0156155*(
                x^3 +
-                 (x>=75)*(21*(x-75)^3)/54 -
-                 (x>=21)*(75*(x-21)^3)/54
-             )/(75^2)
+                 (x>=75)*(21*(x-75)^3)*0.01851852 -
+                 (x>=21)*(75*(x-21)^3)*0.01851852
+             )*0.0001777778
     )
   exp(spline)
 }
@@ -70,7 +72,8 @@ hypertension_m_rr <- function(x){
 #'@param x A vector of x values at which to evaluate the RR function
 #'
 #'
-#'
+#' 0.04 = 1/25
+#' 0.0007304602 = 1/(37^2)
 #'
 
 acute_pancreatitis_f_rr <- function(x){
@@ -79,9 +82,9 @@ acute_pancreatitis_f_rr <- function(x){
       (x>0)*(-0.0272886)*x +
         0.0611466*(
           (x>= 3)*((x-3)^3)+
-            (x>=40)*(12*((x-40)^3)/25)-
-            (x>=15)*(37*((x-15)^3)/25)
-        )/(37^2)
+            (x>=40)*(12*((x-40)^3)*0.04)-
+            (x>=15)*(37*((x-15)^3)*0.04)
+        )*0.0007304602
     )+
     (x>=108)*(2.327965)
   exp(spline)
@@ -89,8 +92,10 @@ acute_pancreatitis_f_rr <- function(x){
 
 #' Get Simple Fractional Polynomial Relative Risk Function
 #'
-#'@param B The numeric vector of Beta values needed to produce a fractional polynomial
-#'@param extrapolation Either 1(linear) or 0(capped) used for extrapolating the RR after 150
+#'@param B The numeric vector of Beta values needed to produce a fractional poly
+#'         nomial
+#'@param extrapolation Either TRUE(linear) or FALSE(capped) used for
+#'                     extrapolating the RR after 150
 #'
 #'
 #'
@@ -106,9 +111,10 @@ simple_rr <- function(B, extrapolation = TRUE) {
     sqrty = sqrt(y)
     logy = log(y)
     ry = 1 / y
+    rsqrty = 1/sqrty
     if(B[[1]]!=0) {M[,1] = B[[1]] *(ry*ry)             }
     if(B[[2]]!=0) {M[,2] = B[[2]] *(ry)                }
-    if(B[[3]]!=0) {M[,3] = B[[3]] *(1 / sqrty)         }
+    if(B[[3]]!=0) {M[,3] = B[[3]] *(rsqrty)            }
     if(B[[4]]!=0) {M[,4] = B[[4]] *(logy)              }
     if(B[[5]]!=0) {M[,5] = B[[5]] *(sqrty)             }
     if(B[[6]]!=0) {M[,6] = B[[6]] *y                   }
@@ -116,7 +122,7 @@ simple_rr <- function(B, extrapolation = TRUE) {
     if(B[[8]]!=0) {M[,8] = B[[8]] *y*y*y               }
     if(B[[9]]!=0) {M[,9] = B[[9]] *ry*ry*logy          }
     if(B[[10]]!=0){M[,10]= B[[10]]*ry*logy             }
-    if(B[[11]]!=0){M[,11]= B[[11]]*(1 / sqrty)*logy    }
+    if(B[[11]]!=0){M[,11]= B[[11]]*(rsqrty)*logy       }
     if(B[[12]]!=0){M[,12]= B[[12]]*(logy^2)            }
     if(B[[13]]!=0){M[,13]= B[[13]]*sqrty*logy          }
     if(B[[14]]!=0){M[,14]= B[[14]]*y*logy              }
@@ -126,14 +132,19 @@ simple_rr <- function(B, extrapolation = TRUE) {
     x_eval = sums[1:length(x)]
     rr_100 = sums[length(x)+1]
     rr_150 = sums[length(x)+2]
-    return(((0<x)&(x<=150))*x_eval + (x>150)*(rr_150 + (extrapolation=TRUE)*(x-150)*((rr_150 - rr_100)/50)))
+    return(((0 < x) & (x <= 150))*x_eval +
+            (x > 150)*(rr_150 +
+                       (extrapolation=TRUE)*(x-150)*((rr_150 - rr_100)*0.02)))
   }
 }
 
-#' Get Special Fractional Polynomial Relative Risk Function (IHD extrapolated after 100)
+#' Get Special Fractional Polynomial Relative Risk Function (IHD extrapolated af
+#' ter 100)
 #'
-#'@param B The numeric vector of Beta values needed to produce a fractional polynomial
-#'@param extrapolation Either 1(linear) or 0(capped) used for extrapolating the RR after 150
+#'@param B The numeric vector of Beta values needed to produce a fractional poly
+#'         nomial
+#'@param extrapolation Either TRUE(linear) or FALSE(capped) used for
+#'                     extrapolating the RR after 150
 #'
 #'
 #'
@@ -148,9 +159,10 @@ ihd_rr <- function(B, extrapolation=TRUE) {
     sqrty = sqrt(y)
     logy = log(y)
     ry = 1 / y
+    rsqrty = 1/sqrty
     if(B[[1]]!=0) {M[,1] = B[[1]] *(ry*ry)             }
     if(B[[2]]!=0) {M[,2] = B[[2]] *(ry)                }
-    if(B[[3]]!=0) {M[,3] = B[[3]] *(1 / sqrty)         }
+    if(B[[3]]!=0) {M[,3] = B[[3]] *(rsqrty)            }
     if(B[[4]]!=0) {M[,4] = B[[4]] *(logy)              }
     if(B[[5]]!=0) {M[,5] = B[[5]] *(sqrty)             }
     if(B[[6]]!=0) {M[,6] = B[[6]] *y                   }
@@ -158,7 +170,7 @@ ihd_rr <- function(B, extrapolation=TRUE) {
     if(B[[8]]!=0) {M[,8] = B[[8]] *y*y*y               }
     if(B[[9]]!=0) {M[,9] = B[[9]] *ry*ry*logy          }
     if(B[[10]]!=0){M[,10]= B[[10]]*ry*logy             }
-    if(B[[11]]!=0){M[,11]= B[[11]]*(1 / sqrty)*logy    }
+    if(B[[11]]!=0){M[,11]= B[[11]]*(rsqrty)*logy       }
     if(B[[12]]!=0){M[,12]= B[[12]]*(logy^2)            }
     if(B[[13]]!=0){M[,13]= B[[13]]*sqrty*logy          }
     if(B[[14]]!=0){M[,14]= B[[14]]*y*logy              }
@@ -168,7 +180,9 @@ ihd_rr <- function(B, extrapolation=TRUE) {
     x_eval = sums[1:length(x)]
     rr_50 = sums[length(x)+1]
     rr_100 = sums[length(x)+2]
-    return(((0<x)&(x<=100))*x_eval + (x>100)*(rr_100 + (extrapolation=TRUE)*(x-100)*(rr_100 - rr_50)/50))
+    return(((0 < x) & (x <= 100))*x_eval +
+            (x>100)*(rr_100 +
+                     (extrapolation=TRUE)*(x-100)*(rr_100 - rr_50)*0.02))
   }
 }
 
@@ -176,8 +190,9 @@ ihd_rr <- function(B, extrapolation=TRUE) {
 
 #' Relative Risk Function Chooser
 #'
-#'@description Given a row with the standard Relative Risk input structure (plus extrapolation T/F column),
-#'              determines a relative risk function and a relative risk for binge-drinkers function to be returned.
+#'@description Given a row with the standard Relative Risk input structure (plus
+#'             extrapolation T/F column), determines a relative risk function
+#'             and a relative risk for binge-drinkers function to be returned.
 #'
 #'@param row is a row from the Relative Risk input frame plus an extrapolation
 #'        column.
@@ -227,7 +242,7 @@ rr_chooser <- function(row) {
 
   # Set BD function
   if(row[[6]] != ".") {
-    function_bd <- function(x) as.numeric(data.matrix(row[[6]])) * function_rr(x)
+    function_bd <- function(x) as.numeric(data.matrix(row[[6]]))*function_rr(x)
   }
   else if(row[[1]] == "(5).(2)" | row[[1]] == "(5).(6)"){
     function_bd <- function(x) pmax(1,function_rr(x))
@@ -243,24 +258,28 @@ rr_chooser <- function(row) {
 
 
 
-#' Get a list of Former Drinker Relative Risks, Relative Risk Curves, and Binge Risk Curves
+#' Get a list of Former Drinker Relative Risks, Relative Risk Curves, and Binge
+#' Risk Curves
 #'
 #'@param RR A data table of relative risk information formatted as demanded in
 #'           the InterMAHP comprehensive guide
 #'
-#'@param extrapolation Either TRUE(linear) or FALSE(capped) used for extrapolating the RR after 150 (100 for IHD)
+#'@param extrapolation Either TRUE(linear) or FALSE(capped) used for
+#'                     extrapolating the RR after 150 (100 for IHD)
 #'
 #'
 #'@export
 
-deduce_relative_risk_curves_from_rr <- function(RR = intermahpr::rr_default, x_in = TRUE) {
+deduce_relative_risk_curves_from_rr <- function(RR = intermahpr::rr_default,
+                                                x_in = TRUE) {
     RR$extrapolation <- x_in
     apply(RR, 1, rr_chooser)
 }
 
 #' Default Relative Risk Curve Defintion
 #'
-#' Default input to generate relative risk curves.  Standard formatting is described in the InterMAHP user guides
+#' Default input to generate relative risk curves.  Standard formatting is descr
+#' ibed in the InterMAHP user guides
 #'
 #'@docType data
 #'@usage data(rr_default)

@@ -2,19 +2,24 @@
 % Please edit documentation in R/derive_params_from_pc.R
 \name{derive_params_from_pc}
 \alias{derive_params_from_pc}
-\title{Derives probability distribution parameters from Prevalence and Consumption data}
+\title{Derives probability distribution parameters from Prevalence and Consumption
+data}
 \usage{
-derive_params_from_pc(pc = intermahpr::pc_default)
+derive_params_from_pc(pc = intermahpr::pc_default, bb = c(53.8, 67.25),
+  lb = c(0.03, 0.03), ub = c(250, 250))
 }
 \arguments{
 \item{pc_input}{is assumed type data.table with variable list of c(Year,
 Region, Gender, Age_group, Population, PCC_litres_year, Correctio\
 n_factor, Relative_consumption, P_LA, P_FD, P_CD, P_BD).
 Variables added to this list in the returned data.table are c(PCC_among_dri\
-nkers, Gamma_shape, Gamma_scale, nc, df, p_bat, R1, R2).  This assumption is safe
-because this function should be internally called only, not exposed.
+nkers, Gamma_shape, Gamma_scale, nc, df, p_bat, R1, R2).  This assumption is
+safe because this function should be internally called only, not exposed.
 
-Note that the bundled data set pc_default satisfies these constraints.}
+Note that the bundled data set pc_default satisfies these constraints.
+
+0.002739726 = 1/365
+0.7893 = unit conversion (millilitres to grams) for ethanol}
 }
 \value{
 A data.table with columns Year, Region, Gender, Age_group, Population,
@@ -22,10 +27,11 @@ PCC_litres_year, Correction_factor, Relative_consumption, P_LA, P_FD, P_CD,
 P_BD, PCC_among_drinkers, Gamma_shape, Gamma_scale, nc, df, p_bat, R1, R2
 }
 \description{
-From a given prevalence and consumption dataframe (or similar), computes required data for AAF
-computation including Per Capita Consumption among drinkers, and Gamma Shape/
-Scale parameters.  Also computes constants necessary for AAF integration,
-namely the Deflation factor and Binge-Split ratios.
+From a given prevalence and consumption dataframe (or similar), computes re-
+-quired data for AAF computation including Per Capita Consumption among
+drinkers, and Gamma Shape/Scale parameters.  Also computes constants
+necessary for AAF integration, namely the Deflation factor and Binge-Split
+ratios.
 }
 \details{
 Gamma parameters are derivable entirely from prevalence and consumption,

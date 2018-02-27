@@ -7,7 +7,11 @@
 acute_pancreatitis_f_rr(x)
 }
 \arguments{
-\item{x}{A vector of x values at which to evaluate the RR function}
+\item{x}{A vector of x values at which to evaluate the RR function
+
+
+0.04 = 1/25
+0.0007304602 = 1/(37^2)}
 }
 \description{
 Special Spline Female Acute Pancreatitis Relative Risk Function

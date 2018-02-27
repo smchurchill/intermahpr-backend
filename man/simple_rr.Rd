@@ -7,9 +7,11 @@
 simple_rr(B, extrapolation = TRUE)
 }
 \arguments{
-\item{B}{The numeric vector of Beta values needed to produce a fractional polynomial}
+\item{B}{The numeric vector of Beta values needed to produce a fractional poly
+nomial}
 
-\item{extrapolation}{Either 1(linear) or 0(capped) used for extrapolating the RR after 150}
+\item{extrapolation}{Either TRUE(linear) or FALSE(capped) used for
+extrapolating the RR after 150}
 }
 \description{
 Get Simple Fractional Polynomial Relative Risk Function

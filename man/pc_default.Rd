@@ -9,6 +9,8 @@
 data(pcr_default)
 }
 \description{
-Default prevalence and consumption data from BC and Canada, 2015.input to generate relative risk curves.  Standard formatting is described in the InterMAHP user guides
+Default prevalence and consumption data from BC and Canada, 2015.input to
+generate relative risk curves.  Standard formatting is described in the
+InterMAHP user guides
 }
 \keyword{datasets}

@@ -4,7 +4,7 @@
 \name{intermahpr_constants}
 \alias{intermahpr_constants}
 \title{Get and Set InterMAHPR environment/state variables}
-\format{An object of class \code{environment} of length 8.}
+\format{An object of class \code{environment} of length 2.}
 \usage{
 intermahpr_constants
 }

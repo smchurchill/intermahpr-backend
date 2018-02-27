@@ -1,8 +1,8 @@
 Package: intermahpr
 Title: R Implementation of CISUR's International Model of Alcohol Harms and Policies
-Version: 0.0.0.9000
-Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+Version: 0.0.0.9001
+Authors@R: person("Sam", "Churchill", email = "meadowschurchill@gmail.com", role = c("aut", "cre"))
+Description: R Implementation of CISUR's International Model of Alcohol Harms and Policies
 Depends:
     data.table, plyr
 Imports:

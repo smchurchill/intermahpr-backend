@@ -21,6 +21,7 @@ A list of:
            4. Relative risk for bingers
 }
 \description{
-Given a row with the standard Relative Risk input structure (plus extrapolation T/F column),
-             determines a relative risk function and a relative risk for binge-drinkers function to be returned.
+Given a row with the standard Relative Risk input structure (plus
+            extrapolation T/F column), determines a relative risk function
+            and a relative risk for binge-drinkers function to be returned.
 }
