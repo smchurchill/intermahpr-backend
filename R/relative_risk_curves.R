@@ -134,7 +134,7 @@ simple_rr <- function(B, extrapolation = TRUE) {
     rr_150 = sums[length(x)+2]
     return(((0 < x) & (x <= 150))*x_eval +
             (x > 150)*(rr_150 +
-                       (extrapolation=TRUE)*(x-150)*((rr_150 - rr_100)*0.02)))
+                       (extrapolation==TRUE)*(x-150)*((rr_150 - rr_100)*0.02)))
   }
 }
 
@@ -182,7 +182,7 @@ ihd_rr <- function(B, extrapolation=TRUE) {
     rr_100 = sums[length(x)+2]
     return(((0 < x) & (x <= 100))*x_eval +
             (x>100)*(rr_100 +
-                     (extrapolation=TRUE)*(x-100)*(rr_100 - rr_50)*0.02))
+                     (extrapolation==TRUE)*(x-100)*(rr_100 - rr_50)*0.02))
   }
 }
 
