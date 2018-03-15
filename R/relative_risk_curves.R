@@ -209,30 +209,37 @@ ihd_rr <- function(B, extrapolation=TRUE) {
 #'
 
 rr_chooser <- function(row) {
+  IM <- row[["IM"]]
+  Gender <- row[["Gender"]]
+  Function <- row[["Function"]]
+  Outcome <- row[["Outcome"]]
+  extrapolation <- row[["extrapolation"]]
+  BingeF <- row[["BingeF"]]
+  RR_FD <- as.numeric(row[["RR_FD"]])
+
   function_rr <- function() {0}
   function_bd <- function() {0}
 
   # Set RR function
-  if(row["Function"] == "FP"){
-    betas = as.numeric(data.matrix(row[8:23]))
-    force(betas)
-    if(row[[1]] != "(5).(2)"){
-      function_rr <- simple_rr(betas,row[[24]])
+  if(Function == "FP"){
+    betas <- data.matrix(sapply(row[9:length(row)-1], as.numeric))
+    if(IM != "(5).(2)"){
+      function_rr <- simple_rr(betas,extrapolation)
     }
     else {
-      function_rr <- ihd_rr(betas,row[[24]])
+      function_rr <- ihd_rr(betas,extrapolation)
     }
 
   }
-  else if(row[[7]] == "Step") {
-    if(row[[3]] == "Female") { function_rr <- hiv_f_rr }
+  else if(Function == "Step") {
+    if(Gender == "Female") { function_rr <- hiv_f_rr }
     else { function_rr <- hiv_m_rr }
   }
   else {
-    if(row[[1]] == "(6).(3)"){
+    if(IM == "(6).(3)"){
       function_rr <- acute_pancreatitis_f_rr
     }
-    else if(row[[3]] == "Female") {
+    else if(Gender == "Female") {
       function_rr <- hypertension_f_rr
     }
     else {
@@ -241,10 +248,10 @@ rr_chooser <- function(row) {
   }
 
   # Set BD function
-  if(row[[6]] != ".") {
-    function_bd <- function(x) as.numeric(data.matrix(row[[6]]))*function_rr(x)
+  if(BingeF != ".") {
+    function_bd <- function(x) as.numeric(BingeF)*function_rr(x)
   }
-  else if(row[[1]] == "(5).(2)" | row[[1]] == "(5).(6)"){
+  else if(IM == "(5).(2)" | IM == "(5).(6)"){
     function_bd <- function(x) pmax(1,function_rr(x))
   }
   else {
@@ -253,7 +260,7 @@ rr_chooser <- function(row) {
 
   force(function_rr)
   force(function_bd)
-  list(row[1:4], row[5], function_rr, function_bd)
+  list(row[1:4],RR_FD, function_rr, function_bd)
 }
 
 
