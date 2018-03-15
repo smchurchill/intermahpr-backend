@@ -117,7 +117,7 @@ compute_light_aafs <- function(prev_cons_data = intermahpr::pc_default,
                                extrapolation = TRUE,
                                upper_bound = 250,
                                binge_levels = c(53.80, 67.25),
-                               light_moderate_barriers = c(15,15)) {
+                               light_moderate_barriers = c(20,20)) {
 
   aafs <- compute_general_aafs(prev_cons_data, relative_risks, extrapolation,
                                upper_bound, binge_levels,
@@ -149,8 +149,8 @@ compute_mod_aafs <- function(prev_cons_data = intermahpr::pc_default,
                                extrapolation = TRUE,
                                upper_bound = 250,
                                binge_levels = c(53.80, 67.25),
-                               light_moderate_barriers = c(15,15),
-                               moderate_heavy_barriers = c(35,35)) {
+                               light_moderate_barriers = c(20,20),
+                               moderate_heavy_barriers = c(40,40)) {
 
   aafs <- compute_general_aafs(prev_cons_data, relative_risks, extrapolation,
                                upper_bound, binge_levels,
@@ -183,7 +183,7 @@ compute_heavy_aafs <- function(prev_cons_data = intermahpr::pc_default,
                                extrapolation = TRUE,
                                upper_bound = 250,
                                binge_levels = c(53.80, 67.25),
-                               moderate_heavy_barriers = c(35,35)) {
+                               moderate_heavy_barriers = c(40,40)) {
 
 
   aafs <- compute_general_aafs(prev_cons_data, relative_risks, extrapolation,
@@ -215,8 +215,8 @@ compute_all_aafs <- function(prev_cons_data = intermahpr::pc_default,
                              extrapolation = TRUE,
                              upper_bound = 250,
                              binge_levels = c(53.80, 67.25),
-                             light_moderate_barriers = c(15,15),
-                             moderate_heavy_barriers = c(35,35)) {
+                             light_moderate_barriers = c(20,20),
+                             moderate_heavy_barriers = c(40,40)) {
 
   # t <- compute_total_aafs(prev_cons_data, relative_risks, extrapolation,
   #                         upper_bound, binge_levels)

@@ -90,23 +90,18 @@ acute_pancreatitis_f_rr <- function(x){
   exp(spline)
 }
 
-#' Get Simple Fractional Polynomial Relative Risk Function
+#' Get Fractional Polynomial Relative Risk Function
 #'
 #'@param B The numeric vector of Beta values needed to produce a fractional poly
 #'         nomial
-#'@param extrapolation Either TRUE(linear) or FALSE(capped) used for
-#'                     extrapolating the RR after 150
-#'
 #'
 #'
 #'
 
 
-simple_rr <- function(B, extrapolation = TRUE) {
+fp_rr <- function(B) {
   force(B)
-  force(extrapolation)
-  function(x){
-    y <- append(x, c(100,150))
+  function(y){
     M = matrix(0,length(y),16)
     sqrty = sqrt(y)
     logy = log(y)
@@ -128,13 +123,7 @@ simple_rr <- function(B, extrapolation = TRUE) {
     if(B[[14]]!=0){M[,14]= B[[14]]*y*logy              }
     if(B[[15]]!=0){M[,15]= B[[15]]*y*y*logy            }
     if(B[[16]]!=0){M[,16]= B[[16]]*y*y*y*logy          }
-    sums = exp(rowSums(M))
-    x_eval = sums[1:length(x)]
-    rr_100 = sums[length(x)+1]
-    rr_150 = sums[length(x)+2]
-    return(((0 < x) & (x <= 150))*x_eval +
-            (x > 150)*(rr_150 +
-                       (extrapolation==TRUE)*(x-150)*((rr_150 - rr_100)*0.02)))
+    exp(rowSums(M))
   }
 }
 
@@ -217,50 +206,68 @@ rr_chooser <- function(row) {
   BingeF <- row[["BingeF"]]
   RR_FD <- as.numeric(row[["RR_FD"]])
 
-  function_rr <- function() {0}
-  function_bd <- function() {0}
+  tmp_rr <- function() {0}
+  betas <- data.matrix(rep(0,16))
+  extrapolate_using <- c(100, 150) + ifelse(IM == "(5).(2)", -50, 0)
 
   # Set RR function
   if(Function == "FP"){
+    # print("Function == FP")
     betas <- data.matrix(sapply(row[9:length(row)-1], as.numeric))
-    if(IM != "(5).(2)"){
-      function_rr <- simple_rr(betas,extrapolation)
-    }
-    else {
-      function_rr <- ihd_rr(betas,extrapolation)
-    }
+    tmp_rr <- fp_rr(betas)
+  }
 
+  if(Function == "Step" & Gender == "Female") {
+    # print("Function == Step & Gender == Female")
+    tmp_rr <- hiv_f_rr
   }
-  else if(Function == "Step") {
-    if(Gender == "Female") { function_rr <- hiv_f_rr }
-    else { function_rr <- hiv_m_rr }
+  if(Function == "Step" & Gender == "Male") {
+    # print("Function == Step & Gender == Male")
+    tmp_rr <- hiv_m_rr
   }
-  else {
-    if(IM == "(6).(3)"){
-      function_rr <- acute_pancreatitis_f_rr
+
+  if(Function == "Spline") {
+    # print("Function == Spline")
+    if(IM == "(6).(3)") {
+      # print("Function == Spline & IM == 6.3")
+      tmp_rr <- acute_pancreatitis_f_rr
+      extrapolation = FALSE
     }
     else if(Gender == "Female") {
-      function_rr <- hypertension_f_rr
+      # print("Function == Spline & IM != 6.3 & Gender == Female")
+      tmp_rr <- hypertension_f_rr
+      extrapolation = FALSE
     }
     else {
-      function_rr <- hypertension_m_rr
+      tmp_rr <- hypertension_m_rr
     }
   }
 
-  # Set BD function
-  if(BingeF != ".") {
-    function_bd <- function(x) as.numeric(BingeF)*function_rr(x)
-  }
-  else if(IM == "(5).(2)" | IM == "(5).(6)"){
-    function_bd <- function(x) pmax(1,function_rr(x))
-  }
-  else {
-    function_bd <- function_rr
+  fn_rr <- function(x) {
+    x1 <- extrapolate_using[[1]]
+    x2 <- extrapolate_using[[2]]
+    y1 <- tmp_rr(x1)
+    y2 <- tmp_rr(x2)
+    slope <- ifelse(extrapolation, (y2-y1)/(x2-x1), 0)
+    return(((0 < x) & (x < x2))*tmp_rr(x) + (x2 < x)*(y2 + slope*(x-x2)))
   }
 
-  force(function_rr)
-  force(function_bd)
-  list(row[1:4],RR_FD, function_rr, function_bd)
+
+  # Set BD function
+  fn_bd <- fn_rr
+  if(BingeF != ".") {
+    fn_bd <- function(x) as.numeric(BingeF)*tmp_rr(x)
+  }
+  if(IM == "(5).(2)" | IM == "(5).(6)"){
+    fn_bd <- function(x) pmax(1,tmp_rr(x))
+  }
+
+  # print(ggplot(data = data.frame(x=0), mapping = aes(x=x)) +
+  #          stat_function(fun = fn_rr) +
+  #          xlim(0.03, 250))
+  force(fn_rr)
+  force(fn_bd)
+  list(row[1:4],RR_FD, fn_rr, fn_bd)
 }
 
 
@@ -275,12 +282,18 @@ rr_chooser <- function(row) {
 #'                     extrapolating the RR after 150 (100 for IHD)
 #'
 #'
-#'@export
+#'
+#'
 
 deduce_relative_risk_curves_from_rr <- function(RR = intermahpr::rr_default,
                                                 x_in = TRUE) {
     RR$extrapolation <- x_in
     apply(RR, 1, rr_chooser)
+}
+
+generate_relative_risk_plots <- function(RR = intermahpr::rr_default,
+                                         x_in = TRUE) {
+  curves <- deduce_relative_risk_curves_from_rr(RR, x_in)
 }
 
 #' Default Relative Risk Curve Defintion

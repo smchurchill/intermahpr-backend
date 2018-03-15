@@ -35,7 +35,8 @@ compute_aaf <- function(C, P) {
   fd_numerator <- PX[["P_FD"]] * (as.numeric(C[[2]]) - 1)
 
   integrand <- function(x) {
-    (x <= PX[["BB"]])*(PX[["R1"]]*PR(x) + PX[["R2"]]*PB(x)) + (PX[["BB"]] < x)*PB(x)
+    (x          <= PX[["BB"]]) * (PX[["R1"]]*PR(x) + PX[["R2"]]*PB(x)) +
+    (PX[["BB"]] <  x         ) * PB(x)
   }
 
   aaf_dint <- integrate(integrand,
