@@ -3,11 +3,13 @@ Title: R Implementation of CISUR's International Model of Alcohol Harms and Poli
 Version: 0.0.0.9001
 Authors@R: person("Sam", "Churchill", email = "meadowschurchill@gmail.com", role = c("aut", "cre"))
 Description: R Implementation of CISUR's International Model of Alcohol Harms and Policies
-Depends:
-    data.table, plyr
 Imports:
-    data.table
+    tibble,
+    data.table,
+    dplyr,
+    readr
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1
+Suggests: testthat
