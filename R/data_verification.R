@@ -64,7 +64,7 @@ format_v0_pc <- function(PC_in) {
                     "PCC_LITRES_YEAR", "CORRECTION_FACTOR",
                     "RELATIVE_CONSUMPTION", "P_LA", "P_FD", "P_CD", "P_BD")
   missing_var <- expected_var[!(expected_var %in% names(PC))]
-  needed_var <- expected_var[c(5,6,9:12)]
+  needed_var <- expected_var[c(3,5:12)]
   missing_and_needed <- intersect(missing_var, needed_var)
   if(length(missing_and_needed) > 0) {
     stop(paste0("Missing and needed variables from the supplied prevalence/",

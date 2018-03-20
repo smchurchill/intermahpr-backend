@@ -4,15 +4,15 @@ context("Data Verification: Input data is converted to tibbles for internal use"
 test_that("data frames are converted into tibbles", {
   RR <- data.frame(testrr)
   expect_is(format_rr(RR), 'tbl')
-  PC <- data.frame(x=0)
-  expect_is(format_pc(PC), 'tbl')
+  PC <- data.frame(testpc)
+  expect_is(format_v0_pc(PC), 'tbl')
 })
 
 test_that("tibbles stay as tibbles", {
-  RR <- as.tibble(testrr)
+  RR <- tibble::as.tibble(testrr)
   expect_is(format_rr(RR), 'tbl')
-  PC <- data_frame(x=0)
-  expect_is(format_pc(PC), 'tbl')
+  PC <- tibble::as.tibble(testpc)
+  expect_is(format_v0_pc(PC), 'tbl')
 })
 
 test_that("trigonometric functions match identities", {

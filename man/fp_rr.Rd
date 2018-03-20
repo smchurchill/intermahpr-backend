@@ -4,14 +4,11 @@
 \alias{fp_rr}
 \title{Get Fractional Polynomial Relative Risk Function}
 \usage{
-fp_rr(B, extrapolation = TRUE, extrapolate_using = c(100, 150))
+fp_rr(B)
 }
 \arguments{
 \item{B}{The numeric vector of Beta values needed to produce a fractional poly
 nomial}
-
-\item{extrapolation}{Either TRUE(linear) or FALSE(capped) used for
-extrapolating the RR after 150}
 }
 \description{
 Get Fractional Polynomial Relative Risk Function

@@ -7,7 +7,7 @@
 compute_heavy_aafs(prev_cons_data = intermahpr::pc_default,
   relative_risks = intermahpr::rr_default, extrapolation = TRUE,
   upper_bound = 250, binge_levels = c(53.8, 67.25),
-  moderate_heavy_barriers = c(35, 35))
+  moderate_heavy_barriers = c(40, 40))
 }
 \arguments{
 \item{PC}{Prevalence and consumption}
