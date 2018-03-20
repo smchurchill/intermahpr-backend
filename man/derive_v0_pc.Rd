@@ -9,22 +9,37 @@ derive_v0_pc(PC_in, bb = c(53.8, 67.25), lb = c(0.03, 0.03), ub = c(250,
   250))
 }
 \arguments{
-\item{pc_input}{is assumed type data.table with variable list of c(Year,
-Region, Gender, Age_group, Population, PCC_litres_year, Correctio\
-n_factor, Relative_consumption, P_LA, P_FD, P_CD, P_BD).
-Variables added to this list in the returned data.table are c(PCC_among_dri\
-nkers, Gamma_shape, Gamma_scale, nc, df, p_bat, R1, R2).  This assumption is
-safe because this function should be internally called only, not exposed.
+\item{PC_in}{is assumed type tibble with names(PC_in) = c(YEAR, REGION, GENDER
+, AGE_GROUP, POPULATION, PCC_LITRES_YEAR, CORRECTION_FACTOR,
+RELATIVE_CONSUMPTION, P_LA, P_FD, P_CD, P_BD).
+This function is internally called only, not exported.
 
 Note that the bundled data set pc_default satisfies these constraints.
 
-0.002739726 = 1/365
-0.7893 = unit conversion (millilitres to grams) for ethanol}
+Constants used:
+ 0.002739726 = 1/365
+ 0.7893 = unit conversion (millilitres to grams) for ethanol}
 }
 \value{
-A data.table with columns Year, Region, Gender, Age_group, Population,
-PCC_litres_year, Correction_factor, Relative_consumption, P_LA, P_FD, P_CD,
-P_BD, PCC_among_drinkers, Gamma_shape, Gamma_scale, nc, df, p_bat, R1, R2
+A tibble with additional variables:
+  PCC_G_DAY: Per capita consumption, converted from litres/year to grams/day
+  DRINKERS: Total drinkers in region, computed as POPULATION*P_CD
+  PCAD: Average consumption among drinkers
+  PCC_AMONG_DRINKERS: Computed from PCAD and relative consumption
+  GAMMA_CONSTANT: The distribution of drinkers at drinking level of x grams
+    per day is fit by a gamma distribution whose mean and standard deviation
+    are related by GAMMA_CONSTANT, stratified by gender
+  GAMMA_SHAPE: Computed from GAMMA_CONSTANT
+  GAMMA_SCALE: Computed from GAMMA_CONSTANT
+  INDEX: Among vector inputs, which index refers to this cohort?
+  BB: Binge barrier
+  LB: Lower bound of integration (0.03)
+  UB: Upper bound of integration (user-specified, typical values are 150,250)
+  NC: Normalizing constant for the gamma distribution (how much of the gamma
+  distribution is between LB and UB?)
+  DF: Deflation factor for the gamma distribution (DF = P_CD/NC)
+  P_BAT: Proportion of bingers above threshold (BB)
+  R1, R2: Ratios computed at this step and used in AAF computations
 }
 \description{
 From a given prevalence and consumption dataframe (or similar), computes re-

@@ -1,3 +1,14 @@
+#' What value is imputed when a variable is missing?
+#'
+#' In order to normalize code in future methods, missing data is removed either
+#' throug imputation when possible, or by throwing an error when the data is
+#' necessary.  impute_with is called when a missing value \emph{can} be imputed.
+#'
+#' @param var is a string -- a variable name.
+#'
+#' @return A string or integer that is appropriate for imputation.
+#'
+
 impute_with <- function(var) {
   if(grepl("B[0-9]", var)) {var = "BETA"}
   switch(var,
@@ -13,20 +24,22 @@ impute_with <- function(var) {
          BETA = 0)
 }
 
+#' Definition of missing data for the purposes of intermahpr
+#'
+
 is.missing <- function(obs) {
   is.na(obs) | is.null(obs) | obs == "."
 }
 
-impute_missing <- function(var_obs) {
-  TF <- is.missing(var_obs)
-  var_obs[TF] <- impute_with(var_obs)
-}
+#' Format relative risk input data to our desired specifications
+#'
 
-format_rr <- function(RR_in) {
+format_v0_rr <- function(RR_in) {
   RR <- tibble::as.tibble(RR_in)
   names(RR) <- do.call(stringr::str_to_upper, list(names(RR)))
+  betas <- do.call(paste0, list(rep("B", 16), 1:16))
   expected_var <- c("IM", "CONDITION", "GENDER", "OUTCOME", "RR_FD", "BINGEF",
-                    "FUNCTION", do.call(paste0, list(rep("B", 16), 1:16)))
+                    "FUNCTION", betas)
   missing_var <- expected_var[!(expected_var %in% names(RR))]
 
   RR[, missing_var] <- NA
@@ -35,30 +48,37 @@ format_rr <- function(RR_in) {
     RR[var][is.missing(RR[var])] <- impute_with(var)
   }
 
-  readr::type_convert(RR)
+  RR <- readr::type_convert(RR)
 }
+
+
+
+#' Format prevalence and consumption input data to our desired specifications
+#'
+#' expected variables:
+#'  Needed:
+#'    Proportion, Former Drinkers
+#'    Proportion, Binge Drinkers
+#'    Proportion, Lifetime Abstainers
+#'    Proportion, Current Drinkers
+#'    Gamma Distribution Parameters:
+#'      Per Capita Consumption
+#'      Population
+#'      Relative Consumption
+#'      Correction Factor
+#'    Gender (in order to pair with RR curves)
+#'  Imputable as "Unspecified":
+#'    Region
+#'    Year
+#'    Gender
+#'    Age Group
+#'
+
 
 format_v0_pc <- function(PC_in) {
   PC <- tibble::as.tibble(PC_in)
   names(PC) <- do.call(stringr::str_to_upper, list(names(PC)))
-  ## expected variables:
-  ##  Needed:
-  ##    Proportion, Former Drinkers
-  ##    Proportion, Binge Drinkers
-  ##    Proportion, Lifetime Abstainers
-  ##    Proportion, Current Drinkers
-  ##    Gamma Distribution Parameters:
-  ##      Per Capita Consumption
-  ##      Population
-  ##      Relative Consumption
-  ##      Correction Factor
-  ##    Gender (in order to pair with RR curves)
-  ##  Imputable as "Unspecified":
-  ##    Region
-  ##    Year
-  ##    Gender
-  ##    Age Group
-  ##
+
 
   expected_var <- c("REGION", "YEAR", "GENDER", "AGE_GROUP", "POPULATION",
                     "PCC_LITRES_YEAR", "CORRECTION_FACTOR",
@@ -82,6 +102,7 @@ format_v0_pc <- function(PC_in) {
 }
 
 
+
 #' Derives probability distribution parameters from Prevalence and Consumption
 #' data
 #'
@@ -94,23 +115,39 @@ format_v0_pc <- function(PC_in) {
 #' Gamma parameters are derivable entirely from prevalence and consumption,
 #' no additional input is necessary.
 #'
-#'@param pc_input is assumed type data.table with variable list of c(Year,
-#' Region, Gender, Age_group, Population, PCC_litres_year, Correctio\
-#' n_factor, Relative_consumption, P_LA, P_FD, P_CD, P_BD).
-#' Variables added to this list in the returned data.table are c(PCC_among_dri\
-#' nkers, Gamma_shape, Gamma_scale, nc, df, p_bat, R1, R2).  This assumption is
-#' safe because this function should be internally called only, not exposed.
+#'@param PC_in is assumed type tibble with names(PC_in) = c(YEAR, REGION, GENDER
+#' , AGE_GROUP, POPULATION, PCC_LITRES_YEAR, CORRECTION_FACTOR,
+#' RELATIVE_CONSUMPTION, P_LA, P_FD, P_CD, P_BD).
+#' This function is internally called only, not exported.
 #'
 #' Note that the bundled data set pc_default satisfies these constraints.
 #'
-#' 0.002739726 = 1/365
-#' 0.7893 = unit conversion (millilitres to grams) for ethanol
+#' Constants used:
+#'  0.002739726 = 1/365
+#'  0.7893 = unit conversion (millilitres to grams) for ethanol
 #'
-#'@return A data.table with columns Year, Region, Gender, Age_group, Population,
-#' PCC_litres_year, Correction_factor, Relative_consumption, P_LA, P_FD, P_CD,
-#' P_BD, PCC_among_drinkers, Gamma_shape, Gamma_scale, nc, df, p_bat, R1, R2
+#'@return A tibble with additional variables:
+#'   PCC_G_DAY: Per capita consumption, converted from litres/year to grams/day
+#'   DRINKERS: Total drinkers in region, computed as POPULATION*P_CD
+#'   PCAD: Average consumption among drinkers
+#'   PCC_AMONG_DRINKERS: Computed from PCAD and relative consumption
+#'   GAMMA_CONSTANT: The distribution of drinkers at drinking level of x grams
+#'     per day is fit by a gamma distribution whose mean and standard deviation
+#'     are related by GAMMA_CONSTANT, stratified by gender
+#'   GAMMA_SHAPE: Computed from GAMMA_CONSTANT
+#'   GAMMA_SCALE: Computed from GAMMA_CONSTANT
+#'   INDEX: Among vector inputs, which index refers to this cohort?
+#'   BB: Binge barrier
+#'   LB: Lower bound of integration (0.03)
+#'   UB: Upper bound of integration (user-specified, typical values are 150,250)
+#'   NC: Normalizing constant for the gamma distribution (how much of the gamma
+#'   distribution is between LB and UB?)
+#'   DF: Deflation factor for the gamma distribution (DF = P_CD/NC)
+#'   P_BAT: Proportion of bingers above threshold (BB)
+#'   R1, R2: Ratios computed at this step and used in AAF computations
 #'
-#'
+#'@importFrom magrittr "%>%"
+#'@importFrom dplyr group_by mutate
 #'
 
 
@@ -125,26 +162,46 @@ derive_v0_pc <- function(PC_in,
            DRINKERS = POPULATION * P_CD,
            PCAD = PCC_G_DAY * sum(POPULATION) / sum(DRINKERS),
            PCC_AMONG_DRINKERS = RELATIVE_CONSUMPTION * PCAD * sum(DRINKERS) /
-             sum(RELATIVE_CONSUMPTION*DRINKERS),
-           GAMMA_CONSTANT = if_else(GENDER == "FEMALE", 1.258^2, 1.171^2),
+             sum(RELATIVE_CONSUMPTION*DRINKERS))
+  PC <- PC %>%
+    mutate(GAMMA_CONSTANT = ifelse(GENDER == "Female", 1.258^2, 1.171^2),
            GAMMA_SHAPE = 1/GAMMA_CONSTANT,
            GAMMA_SCALE = GAMMA_CONSTANT*PCC_AMONG_DRINKERS,
-           INDEX = if_else(GENDER == "FEMALE", 1, 2),
-           BB = bb[INDEX],
+           INDEX = ifelse(GENDER == "Female", as.integer(1), as.integer(2)))
+  PC <- PC %>%
+    mutate(BB = bb[INDEX],
            LB = lb[INDEX],
-           UB = ub[INDEX],
-           NC = integrate(function(x) dgamma(x,
-                                             shape = GAMMA_SHAPE,
-                                             scale = GAMMA_SCALE),
-                          lower = LB,
-                          upper = UB)$value,
-           DF = P_CD / NC,
-           P_BAT = integrate(function(x) DF * dgamma(x,
-                                                     shape = GAMMA_SHAPE,
-                                                     scale = GAMMA_SCALE),
-                             lower = BB,
-                             upper = UB)$value,
-           R1 = (P_CD - P_BD)  / (P_CD - P_BAT),
+           UB = ub[INDEX])
+
+  PC[, "NC"] <- 0
+  for(n in 1:nrow(PC)) {
+    GAMMA_SHAPE <- PC[[n, "GAMMA_SHAPE"]]
+    GAMMA_SCALE <- PC[[n, "GAMMA_SCALE"]]
+    LB <- PC[[n, "LB"]]
+    UB <- PC[[n, "UB"]]
+    imgamma <- function(x) {
+      dgamma(x, shape = GAMMA_SHAPE, scale = GAMMA_SCALE)
+    }
+    PC[[n, "NC"]] <- integrate(imgamma, lower = LB, upper = UB)$value
+  }
+
+  PC <- PC %>%
+    mutate(DF = P_CD / NC)
+
+  PC[, "P_BAT"] <- 0
+  for(n in 1:nrow(PC)) {
+    GAMMA_SHAPE <- PC[[n, "GAMMA_SHAPE"]]
+    GAMMA_SCALE <- PC[[n, "GAMMA_SCALE"]]
+    BB <- PC[[n, "BB"]]
+    UB <- PC[[n, "UB"]]
+    DF <- PC[[n, "DF"]]
+    dfgamma <- function(x) {
+      DF * dgamma(x, shape = GAMMA_SHAPE, scale = GAMMA_SCALE)
+    }
+    PC[[n, "P_BAT"]] <- integrate(dfgamma, lower = BB, upper = UB)$value
+  }
+  PC <- PC %>%
+    mutate(R1 = (P_CD - P_BD)  / (P_CD - P_BAT),
            R2 = (P_BD - P_BAT) / (P_CD - P_BAT))
   PC
 }

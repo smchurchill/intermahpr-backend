@@ -2,9 +2,7 @@
 #'
 #'@param x A vector of x values at which to evaluate the RR function
 #'
-#'
-#'
-#'
+
 
 hiv_f_rr <- function(x) {
   ((0<x)&(x<49))*1 + (x>=49)*1.54
@@ -14,9 +12,7 @@ hiv_f_rr <- function(x) {
 #'
 #'@param x A vector of x values at which to evaluate the RR function
 #'
-#'
-#'
-#'
+
 
 hiv_m_rr <- function(x) {
   ((0<x)&(x<61))*1 + (x>=61)*1.54
@@ -52,7 +48,6 @@ hypertension_f_rr <- function(x){
 #'
 #' 0.01851852 = 1/54
 #' 0.0001777778 = 1/(75^2)
-#'
 #'
 
 hypertension_m_rr <- function(x){
@@ -92,11 +87,10 @@ acute_pancreatitis_f_rr <- function(x){
 
 #' Get Fractional Polynomial Relative Risk Function
 #'
-#'@param B The numeric vector of Beta values needed to produce a fractional poly
-#'         nomial
+#'@param B The numeric vector of Beta values needed to produce a fractional
+#'  polynomial
 #'
-#'
-#'
+
 
 
 fp_rr <- function(B) {
@@ -127,179 +121,142 @@ fp_rr <- function(B) {
   }
 }
 
-#' Get Special Fractional Polynomial Relative Risk Function (IHD extrapolated af
-#' ter 100)
+#' Choose which relative risk function is appropriate from the given input
 #'
-#'@param B The numeric vector of Beta values needed to produce a fractional poly
-#'         nomial
-#'@param extrapolation Either TRUE(linear) or FALSE(capped) used for
-#'                     extrapolating the RR after 150
+#'@description Given a list that contains the string variables IM, GENDER, and
+#'  FUNCTION, and sixteen double variables B1 through B16, returns a relative
+#'  risk function.
+#'  Currently supported levels of IM can be found in the User Guide. Supported
+#'  levels for GENDER are Female and Male, and for FUNCTION are FP, Spline, and
+#'  Step.
+#'  IM, FUNCTION, and GENDER are used to determine which function to produce in
+#'  extraordinary cases.  The most common case, however, is the FP (Fractional
+#'  Polynomial) model. When FUNCTION = FP and the given condition is not
+#'  extraordinary, a relative risk function will still be produced even if
+#'  Gender/IM are imputed by intermahpr.
 #'
+#'@param rr_specs a list that contains the string variables IM, GENDER, and
+#'  FUNCTION, and sixteen double variables B1 through B16
 #'
-#'
-#'
-
-ihd_rr <- function(B, extrapolation=TRUE) {
-  force(B)
-  force(extrapolation)
-  function(x){
-    y <- append(x, c(50,100))
-    M = matrix(0,length(y),16)
-    sqrty = sqrt(y)
-    logy = log(y)
-    ry = 1 / y
-    rsqrty = 1/sqrty
-    if(B[[1]]!=0) {M[,1] = B[[1]] *(ry*ry)             }
-    if(B[[2]]!=0) {M[,2] = B[[2]] *(ry)                }
-    if(B[[3]]!=0) {M[,3] = B[[3]] *(rsqrty)            }
-    if(B[[4]]!=0) {M[,4] = B[[4]] *(logy)              }
-    if(B[[5]]!=0) {M[,5] = B[[5]] *(sqrty)             }
-    if(B[[6]]!=0) {M[,6] = B[[6]] *y                   }
-    if(B[[7]]!=0) {M[,7] = B[[7]] *y*y                 }
-    if(B[[8]]!=0) {M[,8] = B[[8]] *y*y*y               }
-    if(B[[9]]!=0) {M[,9] = B[[9]] *ry*ry*logy          }
-    if(B[[10]]!=0){M[,10]= B[[10]]*ry*logy             }
-    if(B[[11]]!=0){M[,11]= B[[11]]*(rsqrty)*logy       }
-    if(B[[12]]!=0){M[,12]= B[[12]]*(logy^2)            }
-    if(B[[13]]!=0){M[,13]= B[[13]]*sqrty*logy          }
-    if(B[[14]]!=0){M[,14]= B[[14]]*y*logy              }
-    if(B[[15]]!=0){M[,15]= B[[15]]*y*y*logy            }
-    if(B[[16]]!=0){M[,16]= B[[16]]*y*y*y*logy          }
-    sums = exp(rowSums(M))
-    x_eval = sums[1:length(x)]
-    rr_50 = sums[length(x)+1]
-    rr_100 = sums[length(x)+2]
-    return(((0 < x) & (x <= 100))*x_eval +
-            (x>100)*(rr_100 +
-                     (extrapolation==TRUE)*(x-100)*(rr_100 - rr_50)*0.02))
-  }
-}
-
-
-
-#' Relative Risk Function Chooser
-#'
-#'@description Given a row with the standard Relative Risk input structure (plus
-#'             extrapolation T/F column), determines a relative risk function
-#'             and a relative risk for binge-drinkers function to be returned.
-#'
-#'@param row is a row from the Relative Risk input frame plus an extrapolation
-#'        column.
-#'        The necessary structure for each row is
-#'        IM > Condition > Gender > Outcome > RR_FD > BingeF > Function > B1-B16
-#'        > extrapolation
-#'
-#'@return A list of:
-#'            1. list: IM, Condition Name, Gender, Type (Morb, Mort, Comb)
-#'            2. RR_FD constant
-#'            3. Relative risk function
-#'            4. Relative risk for bingers
-#'
+#'@return a function object that describes a base relative risk curve
 #'
 
-rr_chooser <- function(row) {
-  IM <- row[["IM"]]
-  Gender <- row[["Gender"]]
-  Function <- row[["Function"]]
-  Outcome <- row[["Outcome"]]
-  extrapolation <- row[["extrapolation"]]
-  BingeF <- row[["BingeF"]]
-  RR_FD <- as.numeric(row[["RR_FD"]])
+set_rr <- function(rr_specs) {
+  IM <- rr_specs[["IM"]]
+  GENDER <- rr_specs[["GENDER"]]
+  FUNCTION <- rr_specs[["FUNCTION"]]
+  betas <- do.call(paste0, list(rep("B", 16), 1:16))
+  BETAS <- as.numeric(rr_specs[betas])
+  fn_rr <- function(x) {0}
 
-  tmp_rr <- function() {0}
-  betas <- data.matrix(rep(0,16))
-  extrapolate_using <- c(100, 150) + ifelse(IM == "(5).(2)", -50, 0)
-
-  # Set RR function
-  if(Function == "FP"){
-    # print("Function == FP")
-    betas <- data.matrix(sapply(row[9:length(row)-1], as.numeric))
-    tmp_rr <- fp_rr(betas)
+  if(FUNCTION == "FP"){
+    fn_rr <- fp_rr(BETAS)
   }
 
-  if(Function == "Step" & Gender == "Female") {
-    # print("Function == Step & Gender == Female")
-    tmp_rr <- hiv_f_rr
+  if(FUNCTION == "Step" & GENDER == "Female") {
+    fn_rr <- hiv_f_rr
   }
-  if(Function == "Step" & Gender == "Male") {
-    # print("Function == Step & Gender == Male")
-    tmp_rr <- hiv_m_rr
+  if(FUNCTION == "Step" & GENDER == "Male") {
+    fn_rr <- hiv_m_rr
   }
 
-  if(Function == "Spline") {
-    # print("Function == Spline")
+  if(FUNCTION == "Spline") {
     if(IM == "(6).(3)") {
-      # print("Function == Spline & IM == 6.3")
-      tmp_rr <- acute_pancreatitis_f_rr
-      extrapolation = FALSE
+      fn_rr <- acute_pancreatitis_f_rr
     }
-    else if(Gender == "Female") {
-      # print("Function == Spline & IM != 6.3 & Gender == Female")
-      tmp_rr <- hypertension_f_rr
-      extrapolation = FALSE
+    else if(GENDER == "Female") {
+      fn_rr <- hypertension_f_rr
     }
     else {
-      tmp_rr <- hypertension_m_rr
+      fn_rr <- hypertension_m_rr
     }
   }
-
-  fn_rr <- function(x) {
-    x1 <- extrapolate_using[[1]]
-    x2 <- extrapolate_using[[2]]
-    y1 <- tmp_rr(x1)
-    y2 <- tmp_rr(x2)
-    slope <- ifelse(extrapolation, (y2-y1)/(x2-x1), 0)
-    return(((0 < x) & (x < x2))*tmp_rr(x) + (x2 < x)*(y2 + slope*(x-x2)))
-  }
-
-
-  # Set BD function
-  fn_bd <- fn_rr
-  if(BingeF != ".") {
-    fn_bd <- function(x) as.numeric(BingeF)*tmp_rr(x)
-  }
-  if(IM == "(5).(2)" | IM == "(5).(6)"){
-    fn_bd <- function(x) pmax(1,tmp_rr(x))
-  }
-
-  # print(ggplot(data = data.frame(x=0), mapping = aes(x=x)) +
-  #          stat_function(fun = fn_rr) +
-  #          xlim(0.03, 250))
   force(fn_rr)
-  force(fn_bd)
-  list(row[1:4],RR_FD, fn_rr, fn_bd)
+  fn_rr
 }
 
+#' Produce an extrapolation-modified relative risk curve
+#'
+#'@description given a relative risk curve and some metadata, produces a
+#'  risk curve that has the desired extrapolation behaviour beyond 150 g/day,
+#'  or 100 g/day for IHD.
+#'
+#'@param rr_specs a list that contains the string variables IM and GENDER, and
+#'  the logical EXT
+#'@param rr_fn a relative risk curve
+#'
+#'@return a function whose values above 150 (100 for IHD) are linearly
+#'  extrapolated (see InterMAHP guide for details)
+#'
 
+ext_rr <- function(rr_specs, fn_rr) {
+  IM <- rr_specs[["IM"]]
+  GENDER <- rr_specs[["GENDER"]]
+  EXT <- rr_specs[["EXT"]]
+  if(GENDER == "Female" & (IM %in% c("(5).(1)", "(6).(3)"))) {
+    EXT <- FALSE
+  }
 
-#' Get a list of Former Drinker Relative Risks, Relative Risk Curves, and Binge
-#' Risk Curves
-#'
-#'@param RR A data table of relative risk information formatted as demanded in
-#'           the InterMAHP comprehensive guide
-#'
-#'@param extrapolation Either TRUE(linear) or FALSE(capped) used for
-#'                     extrapolating the RR after 150 (100 for IHD)
-#'
-#'
-#'
-#'
+  x1 <- 100 + ifelse(IM == "(5).(2)", -50, 0)
+  x2 <- 150 + ifelse(IM == "(5).(2)", -50, 0)
+  y1 <- fn_rr(x1)
+  y2 <- fn_rr(x2)
+  slope <- ifelse(EXT, (y2-y1)/(x2-x1), 0)
 
-deduce_relative_risk_curves_from_rr <- function(RR = intermahpr::rr_default,
-                                                x_in = TRUE) {
-    RR$extrapolation <- x_in
-    apply(RR, 1, rr_chooser)
+  lin_ext <- function(x) {
+    y2 + slope*(x-x2)
+  }
+
+  extrapolated <- function(x) {
+    ((0 < x) & (x < x2))*fn_rr(x) + (x2 < x)*lin_ext(x)
+  }
+
+  extrapolated
 }
 
-generate_relative_risk_plots <- function(RR = intermahpr::rr_default,
-                                         x_in = TRUE) {
-  curves <- deduce_relative_risk_curves_from_rr(RR, x_in)
+#' Produce a Relative-Risk-For-Bingers curve from the given input
+#'
+#'@description given a list that contains the string variable IM and the double
+#'  variable BINGEF, produces a Relative-Risk-For-Bingers curve.  IM is used for
+#'  the curves for IHD and ischaemic stroke, where any protective J-shape is
+#'  forfeited by bingers.  All curves are then multiplied by BINGEF which has
+#'  the value of 1 in all cases except for condition classes 7, 8, 9, which
+#'  account for motor vehicle collisions, unintentional injuries, and
+#'  intentional injuries.
+#'
+#'@param rr_specs a list that contains the string variables IM and the double
+#'  BINGEF
+#'@param rr_fn a relative risk curve
+#'
+
+bng_rr <- function(rr_specs, fn_rr) {
+  IM <- rr_specs[["IM"]]
+  BINGEF <- rr_specs[["IM"]]
+  tmp_rr <- fn_rr
+  if(IM %in% c("(5).(2)","(5).(5)")) {
+    tmp_rr <- function(x) pmax(1, fn_rr(x))
+  }
+  bd_rr <- function(x) BINGEF*tmp_rr(x)
+  bd_rr
+}
+
+#' Compile a list of RR functions
+#'
+#' @param R a list that contains the string variables IM, GENDER, and FUNCTION,
+#' sixteen double variables B1 through B16, the logical EXT, and the double
+#' BINGEF.
+#'
+
+compile_rr <- function(R) {
+  list("BASE_RR" = set_rr(R),
+       "LNXT_RR" = ext_rr(R, set_rr(R)),
+       "BNGD_RR" = bng_rr(R, set_rr(R)))
 }
 
 #' Default Relative Risk Curve Defintion
 #'
-#' Default input to generate relative risk curves.  Standard formatting is descr
-#' ibed in the InterMAHP user guides
+#' Default input to generate relative risk curves.  Standard formatting is
+#' described in the InterMAHP user guides
 #'
 #'@docType data
 #'@usage data(rr_default)

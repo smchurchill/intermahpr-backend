@@ -9,7 +9,7 @@
 data(rr_default)
 }
 \description{
-Default input to generate relative risk curves.  Standard formatting is descr
-ibed in the InterMAHP user guides
+Default input to generate relative risk curves.  Standard formatting is
+described in the InterMAHP user guides
 }
 \keyword{datasets}

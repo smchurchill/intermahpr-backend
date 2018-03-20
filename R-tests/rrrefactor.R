@@ -1,5 +1,31 @@
 library(tidyverse)
 
+RR <- rr_default
+RRV <- format_v0_rr(RR)
+RRV[, "EXT"] <- TRUE
+RRV
+
+RRB <- apply(RRV, 1, function(obs) compile_rr(obs))
+RRB
+
+RRV["CURVES"] <- RRB
+RRV["CURVES"][[1]]
+
+str(RRB)
+
+
+PC <- pc_default
+PCV <- format_v0_pc(PC)
+PCS <- derive_v0_pc(PCV)
+PCS[,-c(1,2,4:16)]
+
+
+
+RRS[[1]][[1]][["GENDER"]]
+
+
+
+
 D <- intermahpr::rr_default
 E <- data.frame(D)
 G <- as.tibble(E)

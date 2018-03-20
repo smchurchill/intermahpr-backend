@@ -7,8 +7,8 @@
 fp_rr(B)
 }
 \arguments{
-\item{B}{The numeric vector of Beta values needed to produce a fractional poly
-nomial}
+\item{B}{The numeric vector of Beta values needed to produce a fractional
+polynomial}
 }
 \description{
 Get Fractional Polynomial Relative Risk Function
