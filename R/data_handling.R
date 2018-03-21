@@ -1,3 +1,5 @@
+#### Handle missing data -------------------------------------------------------
+
 #' What value is imputed when a variable is missing?
 #'
 #' In order to normalize code in future methods, missing data is removed either
@@ -31,18 +33,20 @@ is.missing <- function(obs) {
   is.na(obs) | is.null(obs) | obs == "."
 }
 
+#### Verify and wrangle data ---------------------------------------------------
+
 #' Format relative risk input data to our desired specifications
 #'
 
-format_v0_rr <- function(RR_in) {
-  RR <- tibble::as.tibble(RR_in)
+format_v0_rr <- function(rr) {
+  RR <- tibble::as.tibble(rr)
   names(RR) <- do.call(stringr::str_to_upper, list(names(RR)))
-  betas <- do.call(paste0, list(rep("B", 16), 1:16))
-  expected_var <- c("IM", "CONDITION", "GENDER", "OUTCOME", "RR_FD", "BINGEF",
-                    "FUNCTION", betas)
-  missing_var <- expected_var[!(expected_var %in% names(RR))]
+  BETAS <- do.call(paste0, list(rep("B", 16), 1:16))
+  EXPECTED <- c("IM", "CONDITION", "GENDER", "OUTCOME", "RR_FD", "BINGEF",
+                    "FUNCTION", BETAS)
+  MISSING <- EXPECTED[!(EXPECTED %in% names(RR))]
 
-  RR[, missing_var] <- NA
+  RR[, MISSING] <- NA
 
   for(var in names(RR)) {
     RR[var][is.missing(RR[var])] <- impute_with(var)
@@ -50,8 +54,6 @@ format_v0_rr <- function(RR_in) {
 
   RR <- readr::type_convert(RR)
 }
-
-
 
 #' Format prevalence and consumption input data to our desired specifications
 #'
@@ -74,25 +76,24 @@ format_v0_rr <- function(RR_in) {
 #'    Age Group
 #'
 
-
-format_v0_pc <- function(PC_in) {
-  PC <- tibble::as.tibble(PC_in)
+format_v0_pc <- function(pc) {
+  PC <- tibble::as.tibble(pc)
   names(PC) <- do.call(stringr::str_to_upper, list(names(PC)))
 
 
-  expected_var <- c("REGION", "YEAR", "GENDER", "AGE_GROUP", "POPULATION",
+  EXPECTED <- c("REGION", "YEAR", "GENDER", "AGE_GROUP", "POPULATION",
                     "PCC_LITRES_YEAR", "CORRECTION_FACTOR",
                     "RELATIVE_CONSUMPTION", "P_LA", "P_FD", "P_CD", "P_BD")
-  missing_var <- expected_var[!(expected_var %in% names(PC))]
-  needed_var <- expected_var[c(3,5:12)]
-  missing_and_needed <- intersect(missing_var, needed_var)
-  if(length(missing_and_needed) > 0) {
+  MISSING <- EXPECTED[!(EXPECTED %in% names(PC))]
+  NEEDED <- EXPECTED[c(3,5:12)]
+  MISSING_NEEDED <- intersect(MISSING, NEEDED)
+  if(length(MISSING_NEEDED) > 0) {
     stop(paste0("Missing and needed variables from the supplied prevalence/",
                 "consumption sheet: "),
-                paste(missing_and_needed, collapse = ", "))
+                paste(MISSING_NEEDED, collapse = ", "))
   }
 
-  PC[, missing_var] <- NA
+  PC[, MISSING] <- NA
 
   for(var in names(PC)) {
     PC[var][is.missing(PC[var])] <- impute_with(var)
@@ -101,6 +102,29 @@ format_v0_pc <- function(PC_in) {
   readr::type_convert(PC)
 }
 
+#### Process formatted data ----------------------------------------------------
+
+#' Derives relative risk curves from relative risk data
+#'
+#'@param rr tibble as formatted above
+#'@param ext logical indicator of extrapolation, (TRUE = linear, FALSE = capped)
+#'
+#'@return tibble which is RR with an additional column that contains all
+#'  relevent relative risk curves under the variable CURVES. The CURVES variable
+#'  has the following structure:
+#'    RR[["CURVES"]][[i]] is a list
+#'    RR[["CURVES"]][[i]][["BASE_RR"]] is the base relative risk function (i.e.
+#'      no extrapolation after 100/150)
+#'    RR[["CURVES"]][[i]][["LNXT_RR"]] is the extrapolated relative risk curve
+#'    RR[["CURVES"]][[i]][["BNGD_RR"]] is the extrapolated relative risk curve
+#'      for binge drinkers
+
+derive_v0_rr <- function(rr, ext) {
+  rr[, "EXT"] <- ext
+  RR_FN_LIST <- list(apply(rr, 1, function(obs) compile_rr(obs)))
+  rr["CURVES"] <- RR_FN_LIST
+  rr
+}
 
 
 #' Derives probability distribution parameters from Prevalence and Consumption
@@ -115,12 +139,15 @@ format_v0_pc <- function(PC_in) {
 #' Gamma parameters are derivable entirely from prevalence and consumption,
 #' no additional input is necessary.
 #'
-#'@param PC_in is assumed type tibble with names(PC_in) = c(YEAR, REGION, GENDER
+#'@param PC is assumed type tibble with names(PC) = c(YEAR, REGION, GENDER
 #' , AGE_GROUP, POPULATION, PCC_LITRES_YEAR, CORRECTION_FACTOR,
 #' RELATIVE_CONSUMPTION, P_LA, P_FD, P_CD, P_BD).
 #' This function is internally called only, not exported.
 #'
 #' Note that the bundled data set pc_default satisfies these constraints.
+#'
+#'@param bb User supplied gender stratified binge barrier
+#'@param lb
 #'
 #' Constants used:
 #'  0.002739726 = 1/365
@@ -150,12 +177,11 @@ format_v0_pc <- function(PC_in) {
 #'@importFrom dplyr group_by mutate
 #'
 
-
-derive_v0_pc <- function(PC_in,
+derive_v0_pc <- function(pc,
                          bb = c(53.8, 67.25),
                          lb = c(0.03, 0.03),
                          ub = c(250,  250)) {
-  PC <- PC_in %>%
+  PC <- pc %>%
     group_by(REGION, YEAR) %>%
     mutate(PCC_G_DAY = PCC_LITRES_YEAR * 1000 *
              0.7893 * CORRECTION_FACTOR * 0.002739726,
@@ -206,16 +232,62 @@ derive_v0_pc <- function(PC_in,
   PC
 }
 
-#' Default Prevalence and Consumption Data
+#### Add AAF computing functions -----------------------------------------------
+
+#' Prepares PC and RR data for use in AAF methods
 #'
-#' Default prevalence and consumption data from BC and Canada, 2015.input to
-#' generate relative risk curves.  Standard formatting is described in the
-#' InterMAHP user guides
+#'@description Performs a full_join of RR and PC over GENDER and adds N_GAMMA
+#'  (Normalized GAMMA distribution) function to the CURVES list (N_GAMMA defined
+#'  as DF*gamma(x,shape,scale))
 #'
-#' @docType data
+#'@param RR relative risk tibble as produced by derive_v*_rr
+#'@param PC prevalence and consumption tibble as produced by derive_v*_pc
 #'
-#' @usage data(pcr_default)
+#'@return tibble with one row per unique region.year.gender.age_group.im combn
 #'
+
+join_pc_rr <- function(pc, rr) {
+  JOINT <- inner_join(pc, rr, by = "GENDER")
+  JOINT[["CURVES"]][[, "N_GAMMA"]] <- function(x) 0
+  for(n in 1:nrow(JOINT)) {
+    DF <- JOINT[["DF"]][[n]]
+    GAMMA_SHAPE <- JOINT[["GAMMA_SHAPE"]][[n]]
+    GAMMA_SCALE <- JOINT[["GAMMA_SCALE"]][[n]]
+    N_GAMMA <- function(x) {
+      DF * dgamma(x, shape = GAMMA_SHAPE, scale = GAMMA_SCALE)
+    }
+    JOINT[["CURVES"]][[n]][["N_GAMMA"]] <- N_GAMMA
+  }
+}
+
+#' Obtains AAF computing functions for each observation
 #'
-"pc_default"
+#'@param JOINT tibble as produced by join_pc_rr
+#'
+#'@return tibble with additional variable AAF_FD and CURVES variable wherein
+#'  each list contains the additional curve INTGRND and function AAF_CMP.
+#'  INTGRND is described in int_factory and AAF_CMP is described in aaf_factory.
+#'
+
+add_aaf_fns <- function(joint) {
+  joint[["CURVES"]][[, "INTGRND"]] <- function(x) 0
+  INTGRND_LIST <- apply(joint, 1, function(obs) int_factory(obs))
+  for(n in 1:nrow(joint)) {
+
+  }
+
+
+  joint[["CURVES"]][[, "AAF_CMP"]] <- function(a,b) 0
+
+  joint[["CURVES"]][[, "INTGRND"]] <- function(x) 0
+
+
+
+  for(n in 1:nrow(joint)) {
+
+  }
+
+
+  joint[["CURVES"]][[, "AAF_CMP"]] <- function(a,b) 0
+}
 

@@ -5,7 +5,7 @@
 
 
 hiv_f_rr <- function(x) {
-  ((0<x)&(x<49))*1 + (x>=49)*1.54
+  ((0 < x) & (x < 49))*1 + (x >= 49)*1.54
 }
 
 #' Special Male HIV Relative Risk Function
@@ -15,7 +15,7 @@ hiv_f_rr <- function(x) {
 
 
 hiv_m_rr <- function(x) {
-  ((0<x)&(x<61))*1 + (x>=61)*1.54
+  ((0 < x) & (x < 61))*1 + (x >= 61)*1.54
 }
 
 #' Special Spline Female Hypertension Relative Risk Function
@@ -27,19 +27,18 @@ hiv_m_rr <- function(x) {
 #'
 
 hypertension_f_rr <- function(x){
-
-  spline =
-    (x<75)*(
-      (x> 0)*0*x +
-        (x>18.9517)*(
+  SPLINE =
+    (x < 75)*(
+      (x > 0)*0*x +
+        (x > 18.9517)*(
           -0.0154196*x +
             0.0217586*(
               x^3 + 1*(x-20)^3 - 2*(x-10)^3
             )*0.0025
         )
     )+
-    (x>=75)*(0.9649937)
-  exp(spline)
+    (x >= 75)*(0.9649937)
+  exp(SPLINE)
 }
 
 #' Special Spline Male Hyptertension Relative Risk Function
@@ -51,15 +50,15 @@ hypertension_f_rr <- function(x){
 #'
 
 hypertension_m_rr <- function(x){
-  spline =
-    (x>0)*(0.0150537*x -
+  SPLINE =
+    (x > 0)*(0.0150537*x -
              0.0156155*(
                x^3 +
-                 (x>=75)*(21*(x-75)^3)*0.01851852 -
-                 (x>=21)*(75*(x-21)^3)*0.01851852
+                 (x >= 75)*(21*(x-75)^3)*0.01851852 -
+                 (x >= 21)*(75*(x-21)^3)*0.01851852
              )*0.0001777778
     )
-  exp(spline)
+  exp(SPLINE)
 }
 
 #' Special Spline Female Acute Pancreatitis Relative Risk Function
@@ -73,15 +72,15 @@ hypertension_m_rr <- function(x){
 
 acute_pancreatitis_f_rr <- function(x){
   spline =
-    (x<108)*(
-      (x>0)*(-0.0272886)*x +
+    (x < 108)*(
+      (x > 0)*(-0.0272886)*x +
         0.0611466*(
-          (x>= 3)*((x-3)^3)+
-            (x>=40)*(12*((x-40)^3)*0.04)-
-            (x>=15)*(37*((x-15)^3)*0.04)
+          (x >= 3)*((x-3)^3)+
+            (x >= 40)*(12*((x-40)^3)*0.04)-
+            (x >= 15)*(37*((x-15)^3)*0.04)
         )*0.0007304602
     )+
-    (x>=108)*(2.327965)
+    (x >= 108)*(2.327965)
   exp(spline)
 }
 
@@ -93,30 +92,30 @@ acute_pancreatitis_f_rr <- function(x){
 
 
 
-fp_rr <- function(B) {
-  force(B)
-  function(y){
-    M = matrix(0,length(y),16)
-    sqrty = sqrt(y)
-    logy = log(y)
-    ry = 1 / y
-    rsqrty = 1/sqrty
-    if(B[[1]]!=0) {M[,1] = B[[1]] *(ry*ry)             }
-    if(B[[2]]!=0) {M[,2] = B[[2]] *(ry)                }
-    if(B[[3]]!=0) {M[,3] = B[[3]] *(rsqrty)            }
-    if(B[[4]]!=0) {M[,4] = B[[4]] *(logy)              }
-    if(B[[5]]!=0) {M[,5] = B[[5]] *(sqrty)             }
-    if(B[[6]]!=0) {M[,6] = B[[6]] *y                   }
-    if(B[[7]]!=0) {M[,7] = B[[7]] *y*y                 }
-    if(B[[8]]!=0) {M[,8] = B[[8]] *y*y*y               }
-    if(B[[9]]!=0) {M[,9] = B[[9]] *ry*ry*logy          }
-    if(B[[10]]!=0){M[,10]= B[[10]]*ry*logy             }
-    if(B[[11]]!=0){M[,11]= B[[11]]*(rsqrty)*logy       }
-    if(B[[12]]!=0){M[,12]= B[[12]]*(logy^2)            }
-    if(B[[13]]!=0){M[,13]= B[[13]]*sqrty*logy          }
-    if(B[[14]]!=0){M[,14]= B[[14]]*y*logy              }
-    if(B[[15]]!=0){M[,15]= B[[15]]*y*y*logy            }
-    if(B[[16]]!=0){M[,16]= B[[16]]*y*y*y*logy          }
+fp_rr <- function(betas) {
+  force(betas)
+  function(x) {
+    M = matrix(0,length(x),16)
+    sqrtx = sqrt(x)
+    logx = log(x)
+    rx = 1 / x
+    rsqrtx = 1/sqrtx
+    if(betas[[1]]!=0) {M[,1] = betas[[1]] *rx*rx       }
+    if(betas[[2]]!=0) {M[,2] = betas[[2]] *rx          }
+    if(betas[[3]]!=0) {M[,3] = betas[[3]] *rsqrtx      }
+    if(betas[[4]]!=0) {M[,4] = betas[[4]] *logx        }
+    if(betas[[5]]!=0) {M[,5] = betas[[5]] *sqrtx       }
+    if(betas[[6]]!=0) {M[,6] = betas[[6]] *x           }
+    if(betas[[7]]!=0) {M[,7] = betas[[7]] *x*x         }
+    if(betas[[8]]!=0) {M[,8] = betas[[8]] *x*x*x       }
+    if(betas[[9]]!=0) {M[,9] = betas[[9]] *rx*rx*logx  }
+    if(betas[[10]]!=0){M[,10]= betas[[10]]*rx*logx     }
+    if(betas[[11]]!=0){M[,11]= betas[[11]]*rsqrtx*logx }
+    if(betas[[12]]!=0){M[,12]= betas[[12]]*logx*logx   }
+    if(betas[[13]]!=0){M[,13]= betas[[13]]*sqrtx*logx  }
+    if(betas[[14]]!=0){M[,14]= betas[[14]]*x*logx      }
+    if(betas[[15]]!=0){M[,15]= betas[[15]]*x*x*logx    }
+    if(betas[[16]]!=0){M[,16]= betas[[16]]*x*x*x*logx  }
     exp(rowSums(M))
   }
 }
@@ -145,34 +144,34 @@ set_rr <- function(rr_specs) {
   IM <- rr_specs[["IM"]]
   GENDER <- rr_specs[["GENDER"]]
   FUNCTION <- rr_specs[["FUNCTION"]]
-  betas <- do.call(paste0, list(rep("B", 16), 1:16))
-  BETAS <- as.numeric(rr_specs[betas])
-  fn_rr <- function(x) {0}
+  B_INDEX <- do.call(paste0, list(rep("B", 16), 1:16))
+  BETAS <- as.numeric(rr_specs[B_INDEX])
+  FN_RR <- function(x) {0}
 
   if(FUNCTION == "FP"){
-    fn_rr <- fp_rr(BETAS)
+    FN_RR <- fp_rr(BETAS)
   }
 
   if(FUNCTION == "Step" & GENDER == "Female") {
-    fn_rr <- hiv_f_rr
+    FN_RR <- hiv_f_rr
   }
   if(FUNCTION == "Step" & GENDER == "Male") {
-    fn_rr <- hiv_m_rr
+    FN_RR <- hiv_m_rr
   }
 
   if(FUNCTION == "Spline") {
     if(IM == "(6).(3)") {
-      fn_rr <- acute_pancreatitis_f_rr
+      FN_RR <- acute_pancreatitis_f_rr
     }
     else if(GENDER == "Female") {
-      fn_rr <- hypertension_f_rr
+      FN_RR <- hypertension_f_rr
     }
     else {
-      fn_rr <- hypertension_m_rr
+      FN_RR <- hypertension_m_rr
     }
   }
-  force(fn_rr)
-  fn_rr
+  force(FN_RR)
+  FN_RR
 }
 
 #' Produce an extrapolation-modified relative risk curve
@@ -197,21 +196,21 @@ ext_rr <- function(rr_specs, fn_rr) {
     EXT <- FALSE
   }
 
-  x1 <- 100 + ifelse(IM == "(5).(2)", -50, 0)
-  x2 <- 150 + ifelse(IM == "(5).(2)", -50, 0)
-  y1 <- fn_rr(x1)
-  y2 <- fn_rr(x2)
-  slope <- ifelse(EXT, (y2-y1)/(x2-x1), 0)
+  X1 <- 100 + ifelse(IM == "(5).(2)", -50, 0)
+  X2 <- 150 + ifelse(IM == "(5).(2)", -50, 0)
+  Y1 <- fn_rr(X1)
+  Y2 <- fn_rr(X2)
+  SLOPE <- ifelse(EXT, (Y2-Y1)/(X2-X1), 0)
 
-  lin_ext <- function(x) {
-    y2 + slope*(x-x2)
+  LINE <- function(x) {
+    Y2+ SLOPE*(x-X2)
   }
 
-  extrapolated <- function(x) {
-    ((0 < x) & (x < x2))*fn_rr(x) + (x2 < x)*lin_ext(x)
+  EXTRAPOLATED <- function(x) {
+    ((0 < x) & (x < X2))*fn_rr(x) + (X2 < x)*LINE(x)
   }
 
-  extrapolated
+  EXTRAPOLATED
 }
 
 #' Produce a Relative-Risk-For-Bingers curve from the given input
@@ -230,36 +229,13 @@ ext_rr <- function(rr_specs, fn_rr) {
 #'
 
 bng_rr <- function(rr_specs, fn_rr) {
+  print(rr_specs)
   IM <- rr_specs[["IM"]]
-  BINGEF <- rr_specs[["IM"]]
-  tmp_rr <- fn_rr
+  BINGEF <- rr_specs[["BINGEF"]]
+  TMP_RR <- fn_rr
   if(IM %in% c("(5).(2)","(5).(5)")) {
-    tmp_rr <- function(x) pmax(1, fn_rr(x))
+    TMP_RR <- function(x) pmax(1, fn_rr(x))
   }
-  bd_rr <- function(x) BINGEF*tmp_rr(x)
-  bd_rr
+  BD_RR <- function(x) BINGEF*TMP_RR(x)
+  BD_RR
 }
-
-#' Compile a list of RR functions
-#'
-#' @param R a list that contains the string variables IM, GENDER, and FUNCTION,
-#' sixteen double variables B1 through B16, the logical EXT, and the double
-#' BINGEF.
-#'
-
-compile_rr <- function(R) {
-  list("BASE_RR" = set_rr(R),
-       "LNXT_RR" = ext_rr(R, set_rr(R)),
-       "BNGD_RR" = bng_rr(R, set_rr(R)))
-}
-
-#' Default Relative Risk Curve Defintion
-#'
-#' Default input to generate relative risk curves.  Standard formatting is
-#' described in the InterMAHP user guides
-#'
-#'@docType data
-#'@usage data(rr_default)
-#'
-#'
-"rr_default"
