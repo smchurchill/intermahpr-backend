@@ -1,5 +1,6 @@
 library(tidyverse)
 
+
 RR <- rr_default
 RRV <- format_v0_rr(RR)
 RRV[, "EXT"] <- TRUE
@@ -7,49 +8,57 @@ RRV[, "EXT"] <- TRUE
 
 RRV
 
-allocate_as_fn <- function(in_data, var_name) {
-  in_data[, var_name] <- list(list(var_name = function() var_name))
-}
 
-CURVE_LIST <- c("BASE_RR", "LNXT_RR", "BNGD_RR",
-                "N_GAMMA", "INTGRND", "AAF_CMP")
 
-RRR <- Reduce(f = allocate_as_fn, x = CURVE_LIST, init = RRV)
-
-RRV[, "BASE_RR"] <- list(list("BASE_RR" = function(x) 0))
-RRV[, "LNXT_RR"] <- list(list("LNXT_RR" = function(x) 0))
-RRV[, "BNGD_RR"] <- list(list("BNGD_RR" = function(x) 0))
-
-RRV[, c("BASE_RR", "LNXT_RR", "BNGD_RR")]
+RRV <- add_column(RRV,
+                  BASE_RR = zero,
+                  LNXT_RR = zero,
+                  BNGD_RR = zero)
 
 for(n in 1:nrow(RRV)) {
-  RRV[n, "BASE_RR"] <- set_rr(RRV[n,])
-  RRV[n, "CURVES"][["LNXT_RR"]] <- ext_rr(RRV[n,], set_rr(RRV[n,]))
-  RRV[n, "CURVES"][["BNGD_RR"]] <- bng_rr(RRV[n,], set_rr(RRV[n,]))
+  base <- set_rr(RRV[n,])
+  lnxt <- ext_rr(RRV[n,], base)
+  bngd <- bng_rr(RRV[n,], lnxt)
+  RRV[[n, "BASE_RR"]] <- base
+  RRV[[n, "LNXT_RR"]] <- lnxt
+  RRV[[n, "BNGD_RR"]] <- bngd
 }
 
-
-RRB <- RRV %>%
-  mutate()
-
-  list(apply(RRV, 1, function(obs) compile_rr(obs)))
-# RRB
-
-RRV["CURVES"] <- RRB
-RRV["CURVES"][[1]]
 
 PC <- pc_default
 PCV <- format_v0_pc(PC)
 PCS <- derive_v0_pc(PCV)
 
+View(PCS)
+
 JOINED <- PCS %>%
   full_join(RRV)
 
-cmp <- compile_aaf(JOINED[1,])
+for(n in 1:nrow(JOINED)) {
+  integrand <- integrand_factory(JOINED[n, ])
+  JOINED[[n, "INTGRND"]] <- integrand
+  aaf_computer <- aaf_factory(JOINED[n, ])
+  JOINED[[n, "AAF_CMP"]] <- aaf_computer
+  JOINED[[n, "AAF_FD"]] <- aaf_fd(JOINED[n, ])
+}
 
 
+View(JOINED)
 
-PCS[,-c(1,2,4:16)]
+PIN <- 200
+
+ggplot(data = data.frame(x=0), mapping = aes(x=x)) +
+  stat_function(fun = JOINED[[PIN, "INTGRND"]]) +
+  xlim(0.03,250) +
+  labs(title = paste(JOINED[[PIN, "CONDITION"]],
+                     JOINED[[PIN, "GENDER"]],
+                     JOINED[[PIN, "AGE_GROUP"]],
+                     JOINED[[PIN, "YEAR"]],
+                     JOINED[[PIN, "REGION"]]))
+
+JOINED[1, "N_GAMMA"]
+
+View(unnested)
 
 
 for(n in 1:nrow(JOINED)) {

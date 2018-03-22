@@ -1,3 +1,5 @@
+#### Relative Risk Curves ------------------------------------------------------
+
 #' Special Female HIV Relative Risk Function
 #'
 #'@param x A vector of x values at which to evaluate the RR function
@@ -120,6 +122,8 @@ fp_rr <- function(betas) {
   }
 }
 
+#### Curve choosers and modifiers ----------------------------------------------
+
 #' Choose which relative risk function is appropriate from the given input
 #'
 #'@description Given a list that contains the string variables IM, GENDER, and
@@ -134,8 +138,11 @@ fp_rr <- function(betas) {
 #'  extraordinary, a relative risk function will still be produced even if
 #'  Gender/IM are imputed by intermahpr.
 #'
-#'@param rr_specs a list that contains the string variables IM, GENDER, and
-#'  FUNCTION, and sixteen double variables B1 through B16
+#'@param rr_specs is a tibble that contains the variables:
+#'  IM: chr
+#'  GENDER: chr
+#'  FUNCTION: chr
+#'  B1-B16: dbl
 #'
 #'@return a function object that describes a base relative risk curve
 #'
@@ -180,26 +187,29 @@ set_rr <- function(rr_specs) {
 #'  risk curve that has the desired extrapolation behaviour beyond 150 g/day,
 #'  or 100 g/day for IHD.
 #'
-#'@param rr_specs a list that contains the string variables IM and GENDER, and
-#'  the logical EXT
-#'@param rr_fn a relative risk curve
+#'@param rr_specs is a tibble that contains the variables:
+#'  IM: chr
+#'  GENDER: chr
+#'  EXT: lgl
 #'
 #'@return a function whose values above 150 (100 for IHD) are linearly
 #'  extrapolated (see InterMAHP guide for details)
 #'
 
-ext_rr <- function(rr_specs, fn_rr) {
+ext_rr <- function(rr_specs) {
   IM <- rr_specs[["IM"]]
   GENDER <- rr_specs[["GENDER"]]
   EXT <- rr_specs[["EXT"]]
+  FN_RR <- rr_specs[["BASE_RR"]][[1]]
+
   if(GENDER == "Female" & (IM %in% c("(5).(1)", "(6).(3)"))) {
     EXT <- FALSE
   }
 
   X1 <- 100 + ifelse(IM == "(5).(2)", -50, 0)
   X2 <- 150 + ifelse(IM == "(5).(2)", -50, 0)
-  Y1 <- fn_rr(X1)
-  Y2 <- fn_rr(X2)
+  Y1 <- FN_RR(X1)
+  Y2 <- FN_RR(X2)
   SLOPE <- ifelse(EXT, (Y2-Y1)/(X2-X1), 0)
 
   LINE <- function(x) {
@@ -207,7 +217,7 @@ ext_rr <- function(rr_specs, fn_rr) {
   }
 
   EXTRAPOLATED <- function(x) {
-    ((0 < x) & (x < X2))*fn_rr(x) + (X2 < x)*LINE(x)
+    ((0 < x) & (x < X2))*FN_RR(x) + (X2 < x)*LINE(x)
   }
 
   EXTRAPOLATED
@@ -223,18 +233,21 @@ ext_rr <- function(rr_specs, fn_rr) {
 #'  account for motor vehicle collisions, unintentional injuries, and
 #'  intentional injuries.
 #'
-#'@param rr_specs a list that contains the string variables IM and the double
-#'  BINGEF
-#'@param rr_fn a relative risk curve
+#'@param rr_specs is a tibble that contains the variables:
+#'  IM: chr
+#'  BINGEF: dbl
+#'
+#'@return a function whose values are binge modified.  This affects conditions
+#'  5.2 and 5.5, ischaemic heart disease and stroke respectively, by removing a
+#'  protective effect at low levels of consumption
 #'
 
-bng_rr <- function(rr_specs, fn_rr) {
-  print(rr_specs)
+bng_rr <- function(rr_specs) {
   IM <- rr_specs[["IM"]]
   BINGEF <- rr_specs[["BINGEF"]]
-  TMP_RR <- fn_rr
+  TMP_RR <- rr_specs[["LNXT_RR"]][[1]]
   if(IM %in% c("(5).(2)","(5).(5)")) {
-    TMP_RR <- function(x) pmax(1, fn_rr(x))
+    TMP_RR <- function(x) pmax(1, TMP_RR(x))
   }
   BD_RR <- function(x) BINGEF*TMP_RR(x)
   BD_RR

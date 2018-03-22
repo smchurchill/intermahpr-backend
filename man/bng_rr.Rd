@@ -4,13 +4,17 @@
 \alias{bng_rr}
 \title{Produce a Relative-Risk-For-Bingers curve from the given input}
 \usage{
-bng_rr(rr_specs, fn_rr)
+bng_rr(rr_specs)
 }
 \arguments{
-\item{rr_specs}{a list that contains the string variables IM and the double
-BINGEF}
-
-\item{rr_fn}{a relative risk curve}
+\item{rr_specs}{is a tibble that contains the variables:
+IM: chr
+BINGEF: dbl}
+}
+\value{
+a function whose values are binge modified.  This affects conditions
+ 5.2 and 5.5, ischaemic heart disease and stroke respectively, by removing a
+ protective effect at low levels of consumption
 }
 \description{
 given a list that contains the string variable IM and the double

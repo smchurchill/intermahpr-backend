@@ -4,13 +4,13 @@
 \alias{ext_rr}
 \title{Produce an extrapolation-modified relative risk curve}
 \usage{
-ext_rr(rr_specs, fn_rr)
+ext_rr(rr_specs)
 }
 \arguments{
-\item{rr_specs}{a list that contains the string variables IM and GENDER, and
-the logical EXT}
-
-\item{rr_fn}{a relative risk curve}
+\item{rr_specs}{is a tibble that contains the variables:
+IM: chr
+GENDER: chr
+EXT: lgl}
 }
 \value{
 a function whose values above 150 (100 for IHD) are linearly

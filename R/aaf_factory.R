@@ -1,25 +1,3 @@
-#' Factory for normalized gamma distributions
-#'
-#'@param aaf_specs is a tibble that contains the variables:
-#'  GAMMA_SHAPE: dbl
-#'  GAMMA_SCALE: dbl
-#'  DF: dbl
-#'
-#'@return a function object that repreents the normalized gamma distribution
-#'  (defined as defined as DF*gamma(x,shape,scale))
-#'
-
-normalized_gamma_factory <- function(aaf_specs) {
-  force(aaf_specs)
-  GAMMA_SHAPE <- aaf_specs[["GAMMA_SHAPE"]]
-  GAMMA_SCALE <- aaf_specs[["GAMMA_SCALE"]]
-  DF <- aaf_specs[["DF"]]
-  function(x) {
-    DF * dgamma(x, shape = GAMMA_SHAPE, scale = GAMMA_SCALE)
-  }
-}
-
-
 #' Factory for aaf integrands
 #'
 #'@description Given function data (gamma distribution specs, relative risk
@@ -32,28 +10,24 @@ normalized_gamma_factory <- function(aaf_specs) {
 #'  UB: dbl
 #'  R1: dbl
 #'  R2: dbl
-#'  CURVES:: list of functions:
-#'    BASE_RR
-#'    LNXT_RR
-#'    BNGD_RR
-#'    N_GAMMA
+#'  LNXT_RR: fn
+#'  BNGD_RR: fn
+#'  N_GAMMA: fn
 #'
 #'@return a function object that represents the generalized integrand found in
 #'  the generalized AAF computation outlined in the the InterMAHP user guide
 #'
 
-integrand_factory <- function(aaf_specs) {
+intgrnd_factory <- function(aaf_specs) {
   force(aaf_specs)
   BB <- aaf_specs[["BB"]]
   LB <- aaf_specs[["LB"]]
   UB <- aaf_specs[["UB"]]
   R1 <- aaf_specs[["R1"]]
   R2 <- aaf_specs[["R2"]]
-  CURVES <- aaf_specs[["CURVES"]][[1]]
-  BASE_RR <- CURVES[["BASE_RR"]]
-  LNXT_RR <- CURVES[["LNXT_RR"]]
-  BNGD_RR <- CURVES[["BNGD_RR"]]
-  N_GAMMA <- CURVES[["N_GAMMA"]]
+  LNXT_RR <- aaf_specs[["LNXT_RR"]][[1]]
+  BNGD_RR <- aaf_specs[["BNGD_RR"]][[1]]
+  N_GAMMA <- aaf_specs[["N_GAMMA"]][[1]]
   NB_INTEGRAND <- function(x) N_GAMMA(x) * (LNXT_RR(x) - 1)
   BD_INTEGRAND <- function(x) N_GAMMA(x) * (BNGD_RR(x) - 1)
   function(x) {
@@ -73,8 +47,7 @@ integrand_factory <- function(aaf_specs) {
 #'  UB: dbl
 #'  RR_FD: dbl
 #'  P_FD: dbl
-#'  CURVES: list
-#'    INTGRND: function
+#'  INTGRND: fn
 #'
 #'@return a function object that takes as input two values a, b such that
 #'  LB < a < b < UB and returns as output the alcohol attributable fraction for
@@ -82,13 +55,13 @@ integrand_factory <- function(aaf_specs) {
 #'  in the place and time REGION * YEAR (unused metadata).
 #'
 
-aaf_factory <- function(aaf_specs) {
+aaf_cmp_factory <- function(aaf_specs) {
   force(aaf_specs)
   LB <- aaf_specs[["LB"]]
   UB <- aaf_specs[["UB"]]
   RR_FD <- aaf_specs[["RR_FD"]]
   P_FD <- aaf_specs[["P_FD"]]
-  INTGRND <- aaf_specs[["CURVES"]][[1]][["INTGRND"]]
+  INTGRND <- aaf_specs[["INTGRND"]][[1]]
   CD_FACTOR <- integrate(INTGRND, lower = LB, upper = UB)$value
   FD_FACTOR <- P_FD * (RR_FD - 1)
   DENOMINATOR <- 1 + FD_FACTOR + CD_FACTOR
@@ -105,53 +78,25 @@ aaf_factory <- function(aaf_specs) {
 #'  aaf_fd computes the alcohol attributable fraction among former drinkers
 #'
 #'@param aaf_specs is a tibble that contains the variables:
-#'  RR_FD: dbl
+#'  LB: dbl
+#'  UB: dbl
 #'  P_FD: dbl
-#'  CURVES: list
-#'    INTGRND: function
+#'  RR_FD: dbl
+#'  INTGRND: fn
 #'
 #'@return double to be interpreted as a fraction
 #'
 
 aaf_fd <- function(aaf_specs) {
-  RR_FD <- aaf_specs[["RR_FD"]]
+  LB <- aaf_specs[["LB"]]
+  UB <- aaf_specs[["UB"]]
   P_FD <- aaf_specs[["P_FD"]]
-  INTGRND <- aaf_specs[["CURVES"]][[1]][["INTGRND"]]
+  RR_FD <- aaf_specs[["RR_FD"]]
+  INTGRND <- aaf_specs[["INTGRND"]][[1]]
   CD_FACTOR <- integrate(INTGRND, lower = LB, upper = UB)$value
   FD_FACTOR <- P_FD * (RR_FD - 1)
   DENOMINATOR <- 1 + FD_FACTOR + CD_FACTOR
   FRACTION <- FD_FACTOR / DENOMINATOR
   FRACTION
-}
-
-#' Compile a list of AAF functions and values
-#'
-#'@param aaf_specs is a tibble that contains the variables:
-#'  GAMMA_SHAPE: dbl
-#'  GAMMA_SCALE: dbl
-#'  DF: dbl
-#'  BB: dbl
-#'  LB: dbl
-#'  UB: dbl
-#'  R1: dbl
-#'  R2: dbl
-#'  RR_FD: dbl
-#'  P_FD: dbl
-#'  CURVES:: list of functions:
-#'    BASE_RR
-#'    LNXT_RR
-#'    BNGD_RR
-#'
-#'@return a list of the same structure as aaf_specs with no fields altered save
-#'  CURVES, which includes the functions N_GAMMA, INTGRND, and AAF_CMP and with
-#'  a new variable AAF_FD
-#'
-
-compile_aaf <- function(aaf_specs) {
-  aaf_specs[["CURVES"]][[1]][["N_GAMMA"]] <- normalized_gamma_factory(aaf_specs)
-  print(aaf_specs[["CURVES"]][[1]][["N_GAMMA"]])
-  aaf_specs[["CURVES"]][[1]][["INTGRND"]] <- integrand_factory(aaf_specs)
-  aaf_specs[["CURVES"]][[1]][["AAF_CMP"]] <- aaf_factory(aaf_specs)
-  aaf_specs[["AAF_FD"]] <- aaf_fd(aaf_specs)
 }
 

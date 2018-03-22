@@ -7,8 +7,11 @@
 set_rr(rr_specs)
 }
 \arguments{
-\item{rr_specs}{a list that contains the string variables IM, GENDER, and
-FUNCTION, and sixteen double variables B1 through B16}
+\item{rr_specs}{is a tibble that contains the variables:
+IM: chr
+GENDER: chr
+FUNCTION: chr
+B1-B16: dbl}
 }
 \value{
 a function object that describes a base relative risk curve

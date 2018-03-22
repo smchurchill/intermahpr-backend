@@ -121,8 +121,22 @@ format_v0_pc <- function(pc) {
 
 derive_v0_rr <- function(rr, ext) {
   rr[, "EXT"] <- ext
-  RR_FN_LIST <- list(apply(rr, 1, function(obs) compile_rr(obs)))
-  rr["CURVES"] <- RR_FN_LIST
+  rr <- add_column(rr,
+                   BASE_RR = zero,
+                   LNXT_RR = zero,
+                   BNGD_RR = zero)
+
+    for(n in 1:nrow(rr)) {
+    base <- set_rr(rr[n,])
+    rr[[n, "BASE_RR"]] <- base
+
+    lnxt <- ext_rr(rr[n,])
+    rr[[n, "LNXT_RR"]] <- lnxt
+
+    bngd <- bng_rr(rr[n,])
+    rr[[n, "BNGD_RR"]] <- bngd
+  }
+
   rr
 }
 
@@ -228,66 +242,74 @@ derive_v0_pc <- function(pc,
   }
   PC <- PC %>%
     mutate(R1 = (P_CD - P_BD)  / (P_CD - P_BAT),
-           R2 = (P_BD - P_BAT) / (P_CD - P_BAT))
+           R2 = (P_BD - P_BAT) / (P_CD - P_BAT),
+           AAF_FD = 0) %>%
+    add_column(N_GAMMA = zero,
+               INTGRND = zero,
+               AAF_CMP = zero)
+
+  for(n in 1:nrow(PC)) {
+    PC[[n, "N_GAMMA"]] <- normalized_gamma_factory(PC[n, ])
+  }
+
   PC
+}
+
+#' Factory for normalized gamma distributions
+#'
+#'@param pc_specs is a tibble that contains the variables:
+#'  GAMMA_SHAPE: dbl
+#'  GAMMA_SCALE: dbl
+#'  DF: dbl
+#'
+#'@return a function object that repreents the normalized gamma distribution
+#'  (defined as defined as DF*gamma(x,shape,scale))
+#'
+
+normalized_gamma_factory <- function(pc_specs) {
+  force(pc_specs)
+  GAMMA_SHAPE <- pc_specs[["GAMMA_SHAPE"]]
+  GAMMA_SCALE <- pc_specs[["GAMMA_SCALE"]]
+  DF <- pc_specs[["DF"]]
+  function(x) {
+    DF * dgamma(x, shape = GAMMA_SHAPE, scale = GAMMA_SCALE)
+  }
 }
 
 #### Add AAF computing functions -----------------------------------------------
 
-#' Prepares PC and RR data for use in AAF methods
+#' Joins PC and RR and obtains AAF functions
 #'
-#'@description Performs a full_join of RR and PC over GENDER and adds N_GAMMA
-#'  (Normalized GAMMA distribution) function to the CURVES list (N_GAMMA defined
-#'  as DF*gamma(x,shape,scale))
+#'@description Performs a full_join of RR and PC over GENDER and then obtains an
+#'  AAF function and AAF_FD computation for each observation
 #'
 #'@param RR relative risk tibble as produced by derive_v*_rr
 #'@param PC prevalence and consumption tibble as produced by derive_v*_pc
 #'
-#'@return tibble with one row per unique region.year.gender.age_group.im combn
+#'@return tibble with one row per unique region.year.gender.age_group.im combn,
+#'  an AAF_FD variable with alc.attr. fraction for former drinkers, and an
+#'  AAF_CMP variable that
 #'
 
 join_pc_rr <- function(pc, rr) {
   JOINT <- inner_join(pc, rr, by = "GENDER")
-  JOINT[["CURVES"]][[, "N_GAMMA"]] <- function(x) 0
+
   for(n in 1:nrow(JOINT)) {
-    DF <- JOINT[["DF"]][[n]]
-    GAMMA_SHAPE <- JOINT[["GAMMA_SHAPE"]][[n]]
-    GAMMA_SCALE <- JOINT[["GAMMA_SCALE"]][[n]]
-    N_GAMMA <- function(x) {
-      DF * dgamma(x, shape = GAMMA_SHAPE, scale = GAMMA_SCALE)
-    }
-    JOINT[["CURVES"]][[n]][["N_GAMMA"]] <- N_GAMMA
+    intgrnd <- intgrnd_factory(JOINT[n, ])
+    JOINT[[n, "INTGRND"]] <- intgrnd
+
+    aaf_cmp <- aaf_cmp_factory(JOINT[n, ])
+    JOINT[[n, "AAF_CMP"]] <- aaf_cmp
+
+    JOINT[[n, "AAF_FD"]] <- aaf_fd(JOINT[n, ])
   }
 }
 
-#' Obtains AAF computing functions for each observation
+#' Dummy function for allocating memory
 #'
-#'@param JOINT tibble as produced by join_pc_rr
+#'@param ... Accepts any input
 #'
-#'@return tibble with additional variable AAF_FD and CURVES variable wherein
-#'  each list contains the additional curve INTGRND and function AAF_CMP.
-#'  INTGRND is described in int_factory and AAF_CMP is described in aaf_factory.
-#'
+#'@return Always returns 0
 
-add_aaf_fns <- function(joint) {
-  joint[["CURVES"]][[, "INTGRND"]] <- function(x) 0
-  INTGRND_LIST <- apply(joint, 1, function(obs) int_factory(obs))
-  for(n in 1:nrow(joint)) {
-
-  }
-
-
-  joint[["CURVES"]][[, "AAF_CMP"]] <- function(a,b) 0
-
-  joint[["CURVES"]][[, "INTGRND"]] <- function(x) 0
-
-
-
-  for(n in 1:nrow(joint)) {
-
-  }
-
-
-  joint[["CURVES"]][[, "AAF_CMP"]] <- function(a,b) 0
-}
+zero <- list(fn = function(...) 0)
 

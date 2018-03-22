@@ -4,7 +4,7 @@
 \alias{fp_rr}
 \title{Get Fractional Polynomial Relative Risk Function}
 \usage{
-fp_rr(B)
+fp_rr(betas)
 }
 \arguments{
 \item{B}{The numeric vector of Beta values needed to produce a fractional
