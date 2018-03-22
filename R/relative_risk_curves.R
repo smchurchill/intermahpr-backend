@@ -148,6 +148,7 @@ fp_rr <- function(betas) {
 #'
 
 set_rr <- function(rr_specs) {
+  force(rr_specs)
   IM <- rr_specs[["IM"]]
   GENDER <- rr_specs[["GENDER"]]
   FUNCTION <- rr_specs[["FUNCTION"]]
@@ -177,7 +178,6 @@ set_rr <- function(rr_specs) {
       FN_RR <- hypertension_m_rr
     }
   }
-  force(FN_RR)
   FN_RR
 }
 
@@ -197,6 +197,7 @@ set_rr <- function(rr_specs) {
 #'
 
 ext_rr <- function(rr_specs) {
+  force(rr_specs)
   IM <- rr_specs[["IM"]]
   GENDER <- rr_specs[["GENDER"]]
   EXT <- rr_specs[["EXT"]]
@@ -243,12 +244,14 @@ ext_rr <- function(rr_specs) {
 #'
 
 bng_rr <- function(rr_specs) {
+  force(rr_specs)
   IM <- rr_specs[["IM"]]
   BINGEF <- rr_specs[["BINGEF"]]
   TMP_RR <- rr_specs[["LNXT_RR"]][[1]]
+  FNC_RR <- rr_specs[["LNXT_RR"]][[1]]
   if(IM %in% c("(5).(2)","(5).(5)")) {
-    TMP_RR <- function(x) pmax(1, TMP_RR(x))
+    FNC_RR <- function(x) pmax(1, TMP_RR(x))
   }
-  BD_RR <- function(x) BINGEF*TMP_RR(x)
+  BD_RR <- function(x) BINGEF*FNC_RR(x)
   BD_RR
 }

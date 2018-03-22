@@ -15,10 +15,10 @@ P_FD: dbl
 INTGRND: fn}
 }
 \value{
-a function object that takes as input two values a, b such that
- LB < a < b < UB and returns as output the alcohol attributable fraction for
- outcome OUTCOME due to condition CONDITION among cohort GENDER * AGE_GROUP
- in the place and time REGION * YEAR (unused metadata).
+a function object that takes as input a vector x of values >= 0.03 and
+ returns the alcohol attributable fraction between 0.03 and x for outcome
+ OUTCOME due to condition CONDITION among cohort GENDER * AGE_GROUP in the
+ place and time REGION * YEAR
 }
 \description{
 Given function data (gamma distribution specs, relative risk

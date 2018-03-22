@@ -33,6 +33,15 @@ is.missing <- function(obs) {
   is.na(obs) | is.null(obs) | obs == "."
 }
 
+#' Dummy function for allocating memory
+#'
+#'@param ... Accepts any input
+#'
+#'@return Always returns 0
+
+zero <- list(fn = function(...) 0)
+
+
 #### Verify and wrangle data ---------------------------------------------------
 
 #' Format relative risk input data to our desired specifications
@@ -189,6 +198,7 @@ derive_v0_rr <- function(rr, ext) {
 #'
 #'@importFrom magrittr "%>%"
 #'@importFrom dplyr group_by mutate
+#'@importFrom tibble add_column
 #'
 
 derive_v0_pc <- function(pc,
@@ -291,8 +301,27 @@ normalized_gamma_factory <- function(pc_specs) {
 #'  AAF_CMP variable that
 #'
 
+
 join_pc_rr <- function(pc, rr) {
-  JOINT <- inner_join(pc, rr, by = "GENDER")
+  JOINT <- dplyr::full_join(pc, rr, by = "GENDER")
+
+  if(any(is.na(JOINT))) {
+    MANGLED <- JOINT[rowSums(is.na(JOINT)) > 0,]
+    IGNORE <- MANGLED[, c("REGION", "YEAR", "GENDER",
+                        "AGE_GROUP", "IM", "CONDITION")]
+
+    ignore_message <- paste0(capture.output(IGNORE), collapse = "\n")
+
+    warning(paste0("\nNAs introduced by joining of prevalence and consumption ",
+                   "data with relative risk data.\nTo avoid this, ensure that",
+                   " the levels in the Gender column of prevalence and consump",
+                   "tion input match the levels in the Gender column of the re",
+                   "lative risk input exactly.\nThe following observations wi",
+                   "ll be ignored:\n", collapse = "\n"),
+            ignore_message)
+
+    JOINT <- JOINT[rowSums(is.na(JOINT)) == 0,]
+  }
 
   for(n in 1:nrow(JOINT)) {
     intgrnd <- intgrnd_factory(JOINT[n, ])
@@ -303,13 +332,7 @@ join_pc_rr <- function(pc, rr) {
 
     JOINT[[n, "AAF_FD"]] <- aaf_fd(JOINT[n, ])
   }
+
+  JOINT
 }
-
-#' Dummy function for allocating memory
-#'
-#'@param ... Accepts any input
-#'
-#'@return Always returns 0
-
-zero <- list(fn = function(...) 0)
 

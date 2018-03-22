@@ -49,10 +49,10 @@ intgrnd_factory <- function(aaf_specs) {
 #'  P_FD: dbl
 #'  INTGRND: fn
 #'
-#'@return a function object that takes as input two values a, b such that
-#'  LB < a < b < UB and returns as output the alcohol attributable fraction for
-#'  outcome OUTCOME due to condition CONDITION among cohort GENDER * AGE_GROUP
-#'  in the place and time REGION * YEAR (unused metadata).
+#'@return a function object that takes as input a vector x of values >= 0.03 and
+#'  returns the alcohol attributable fraction between 0.03 and x for outcome
+#'  OUTCOME due to condition CONDITION among cohort GENDER * AGE_GROUP in the
+#'  place and time REGION * YEAR
 #'
 
 aaf_cmp_factory <- function(aaf_specs) {
@@ -65,8 +65,11 @@ aaf_cmp_factory <- function(aaf_specs) {
   CD_FACTOR <- integrate(INTGRND, lower = LB, upper = UB)$value
   FD_FACTOR <- P_FD * (RR_FD - 1)
   DENOMINATOR <- 1 + FD_FACTOR + CD_FACTOR
-  function(a,b) {
-    NUMERATOR <- integrate(INTGRND, lower = a, upper = b)$value
+  function(x) {
+    integral_up_to <- function(up_to) {
+      integrate(INTGRND, lower = LB, upper = up_to)$value
+    }
+    NUMERATOR <- sapply(x, integral_up_to)
     FRACTION <- NUMERATOR / DENOMINATOR
     FRACTION
   }

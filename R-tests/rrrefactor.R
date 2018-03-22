@@ -1,64 +1,92 @@
-library(tidyverse)
-
+library(ggplot2)
 
 RR <- rr_default
-RRV <- format_v0_rr(RR)
-RRV[, "EXT"] <- TRUE
-# RRV
-
-RRV
-
-
-
-RRV <- add_column(RRV,
-                  BASE_RR = zero,
-                  LNXT_RR = zero,
-                  BNGD_RR = zero)
-
-for(n in 1:nrow(RRV)) {
-  base <- set_rr(RRV[n,])
-  lnxt <- ext_rr(RRV[n,], base)
-  bngd <- bng_rr(RRV[n,], lnxt)
-  RRV[[n, "BASE_RR"]] <- base
-  RRV[[n, "LNXT_RR"]] <- lnxt
-  RRV[[n, "BNGD_RR"]] <- bngd
-}
-
+RRF <- format_v0_rr(RR)
+RRD <- derive_v0_rr(RRF, TRUE)
 
 PC <- pc_default
-PCV <- format_v0_pc(PC)
-PCS <- derive_v0_pc(PCV)
+PCF <- format_v0_pc(PC)
+PCD <- derive_v0_pc(PCF)
 
-View(PCS)
+joined <- join_pc_rr(PCD[1,], RRD)
 
-JOINED <- PCS %>%
-  full_join(RRV)
 
-for(n in 1:nrow(JOINED)) {
-  integrand <- integrand_factory(JOINED[n, ])
-  JOINED[[n, "INTGRND"]] <- integrand
-  aaf_computer <- aaf_factory(JOINED[n, ])
-  JOINED[[n, "AAF_CMP"]] <- aaf_computer
-  JOINED[[n, "AAF_FD"]] <- aaf_fd(JOINED[n, ])
+
+View(joined)
+
+PCD
+
+RRD[1:2,]
+
+joint <- dplyr::full_join(PCD, RRD, by = "GENDER")
+
+View(joint)
+
+intgrnd <- intgrnd_factory(joint[1, ])
+joint[[1, "INTGRND"]] <- intgrnd
+
+aaf_cmp <- aaf_cmp_factory(joint[1, ])
+joint[[1, "AAF_CMP"]] <- aaf_cmp
+
+
+
+for(n in 1:nrow(joint)) {
+  intgrnd <- intgrnd_factory(joint[n, ])
+  joint[[n, "INTGRND"]] <- intgrnd
 }
 
+for(n in 1:nrow(joint)) {
+  aaf_cmp <- aaf_cmp_factory(joint[n, ])
+  joint[[n, "AAF_CMP"]] <- aaf_cmp
+  #
+  #     JOINT[[n, "AAF_FD"]] <- aaf_fd(JOINT[n, ])
+}
 
-View(JOINED)
+joint
 
-PIN <- 200
+pts <- 1:100
+
+joint1[[1, "AAF_CMP"]](pts)
+
+JOINT <- join_pc_rr(PCD, RRD)
+
+JOINT
+
+PIN <- 95
 
 ggplot(data = data.frame(x=0), mapping = aes(x=x)) +
-  stat_function(fun = JOINED[[PIN, "INTGRND"]]) +
+  stat_function(fun = joint[[PIN, "AAF_CMP"]]) +
   xlim(0.03,250) +
-  labs(title = paste(JOINED[[PIN, "CONDITION"]],
-                     JOINED[[PIN, "GENDER"]],
-                     JOINED[[PIN, "AGE_GROUP"]],
-                     JOINED[[PIN, "YEAR"]],
-                     JOINED[[PIN, "REGION"]]))
+  labs(title = paste(joint[[PIN, "OUTCOME"]],
+                     "outcome due to",
+                     joint[[PIN, "CONDITION"]],
+                     joint[[PIN, "GENDER"]],
+                     joint[[PIN, "AGE_GROUP"]],
+                     joint[[PIN, "YEAR"]],
+                     joint[[PIN, "REGION"]]),
+       x = "average grams ethanol per day",
+       y = "Cumulative AAF")
 
 JOINED[1, "N_GAMMA"]
 
 View(unnested)
+
+integrand <- function(x) 3*(x^2)
+
+pts <- 1:100
+
+vector <- sapply(pts, function(x) integrate(f = integrand,
+                                            lower = 0,
+                                            upper = x)$value)
+
+
+vector - (pts^3)
+
+
+int <- function(x) {
+
+
+}
 
 
 for(n in 1:nrow(JOINED)) {
