@@ -217,11 +217,9 @@ ext_rr <- function(rr_specs) {
     Y2+ SLOPE*(x-X2)
   }
 
-  EXTRAPOLATED <- function(x) {
+  function(x) {
     ((0 < x) & (x < X2))*FN_RR(x) + (X2 < x)*LINE(x)
   }
-
-  EXTRAPOLATED
 }
 
 #' Produce a Relative-Risk-For-Bingers curve from the given input
@@ -252,6 +250,5 @@ bng_rr <- function(rr_specs) {
   if(IM %in% c("(5).(2)","(5).(5)")) {
     FNC_RR <- function(x) pmax(1, TMP_RR(x))
   }
-  BD_RR <- function(x) BINGEF*FNC_RR(x)
-  BD_RR
+  function(x) BINGEF*FNC_RR(x)
 }

@@ -61,7 +61,7 @@ format_v0_rr <- function(rr) {
     RR[var][is.missing(RR[var])] <- impute_with(var)
   }
 
-  RR <- readr::type_convert(RR)
+  readr::type_convert(RR)
 }
 
 #' Format prevalence and consumption input data to our desired specifications
@@ -135,7 +135,7 @@ derive_v0_rr <- function(rr, ext) {
                    LNXT_RR = zero,
                    BNGD_RR = zero)
 
-    for(n in 1:nrow(rr)) {
+  for(n in 1:nrow(rr)) {
     base <- set_rr(rr[n,])
     rr[[n, "BASE_RR"]] <- base
 
@@ -162,7 +162,7 @@ derive_v0_rr <- function(rr, ext) {
 #' Gamma parameters are derivable entirely from prevalence and consumption,
 #' no additional input is necessary.
 #'
-#'@param PC is assumed type tibble with names(PC) = c(YEAR, REGION, GENDER
+#'@param pc is assumed type tibble with names(PC) = c(YEAR, REGION, GENDER
 #' , AGE_GROUP, POPULATION, PCC_LITRES_YEAR, CORRECTION_FACTOR,
 #' RELATIVE_CONSUMPTION, P_LA, P_FD, P_CD, P_BD).
 #' This function is internally called only, not exported.
@@ -170,7 +170,9 @@ derive_v0_rr <- function(rr, ext) {
 #' Note that the bundled data set pc_default satisfies these constraints.
 #'
 #'@param bb User supplied gender stratified binge barrier
-#'@param lb
+#'@param lb Lower bound
+#'@param ub Upper bound
+#'@param gc Gender stratified gamma constants
 #'
 #' Constants used:
 #'  0.002739726 = 1/365
@@ -196,16 +198,14 @@ derive_v0_rr <- function(rr, ext) {
 #'   P_BAT: Proportion of bingers above threshold (BB)
 #'   R1, R2: Ratios computed at this step and used in AAF computations
 #'
-#'@importFrom magrittr "%>%"
+#'@importFrom magrittr "%>%" "%<>%"
 #'@importFrom dplyr group_by mutate
 #'@importFrom tibble add_column
 #'
 
-derive_v0_pc <- function(pc,
-                         bb = c(53.8, 67.25),
-                         lb = c(0.03, 0.03),
-                         ub = c(250,  250)) {
-  PC <- pc %>%
+derive_v0_pc <- function(pc, bb, lb, ub, gc) {
+  PC <- pc
+  PC %<>%
     group_by(REGION, YEAR) %>%
     mutate(PCC_G_DAY = PCC_LITRES_YEAR * 1000 *
              0.7893 * CORRECTION_FACTOR * 0.002739726,
@@ -213,15 +213,15 @@ derive_v0_pc <- function(pc,
            PCAD = PCC_G_DAY * sum(POPULATION) / sum(DRINKERS),
            PCC_AMONG_DRINKERS = RELATIVE_CONSUMPTION * PCAD * sum(DRINKERS) /
              sum(RELATIVE_CONSUMPTION*DRINKERS))
-  PC <- PC %>%
-    mutate(GAMMA_CONSTANT = ifelse(GENDER == "Female", 1.258^2, 1.171^2),
+  PC %<>%
+    mutate(GAMMA_CONSTANT = gc[GENDER][[1]],
            GAMMA_SHAPE = 1/GAMMA_CONSTANT,
            GAMMA_SCALE = GAMMA_CONSTANT*PCC_AMONG_DRINKERS,
            INDEX = ifelse(GENDER == "Female", as.integer(1), as.integer(2)))
-  PC <- PC %>%
+  PC %<>%
     mutate(BB = bb[INDEX],
-           LB = lb[INDEX],
-           UB = ub[INDEX])
+           LB = lb,
+           UB = ub)
 
   PC[, "NC"] <- 0
   for(n in 1:nrow(PC)) {
@@ -235,7 +235,7 @@ derive_v0_pc <- function(pc,
     PC[[n, "NC"]] <- integrate(imgamma, lower = LB, upper = UB)$value
   }
 
-  PC <- PC %>%
+  PC %<>%
     mutate(DF = P_CD / NC)
 
   PC[, "P_BAT"] <- 0
@@ -250,7 +250,7 @@ derive_v0_pc <- function(pc,
     }
     PC[[n, "P_BAT"]] <- integrate(dfgamma, lower = BB, upper = UB)$value
   }
-  PC <- PC %>%
+  PC %<>%
     mutate(R1 = (P_CD - P_BD)  / (P_CD - P_BAT),
            R2 = (P_BD - P_BAT) / (P_CD - P_BAT),
            AAF_FD = 0) %>%

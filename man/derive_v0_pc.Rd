@@ -5,22 +5,27 @@
 \title{Derives probability distribution parameters from Prevalence and Consumption
 data}
 \usage{
-derive_v0_pc(pc, bb = c(53.8, 67.25), lb = c(0.03, 0.03), ub = c(250,
-  250))
+derive_v0_pc(pc, bb, lb, ub, gc)
 }
 \arguments{
-\item{bb}{User supplied gender stratified binge barrier}
-
-\item{lb}{Constants used:
-0.002739726 = 1/365
-0.7893 = unit conversion (millilitres to grams) for ethanol}
-
-\item{PC}{is assumed type tibble with names(PC) = c(YEAR, REGION, GENDER
+\item{pc}{is assumed type tibble with names(PC) = c(YEAR, REGION, GENDER
 , AGE_GROUP, POPULATION, PCC_LITRES_YEAR, CORRECTION_FACTOR,
 RELATIVE_CONSUMPTION, P_LA, P_FD, P_CD, P_BD).
 This function is internally called only, not exported.
 
 Note that the bundled data set pc_default satisfies these constraints.}
+
+\item{bb}{User supplied gender stratified binge barrier}
+
+\item{lb}{Lower bound}
+
+\item{ub}{Upper bound}
+
+\item{gc}{Gender stratified gamma constants
+
+Constants used:
+ 0.002739726 = 1/365
+ 0.7893 = unit conversion (millilitres to grams) for ethanol}
 }
 \value{
 A tibble with additional variables:

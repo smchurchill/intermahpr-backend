@@ -1,3 +1,44 @@
+#' Collect and assemble AAF data from RR and PC input data
+#'
+#'@param pc  Prevalence / Consumption input
+#'@param rr  Relative Risk input
+#'@param ext logical, extrapolate linearly?
+#'@param lb  Double, consumption lower bound
+#'@param ub  Double, consumption upper bound
+#'@param bb  Double vector, Binge consumption level, Gender stratified
+#'
+#'
+
+assemble <- function(pc, rr, ext, lb, ub, bb,
+                     gc = list("Female" = 1.258^2, "Male" = 1.171^2)) {
+  RRF <- format_v0_rr(rr = rr)
+  PCF <- format_v0_pc(pc = pc)
+
+  RRD <- derive_v0_rr(rr = RRF, ext = ext)
+  PCD <- derive_v0_pc(pc = PCF, bb = bb, lb = lb, ub = ub, gc = gc)
+
+  join_pc_rr(pc = PCD, rr = RRD)
+}
+
+#' Compute AAFs for all conditions as separated by the given cutpoints
+#'
+#'@param aaf_table A tibble as returned by assemble
+#'@param cuts A list of double vectors indexed by aaf_table$GENDER
+#'
+#'
+
+compute_aafs <- function(aaf_table, cuts) {
+  aaf_table %<>%
+    mutate(CUTS = pmap(list(LB, cuts[GENDER], UB), c)) %>%
+    mutate(CUMUL_F = map2(AAF_CMP, CUTS, ~.x(.y))) %>%
+    mutate(AAF_GRP = map(CUMUL_F, ~diff(.x))) %>%
+    mutate(AAF_TOT = map(CUMUL_F, ~`[[`(.x, length(.x))))
+  aaf_table
+}
+
+
+
+
 #'  Compute General AAFs
 #'
 #'@examples
@@ -232,7 +273,8 @@ compute_all_aafs <- function(prev_cons_data = intermahpr::pc_default,
 
   all_aafs <- Reduce(function(...) merge(..., all=TRUE), list(l, m, h))
   # , t))
-  DT <- data.table(sapply(all_aafs[-(1:7)], function(f) as.numeric(as.character(f))))
+  DT <- data.table(sapply(all_aafs[-(1:7)],
+                          function(f) as.numeric(as.character(f))))
   DT[, AAF_Total := AAF_FD + AAF_LD + AAF_MD + AAF_HD]
   # DT[, sanity_checker := computed_total - AAF_Total]
 
