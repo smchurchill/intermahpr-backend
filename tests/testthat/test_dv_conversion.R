@@ -3,14 +3,14 @@ context("Data Verification: Input data is converted to tibbles for internal use"
 
 test_that("data frames are converted into tibbles", {
   RR <- data.frame(testrr)
-  expect_is(format_rr(RR), 'tbl')
+  expect_is(format_v0_rr(RR), 'tbl')
   PC <- data.frame(testpc)
   expect_is(format_v0_pc(PC), 'tbl')
 })
 
 test_that("tibbles stay as tibbles", {
   RR <- tibble::as.tibble(testrr)
-  expect_is(format_rr(RR), 'tbl')
+  expect_is(format_v0_rr(RR), 'tbl')
   PC <- tibble::as.tibble(testpc)
   expect_is(format_v0_pc(PC), 'tbl')
 })

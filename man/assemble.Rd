@@ -2,9 +2,9 @@
 % Please edit documentation in R/interface.R
 \name{assemble}
 \alias{assemble}
-\title{Collect and assemble AAF data from RR and PC input data}
+\title{Collect and assemble AAF data from formatted RR and PC data}
 \usage{
-assemble(pc, rr, ext, lb, ub, bb, gc = list(Female = 1.258^2, Male = 1.171^2))
+assemble(pc, rr, ext, lb, ub, bb, gc)
 }
 \arguments{
 \item{pc}{Prevalence / Consumption input}
@@ -18,7 +18,12 @@ assemble(pc, rr, ext, lb, ub, bb, gc = list(Female = 1.258^2, Male = 1.171^2))
 \item{ub}{Double, consumption upper bound}
 
 \item{bb}{Double vector, Binge consumption level, Gender stratified}
+
+\item{gc}{Gamma constant.  The linear relationship between mean and standard
+deviation within the gamma distribution that describes consumption among
+current drinkers.  Stratified by gender -- names(gc) must match levels of
+rr$GENDER and pc$GENDER.}
 }
 \description{
-Collect and assemble AAF data from RR and PC input data
+Collect and assemble AAF data from formatted RR and PC data
 }

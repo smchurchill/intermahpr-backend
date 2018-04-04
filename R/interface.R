@@ -1,4 +1,4 @@
-#' Collect and assemble AAF data from RR and PC input data
+#' Collect and assemble AAF data from formatted RR and PC data
 #'
 #'@param pc  Prevalence / Consumption input
 #'@param rr  Relative Risk input
@@ -6,16 +6,16 @@
 #'@param lb  Double, consumption lower bound
 #'@param ub  Double, consumption upper bound
 #'@param bb  Double vector, Binge consumption level, Gender stratified
+#'@param gc  Gamma constant.  The linear relationship between mean and standard
+#'  deviation within the gamma distribution that describes consumption among
+#'  current drinkers.  Stratified by gender -- names(gc) must match levels of
+#'  rr$GENDER and pc$GENDER.
 #'
 #'
 
-assemble <- function(pc, rr, ext, lb, ub, bb,
-                     gc = list("Female" = 1.258^2, "Male" = 1.171^2)) {
-  RRF <- format_v0_rr(rr = rr)
-  PCF <- format_v0_pc(pc = pc)
-
-  RRD <- derive_v0_rr(rr = RRF, ext = ext)
-  PCD <- derive_v0_pc(pc = PCF, bb = bb, lb = lb, ub = ub, gc = gc)
+assemble <- function(pc, rr, ext, lb, ub, bb, gc) {
+  RRD <- derive_v0_rr(rr = rr, ext = ext)
+  PCD <- derive_v0_pc(pc = pc, bb = bb, lb = lb, ub = ub, gc = gc)
 
   join_pc_rr(pc = PCD, rr = RRD)
 }
@@ -25,6 +25,8 @@ assemble <- function(pc, rr, ext, lb, ub, bb,
 #'@param aaf_table A tibble as returned by assemble
 #'@param cuts A list of double vectors indexed by aaf_table$GENDER
 #'
+#'@importFrom purrr pmap map map2
+#'@importFrom magrittr "%>%" "%<>%"
 #'
 
 compute_aafs <- function(aaf_table, cuts) {
@@ -36,250 +38,206 @@ compute_aafs <- function(aaf_table, cuts) {
   aaf_table
 }
 
-
-
-
-#'  Compute General AAFs
+#' Takes all possible inputs, computes specified AAFs, returns TMI
 #'
-#'@examples
-#'  compute_general_aafs(intermahpr::pc_default,
-#'                     intermahpr::rr_default,
-#'                     TRUE,
-#'                     250,
-#'                     c(53.80, 67.25))
+#'@description
+#'The most granular AAF computation.  All inputs have default values, and levels
+#'of Gender are inspected before any computations are done.
 #'
+#'@param pc  Prevalence / Consumption input
+#'@param rr  Relative Risk input
+#'@param ext logical.  Answer to the question: "extrapolate linearly?"
+#'@param lb  Double, consumption lower bound, given in
+#'  units of grams ethanol per day
+#'@param ub  Double, consumption upper bound, given in
+#'  units of grams ethanol per day
+#'@param bb  Double vector, Binge consumption level, Gender stratified, given in
+#'  units of grams ethanol per day
+#'@param gc  Gamma constant. The linear relationship between mean and standard
+#'  deviation within the gamma distribution that describes consumption among
+#'  current drinkers. Stratified by gender -- names(gc) must match levels of
+#'  rr$GENDER and pc$GENDER.
+#'@param cb  Consumption barriers. These define light/moderate/heavy drinking
+#'  groups. Given in units of grams ethanol per day.
 #'
 #'@export
 #'
-#'@param PC Prevalence and consumption
-#'@param RR Relative risk informer
-#'@return data.frame of aafs by region, year, gender, age group, condition
+
+intermahpr_raw <- function(pc = intermahpr::pc_default,
+                           rr = intermahpr::rr_default,
+                           ext = TRUE, lb = 0.03, ub = 250,
+                           bb = list("Female" = 53.8, "Male" = 67.25),
+                           gc = list("Female" = 1.258^2, "Male" = 1.171^2),
+                           cb = list("Female" = c(13.45, 26.9),
+                                     "Male" = c(20.2, 40.4))) {
+  PCF <- format_v0_pc(pc = pc)
+  RRF <- format_v0_rr(rr = rr)
+  PC_LEVELS <- levels(as.factor(PCF$GENDER))
+  RR_LEVELS <- levels(as.factor(RRF$GENDER))
+  BB_LEVELS <- levels(as.factor(names(bb)))
+  GC_LEVELS <- levels(as.factor(names(gc)))
+  CB_LEVELS <- levels(as.factor(names(cb)))
+  LEVEL_MATCHES <- sapply(list(RR_LEVELS, BB_LEVELS, GC_LEVELS, CB_LEVELS),
+                          FUN = identical, PC_LEVELS)
+  LEVELS_IDENTICAL <- all(LEVEL_MATCHES)
+
+  if(!LEVELS_IDENTICAL) {
+    LEVELS_MESSAGE <- paste0("Prevalence/Consumption Gender levels: ",
+                             capture.output(PC_LEVELS),
+                             "\nRelative Risk Gender levels:          ",
+                             capture.output(RR_LEVELS),
+                             "\nBinge Barrier Gender levels:          ",
+                             capture.output(BB_LEVELS),
+                             "\nGamma Constant Gender levels:         ",
+                             capture.output(GC_LEVELS),
+                             "\nConsumption Barrier Gender levels:    ",
+                             capture.output(CB_LEVELS),
+                             collapse = "\n")
+
+    stop(paste0("Levels of Gender variable within Prevalence/Consumption, R",
+                   "elative Risk, Binge Barrier, Gamma Constant, and Consumpti",
+                   "on Barriers must be equal.  The levels input are:\n",
+                   collapse = "\n"),
+            LEVELS_MESSAGE)
+  }
+
+  ASSEMBLED <- assemble(pc = PCF, rr = RRF,
+                        ext = ext, lb = lb, ub = ub,
+                        bb = bb, gc = gc)
+  COMPUTED <- compute_aafs(aaf_table = ASSEMBLED, cuts = cb)
+  COMPUTED
+}
+
+#' Helper function that tidies base AAF into a certain outcome type
 #'
-#'@description
-#'  Interface functions are wrappers for this more general aaf compiler
+#'
+#'@importFrom magrittr "%>%" "%<>%"
+#'@importFrom dplyr filter
 #'
 
-compute_general_aafs <- function(prev_cons_data = intermahpr::pc_default,
-                                 relative_risks = intermahpr::rr_default,
-                                 extrapolation = TRUE,
-                                 upper_bound = 250,
-                                 binge_levels = c(53.80, 67.25),
-                                 lower = c(0.03,0.03),
-                                 upper = c(upper_bound, upper_bound)) {
-  set_upper_bound(upper_bound)
 
-  params <- derive_params_from_pc(prev_cons_data,
-                                  bb = binge_levels,
-                                  lb = lower,
-                                  ub = upper)
-  curves <- deduce_relative_risk_curves_from_rr(relative_risks, extrapolation)
+outcome_splitter <- function(aaf_table, outcome) {
+  aaf_table %<>%
+    filter(OUTCOME == outcome | OUTCOME == "Combined") %>%
+    mutate(AAF_LD = sapply(AAF_GRP, `[[`, 1),
+           AAF_MD = sapply(AAF_GRP, `[[`, 2),
+           AAF_HD = sapply(AAF_GRP, `[[`, 3),
+           AAF_TOTAL = sapply(AAF_TOT, `[[`, 1)) %>%
+    select(REGION, YEAR, GENDER, AGE_GROUP, IM, CONDITION,
+           AAF_FD, AAF_LD, AAF_MD, AAF_HD, AAF_TOTAL)
 
+  aaf_table
+}
 
-  aaf_list <- lapply(curves,
-                     function(C) apply(subset(params, Gender == C[[1]][[3]]),
-                                       1,
-                                       function(x) compute_aaf(C,x)))
+#' Integrate that takes as input a list funs of functions, a vector vlower of
+#' "lower" values and a vector vupper of "upper" values, assumes that
+#' length(vlower) = length(vupper) = length(funs), and returns a
+#' vector of integrals of funs between the lower and upper values.
+#'
+#'
+#'
 
-  saved_names <- names(aaf_list[[1]][[1]])
+vintegrate <- function(funs, vlower, vupper) {
+  llower <- length(vlower)
+  lupper <- length(vupper)
+  lfuns <- length(funs)
 
-  aaf_frames <- lapply(aaf_list,
-                       function(x) data.frame(matrix(unlist(x),
-                                                     nrow = length(x),
-                                                     byrow = TRUE)))
+  values <- rep(-1, lfuns)
 
+  for(i in 1:lfuns) {
+    values[[i]] <- integrate(funs[[i]], vlower[[i]], vupper[[i]])$value
+  }
 
-  aaf_frame <- do.call("rbind", aaf_frames)
+  values
+}
 
-  names(aaf_frame) <- saved_names
+#' Helper function that tidies base AAF into the relevant prevalence and
+#' consumption data
+#'
+#'@importFrom dplyr distinct select case_when
+#'
 
-  aaf_frame
+extract_prevcons <- function(aaf_table) {
+  aaf_table %<>%
+    mutate(LM = sapply(CUTS, `[[`, 2),
+           MH = sapply(CUTS, `[[`, 3)) %>%
+    distinct(REGION, YEAR, GENDER, AGE_GROUP, POPULATION, PCC_AMONG_DRINKERS,
+             GAMMA_SHAPE, GAMMA_SCALE, P_LA, P_FD, P_CD, EXT, LB, LM, MH,
+             UB, .keep_all = TRUE) %>%
+    select(REGION, YEAR, GENDER, AGE_GROUP, POPULATION, PCC_AMONG_DRINKERS,
+           GAMMA_SHAPE, GAMMA_SCALE, P_LA, P_FD, P_CD, EXT, LB, LM, MH, UB,
+           N_GAMMA)
+
+  aaf_table %<>%
+    mutate(EXTRAPOLATION = case_when(EXT == TRUE  ~ "linear",
+                                     EXT == FALSE ~ "capped")) %>%
+    add_column(P_LD = vintegrate(aaf_table[["N_GAMMA"]],
+                                 aaf_table[["LB"]],
+                                 aaf_table[["LM"]]),
+               P_MD = vintegrate(aaf_table[["N_GAMMA"]],
+                                 aaf_table[["LM"]],
+                                 aaf_table[["MH"]]),
+               P_HD = vintegrate(aaf_table[["N_GAMMA"]],
+                                 aaf_table[["MH"]],
+                                 aaf_table[["UB"]]))%>%
+    mutate(P_CD_SUM = P_LD + P_MD + P_HD) %>%
+    select(REGION, YEAR, GENDER, AGE_GROUP, POPULATION, PCC_AMONG_DRINKERS,
+           GAMMA_SHAPE, GAMMA_SCALE, P_LA, P_FD, P_CD, P_LD, P_MD, P_HD,
+           EXTRAPOLATION, P_CD_SUM)
+
+  aaf_table
 }
 
 
-
-
-#'  Compute Total AAFs
+#' Takes Base InterMAHP inputs, returns formatted data
 #'
-#'@examples
-#'  compute_total_aafs(intermahpr::pc_default,
-#'                     intermahpr::rr_default,
-#'                     TRUE,
-#'                     250,
-#'                     c(53.80, 67.25))
+#'@param RelativeRisks rr
+#'@param PrevalenceConsumption pc
+#'@param FemaleLightModerateBarrier flm
+#'@param FemaleModerateHeavyBarrier fmh
+#'@param FemaleBingeBarrier fbb
+#'@param MaleLightModerateBarrier mlm
+#'@param MaleModerateHeavyBarrier mmh
+#'@param MaleBingeBarrier mbb
+#'@param UpperBound ub
+#'@param Extrapolation ext
+#'@param OutputPath op
 #'
 #'@export
 #'
-#'
-#'@param PC Prevalence and consumption
-#'@param RR Relative risk informer
-#'@return data.frame of aafs by region, year, gender, age group, condition
-#'
-#'@description
-#'  Compute total aafs
-#'
 
-compute_total_aafs <- function(prev_cons_data = intermahpr::pc_default,
-                               relative_risks = intermahpr::rr_default,
-                               extrapolation = TRUE,
-                               upper_bound = 250,
-                               binge_levels = c(53.80, 67.25)) {
+intermahpr_base <- function(RelativeRisks = intermahpr::rr_default,
+                            PrevalenceConsumption,
+                            FemaleLightModerateBarrier,
+                            FemaleModerateHeavyBarrier,
+                            FemaleBingeBarrier,
+                            MaleLightModerateBarrier,
+                            MaleModerateHeavyBarrier,
+                            MaleBingeBarrier,
+                            UpperBound,
+                            Extrapolation,
+                            OutputPath) {
+  BB <- list("Female" = FemaleBingeBarrier, "Male" = MaleBingeBarrier)
+  GC <- list("Female" = 1.258^2, "Male" = 1.171^2)
+  CB <- list("Female" = c(FemaleLightModerateBarrier,
+                          FemaleModerateHeavyBarrier),
+             "Male" = c(MaleLightModerateBarrier,
+                        MaleModerateHeavyBarrier))
+  AAF_OUT <- intermahpr_raw(rr = RelativeRisks, pc = PrevalenceConsumption,
+                            ext = Extrapolation, lb = 0.03, ub = UpperBound,
+                            bb = BB, gc = GC, cb = CB)
+  InterMAHP_AAFs_morbidity <- outcome_splitter(AAF_OUT, "Morbidity")
+  InterMAHP_AAFs_mortality <- outcome_splitter(AAF_OUT, "Mortality")
+  InterMAHP_prev_cons_output <- extract_prevcons(AAF_OUT)
 
-  aafs <- compute_general_aafs(prev_cons_data, relative_risks, extrapolation,
-                               upper_bound, binge_levels,
-                               lower = rep(intermahpr_constants$lower_bound, 2),
-                               upper = rep(upper_bound, 2))
+  readr::write_csv(x = InterMAHP_AAFs_morbidity,
+                   path = file.path(OutputPath, "InterMAHP_AAFs_morbidity.csv"))
+  readr::write_csv(x = InterMAHP_AAFs_mortality,
+                   path = file.path(OutputPath, "InterMAHP_AAFs_mortality.csv"))
+  readr::write_csv(x = InterMAHP_AAFs_morbidity,
+                   path = file.path(OutputPath, "InterMAHP_prev_cons_output.csv"))
 
-  aaf_rename <- plyr::rename(aafs[-(8:10)], c("AAF" = "AAF_CD"))
-
-  DT <- data.table(sapply(aaf_rename[-(1:7)],
-                          function(f) as.numeric(as.character(f))))
-  DT[, AAF_Total := AAF_FD + AAF_CD]
-  cbind(aafs[1:7], DT)
+  list("InterMAHP_AAFs_morbidity" = InterMAHP_AAFs_morbidity,
+       "InterMAHP_AAFs_mortality" = InterMAHP_AAFs_mortality,
+       "InterMAHP_prev_cons_output" = InterMAHP_prev_cons_output)
 }
-
-#'  Compute Light AAFs
-#'
-#'@examples
-#' compute_light_aafs(intermahpr::pc_default, intermahpr::rr_default, TRUE, c())
-#'
-#'@export
-#'
-#'
-#'@param PC Prevalence and consumption
-#'@param RR Relative risk informer
-#'@return data.frame of aafs by region, year, gender, age group, condition
-#'
-#'@description
-#'  Compute light aafs
-#'
-
-compute_light_aafs <- function(prev_cons_data = intermahpr::pc_default,
-                               relative_risks = intermahpr::rr_default,
-                               extrapolation = TRUE,
-                               upper_bound = 250,
-                               binge_levels = c(53.80, 67.25),
-                               light_moderate_barriers = c(20,20)) {
-
-  aafs <- compute_general_aafs(prev_cons_data, relative_risks, extrapolation,
-                               upper_bound, binge_levels,
-                               lower = rep(intermahpr_constants$lower_bound, 2),
-                               upper = light_moderate_barriers)
-
-  plyr::rename(aafs[-(8:10)], c("AAF" = "AAF_LD"))
-
-}
-
-#'  Compute Moderate AAFs
-#'
-#'@examples
-#' compute_mod_aafs(intermahpr::pc_default, intermahpr::rr_default, TRUE, c())
-#'
-#'@export
-#'
-#'
-#'@param PC Prevalence and consumption
-#'@param RR Relative risk informer
-#'@return data.frame of aafs by region, year, gender, age group, condition
-#'
-#'@description
-#'  Compute moderate aafs
-#'
-
-compute_mod_aafs <- function(prev_cons_data = intermahpr::pc_default,
-                               relative_risks = intermahpr::rr_default,
-                               extrapolation = TRUE,
-                               upper_bound = 250,
-                               binge_levels = c(53.80, 67.25),
-                               light_moderate_barriers = c(20,20),
-                               moderate_heavy_barriers = c(40,40)) {
-
-  aafs <- compute_general_aafs(prev_cons_data, relative_risks, extrapolation,
-                               upper_bound, binge_levels,
-                               lower = light_moderate_barriers,
-                               upper = moderate_heavy_barriers)
-
-  plyr::rename(aafs[-(8:10)], c("AAF" = "AAF_MD"))
-
-
-}
-
-#'  Compute Heavy AAFs
-#'
-#'@examples
-#' compute_heavy_aafs(intermahpr::pc_default, intermahpr::rr_default, TRUE, c())
-#'
-#'@export
-#'
-#'
-#'@param PC Prevalence and consumption
-#'@param RR Relative risk informer
-#'@return data.frame of aafs by region, year, gender, age group, condition
-#'
-#'@description
-#'  Compute heavy aafs.
-#'
-
-compute_heavy_aafs <- function(prev_cons_data = intermahpr::pc_default,
-                               relative_risks = intermahpr::rr_default,
-                               extrapolation = TRUE,
-                               upper_bound = 250,
-                               binge_levels = c(53.80, 67.25),
-                               moderate_heavy_barriers = c(40,40)) {
-
-
-  aafs <- compute_general_aafs(prev_cons_data, relative_risks, extrapolation,
-                               upper_bound, binge_levels,
-                               lower = moderate_heavy_barriers,
-                               upper = rep(upper_bound, 2))
-
-  plyr::rename(aafs[-(8:10)], c("AAF" = "AAF_HD"))
-}
-
-#'  Compute All AAFs
-#'
-#'@examples
-#' compute_all_aafs(intermahpr::pc_default, intermahpr::rr_default, TRUE, c())
-#'
-#'@export
-#'
-#'
-#'@param PC Prevalence and consumption
-#'@param RR Relative risk informer
-#'@return data.frame of aafs by region, year, gender, age group, condition
-#'
-#'@description
-#'  Compute all AAFs.
-#'
-
-compute_all_aafs <- function(prev_cons_data = intermahpr::pc_default,
-                             relative_risks = intermahpr::rr_default,
-                             extrapolation = TRUE,
-                             upper_bound = 250,
-                             binge_levels = c(53.80, 67.25),
-                             light_moderate_barriers = c(20,20),
-                             moderate_heavy_barriers = c(40,40)) {
-
-  # t <- compute_total_aafs(prev_cons_data, relative_risks, extrapolation,
-  #                         upper_bound, binge_levels)
-
-  l <- compute_light_aafs(prev_cons_data, relative_risks, extrapolation,
-                          upper_bound, binge_levels, light_moderate_barriers)
-  m <- compute_mod_aafs(prev_cons_data, relative_risks, extrapolation,
-                        upper_bound, binge_levels,
-                        light_moderate_barriers, moderate_heavy_barriers)
-  h <- compute_heavy_aafs(prev_cons_data, relative_risks, extrapolation,
-                          upper_bound, binge_levels, moderate_heavy_barriers)
-
-
-  all_aafs <- Reduce(function(...) merge(..., all=TRUE), list(l, m, h))
-  # , t))
-  DT <- data.table(sapply(all_aafs[-(1:7)],
-                          function(f) as.numeric(as.character(f))))
-  DT[, AAF_Total := AAF_FD + AAF_LD + AAF_MD + AAF_HD]
-  # DT[, sanity_checker := computed_total - AAF_Total]
-
-  cbind(all_aafs[1:7], DT)
-}
-
-
-

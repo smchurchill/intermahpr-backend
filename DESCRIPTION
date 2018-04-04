@@ -8,7 +8,7 @@ Imports:
     tibble,
     dplyr,
     readr,
-    pracma
+    purrr
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true

@@ -213,13 +213,16 @@ derive_v0_pc <- function(pc, bb, lb, ub, gc) {
            PCAD = PCC_G_DAY * sum(POPULATION) / sum(DRINKERS),
            PCC_AMONG_DRINKERS = RELATIVE_CONSUMPTION * PCAD * sum(DRINKERS) /
              sum(RELATIVE_CONSUMPTION*DRINKERS))
+
   PC %<>%
-    mutate(GAMMA_CONSTANT = gc[GENDER][[1]],
-           GAMMA_SHAPE = 1/GAMMA_CONSTANT,
-           GAMMA_SCALE = GAMMA_CONSTANT*PCC_AMONG_DRINKERS,
-           INDEX = ifelse(GENDER == "Female", as.integer(1), as.integer(2)))
+    add_column(GAMMA_CONSTANT = sapply(gc[PC$GENDER], `[[`, 1))
+
   PC %<>%
-    mutate(BB = bb[INDEX],
+    mutate(GAMMA_SHAPE = 1/GAMMA_CONSTANT,
+           GAMMA_SCALE = GAMMA_CONSTANT*PCC_AMONG_DRINKERS)
+
+  PC %<>%
+    mutate(BB = bb[GENDER][[1]],
            LB = lb,
            UB = ub)
 
