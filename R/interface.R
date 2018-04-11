@@ -238,7 +238,7 @@ intermahpr_base <- function(RelativeRisks = intermahpr::rr_default,
   InterMAHP_AAFs_mortality <- outcome_splitter(AAF_OUT, "Mortality")
   InterMAHP_prev_cons_output <- extract_prevcons(AAF_OUT)
 
-  if(file.exists(OutputPath)) {
+  if(file.access(OutputPath, 2) == 0) {
     readr::write_csv(x = InterMAHP_AAFs_morbidity,
                      path = file.path(OutputPath,
                                       paste0(FilePrefix,
@@ -255,7 +255,8 @@ intermahpr_base <- function(RelativeRisks = intermahpr::rr_default,
   else if(!is.null(OutputPath)) {
     message(
       paste0(
-        "Path does not exist.  Returning list of output tables instead. If you",
+        "Path does not exist, or R does not have write permission to the speci",
+        "fied path. Returning list of output tables instead. If you",
         " haven't explicitly assigned output to a variable, this list is store",
         "d in the variable '.Last.value'"
       )
