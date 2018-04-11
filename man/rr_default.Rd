@@ -3,7 +3,7 @@
 \docType{data}
 \name{rr_default}
 \alias{rr_default}
-\title{Default Relative Risk Curve Defintion}
+\title{Default Relative Risk Curve Definition}
 \format{An object of class \code{data.table} (inherits from \code{data.frame}) with 54 rows and 23 columns.}
 \usage{
 data(rr_default)

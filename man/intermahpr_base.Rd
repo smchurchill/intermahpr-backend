@@ -7,7 +7,7 @@
 intermahpr_base(RelativeRisks = intermahpr::rr_default, PrevalenceConsumption,
   FemaleLightModerateBarrier, FemaleModerateHeavyBarrier, FemaleBingeBarrier,
   MaleLightModerateBarrier, MaleModerateHeavyBarrier, MaleBingeBarrier,
-  UpperBound, Extrapolation, OutputPath)
+  UpperBound, Extrapolation, OutputPath = NULL, FilePrefix = "")
 }
 \arguments{
 \item{RelativeRisks}{rr}

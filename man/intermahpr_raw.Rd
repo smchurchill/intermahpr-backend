@@ -23,7 +23,8 @@ units of grams ethanol per day}
 units of grams ethanol per day}
 
 \item{bb}{Double vector, Binge consumption level, Gender stratified, given in
-units of grams ethanol per day}
+units of grams ethanol per day. Stratified by gender -- names(bb) must match
+levels of rr$GENDER and pc$GENDER.}
 
 \item{gc}{Gamma constant. The linear relationship between mean and standard
 deviation within the gamma distribution that describes consumption among
@@ -31,7 +32,8 @@ current drinkers. Stratified by gender -- names(gc) must match levels of
 rr$GENDER and pc$GENDER.}
 
 \item{cb}{Consumption barriers. These define light/moderate/heavy drinking
-groups. Given in units of grams ethanol per day.}
+groups. Given in units of grams ethanol per day. Stratified by gender --
+names(cb) must match levels of rr$GENDER and pc$GENDER.}
 }
 \description{
 The most granular AAF computation.  All inputs have default values, and levels

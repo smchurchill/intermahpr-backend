@@ -34,7 +34,8 @@ compute_aafs <- function(aaf_table, cuts) {
     mutate(CUTS = pmap(list(LB, cuts[GENDER], UB), c)) %>%
     mutate(CUMUL_F = map2(AAF_CMP, CUTS, ~.x(.y))) %>%
     mutate(AAF_GRP = map(CUMUL_F, ~diff(.x))) %>%
-    mutate(AAF_TOT = map(CUMUL_F, ~`[[`(.x, length(.x))))
+    mutate(AAF_CD = unlist(map(CUMUL_F, ~`[`(.x, length(.x))))) %>%
+    mutate(AAF_TOTAL = AAF_FD + AAF_CD)
   aaf_table
 }
 
@@ -52,13 +53,15 @@ compute_aafs <- function(aaf_table, cuts) {
 #'@param ub  Double, consumption upper bound, given in
 #'  units of grams ethanol per day
 #'@param bb  Double vector, Binge consumption level, Gender stratified, given in
-#'  units of grams ethanol per day
+#'  units of grams ethanol per day. Stratified by gender -- names(bb) must match
+#'  levels of rr$GENDER and pc$GENDER.
 #'@param gc  Gamma constant. The linear relationship between mean and standard
 #'  deviation within the gamma distribution that describes consumption among
 #'  current drinkers. Stratified by gender -- names(gc) must match levels of
 #'  rr$GENDER and pc$GENDER.
 #'@param cb  Consumption barriers. These define light/moderate/heavy drinking
-#'  groups. Given in units of grams ethanol per day.
+#'  groups. Given in units of grams ethanol per day. Stratified by gender --
+#'  names(cb) must match levels of rr$GENDER and pc$GENDER.
 #'
 #'@export
 #'
@@ -84,13 +87,17 @@ intermahpr_raw <- function(pc = intermahpr::pc_default,
   if(!LEVELS_IDENTICAL) {
     LEVELS_MESSAGE <- paste0("Prevalence/Consumption Gender levels: ",
                              capture.output(PC_LEVELS),
-                             "\nRelative Risk Gender levels:          ",
+                             "\n",
+                             "Relative Risk Gender levels:          ",
                              capture.output(RR_LEVELS),
-                             "\nBinge Barrier Gender levels:          ",
+                             "\n",
+                             "Binge Barrier Gender levels:          ",
                              capture.output(BB_LEVELS),
-                             "\nGamma Constant Gender levels:         ",
+                             "\n",
+                             "Gamma Constant Gender levels:         ",
                              capture.output(GC_LEVELS),
-                             "\nConsumption Barrier Gender levels:    ",
+                             "\n",
+                             "Consumption Barrier Gender levels:    ",
                              capture.output(CB_LEVELS),
                              collapse = "\n")
 
@@ -121,8 +128,7 @@ outcome_splitter <- function(aaf_table, outcome) {
     filter(OUTCOME == outcome | OUTCOME == "Combined") %>%
     mutate(AAF_LD = sapply(AAF_GRP, `[[`, 1),
            AAF_MD = sapply(AAF_GRP, `[[`, 2),
-           AAF_HD = sapply(AAF_GRP, `[[`, 3),
-           AAF_TOTAL = sapply(AAF_TOT, `[[`, 1)) %>%
+           AAF_HD = sapply(AAF_GRP, `[[`, 3)) %>%
     select(REGION, YEAR, GENDER, AGE_GROUP, IM, CONDITION,
            AAF_FD, AAF_LD, AAF_MD, AAF_HD, AAF_TOTAL)
 
@@ -216,7 +222,9 @@ intermahpr_base <- function(RelativeRisks = intermahpr::rr_default,
                             MaleBingeBarrier,
                             UpperBound,
                             Extrapolation,
-                            OutputPath) {
+                            OutputPath = NULL,
+                            FilePrefix = "") {
+
   BB <- list("Female" = FemaleBingeBarrier, "Male" = MaleBingeBarrier)
   GC <- list("Female" = 1.258^2, "Male" = 1.171^2)
   CB <- list("Female" = c(FemaleLightModerateBarrier,
@@ -230,14 +238,35 @@ intermahpr_base <- function(RelativeRisks = intermahpr::rr_default,
   InterMAHP_AAFs_mortality <- outcome_splitter(AAF_OUT, "Mortality")
   InterMAHP_prev_cons_output <- extract_prevcons(AAF_OUT)
 
-  readr::write_csv(x = InterMAHP_AAFs_morbidity,
-                   path = file.path(OutputPath, "InterMAHP_AAFs_morbidity.csv"))
-  readr::write_csv(x = InterMAHP_AAFs_mortality,
-                   path = file.path(OutputPath, "InterMAHP_AAFs_mortality.csv"))
-  readr::write_csv(x = InterMAHP_AAFs_morbidity,
-                   path = file.path(OutputPath, "InterMAHP_prev_cons_output.csv"))
+  if(file.exists(OutputPath)) {
+    readr::write_csv(x = InterMAHP_AAFs_morbidity,
+                     path = file.path(OutputPath,
+                                      paste0(FilePrefix,
+                                             "InterMAHP_AAFs_morbidity.csv")))
+    readr::write_csv(x = InterMAHP_AAFs_mortality,
+                     path = file.path(OutputPath,
+                                      paste0(FilePrefix,
+                                             "InterMAHP_AAFs_mortality.csv")))
+    readr::write_csv(x = InterMAHP_AAFs_morbidity,
+                     path = file.path(OutputPath,
+                                      paste0(FilePrefix,
+                                             "InterMAHP_prev_cons_output.csv")))
+  }
+  else if(!is.null(OutputPath)) {
+    message(
+      paste0(
+        "Path does not exist.  Returning list of output tables instead. If you",
+        " haven't explicitly assigned output to a variable, this list is store",
+        "d in the variable '.Last.value'"
+      )
+    )
+  }
 
-  list("InterMAHP_AAFs_morbidity" = InterMAHP_AAFs_morbidity,
-       "InterMAHP_AAFs_mortality" = InterMAHP_AAFs_mortality,
-       "InterMAHP_prev_cons_output" = InterMAHP_prev_cons_output)
+  invisible(
+    list(
+      "InterMAHP_AAFs_morbidity" = InterMAHP_AAFs_morbidity,
+      "InterMAHP_AAFs_mortality" = InterMAHP_AAFs_mortality,
+      "InterMAHP_prev_cons_output" = InterMAHP_prev_cons_output
+    )
+  )
 }

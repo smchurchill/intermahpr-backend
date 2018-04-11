@@ -11,7 +11,7 @@
 #'
 "pc_default"
 
-#' Default Relative Risk Curve Defintion
+#' Default Relative Risk Curve Definition
 #'
 #' Default input to generate relative risk curves.  Standard formatting is
 #' described in the InterMAHP user guides
@@ -21,3 +21,26 @@
 #'
 #'
 "rr_default"
+
+#' Deafult Relative Risk Curves with Zhao IHD treatment
+#'
+#' Default input to generate relative risk curves, uses Zhao IHD treatment.
+#' Standard formatting is described in the InterMAHP user guides
+#'
+#'@docType data
+#'@usage data(rr_zhao)
+#'
+#'
+"rr_zhao"
+
+
+#' Deafult Relative Risk Curves with Roerecke IHD treatment
+#'
+#' Default input to generate relative risk curves, uses Roerecke IHD treatment.
+#' Standard formatting is described in the InterMAHP user guides
+#'
+#'@docType data
+#'@usage data(rr_roerecke)
+#'
+#'
+"rr_roerecke"

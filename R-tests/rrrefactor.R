@@ -2,15 +2,29 @@ library(ggplot2)
 library(tidyverse)
 library(magrittr)
 
-path = "C:\\Users\\samuelch\\Documents\\RStudio\\IMAHPROUTPUT\\"
+
+impc <- readr::read_csv("data-raw/impc.csv")
+
+impc
+
+levels(as.factor(impc$Region))
+
+impc_bc_2014 <- impc %>%
+  filter(grepl("BC", Region), Year == 2014)
+
+impc_bc_2014
+
+path = "C:/Users/samuelch/Documents/RStudio/IMAHPROUTPUT/what"
 
 dir <- tempdir()
 
 dir
 
 a <- intermahpr_raw()
-b <- intermahpr_base(RelativeRisks = rr_default,
-                     PrevalenceConsumption = pc_default,
+
+
+intermahpr_base(RelativeRisks = rr_default,
+                     PrevalenceConsumption = impc_bc_2014,
                      FemaleLightModerateBarrier = 13.45,
                      FemaleModerateHeavyBarrier = 26.9,
                      FemaleBingeBarrier = 53.8,
@@ -19,7 +33,10 @@ b <- intermahpr_base(RelativeRisks = rr_default,
                      MaleBingeBarrier = 67.25,
                      UpperBound = 250,
                      Extrapolation = TRUE,
-                     OutputPath = path)
+                     OutputPath = path,
+                     FilePrefix = "testest")
+
+d
 
 path
 
