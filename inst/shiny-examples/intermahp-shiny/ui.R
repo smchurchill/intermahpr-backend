@@ -8,14 +8,19 @@ function(request) {
     shinyjs::useShinyjs(),
     title = "InterMAHP",
 
-    ## Add custom JS and CSS -
+    ## Add custom JS and CSS ----
+    shiny::singleton(
+      tags$head(
+        includeCSS(file.path("www", "intermahp.css"))
+      )
+    ),
 
-    ## Enclose the header in it's own section for nicer styling -
+    ## Enclose the header in it's own section for nicer styling ----
     div(
       id = "headerSection",
       h1("The International Model of Alcohol Harms and Policies"),
 
-      ## Additional info -
+      ## Additional info ----
       span(
         style = "font-size: 1.2em",
           span("CISUR package"),
@@ -25,33 +30,34 @@ function(request) {
       )
     ),
 
-    ## Initial Loading Screen -
+    ## Initial Loading Screen ----
     div(
       id = "loadingContent",
       h2("Loading...")
     ),
 
-    ## Content goes here, hidden initially until full load -
+    ## Content goes here, hidden initially until full load ----
     shinyjs::hidden(
       div(
         id = "allContent",
 
-        ## sidebar - data input -
+        ## sidebar - data input ----
         sidebarLayout(
           sidebarPanel(
             h3("Relative Risk Data", style = "margin-top: 0;"),
-            ## Upload your own RR csv or use a packaged one?
+            ## Upload your own RR csv or use a packaged one? ----
             selectInput(
               "source_rr",
               "",
               c(
                 "Upload CSV" = "upload",
-                "Use packaged relative risk curves" = "packaged"
+                "Use packaged" = "packaged"
               ),
               selected = "upload"
             ),
-            ## Which IHD treatment among packaged risks? -
+            ## Which IHD treatment among packaged risks? ----
             conditionalPanel(
+              style = "height: 94px;",
               "input.source_rr == 'packaged'",
               selectInput(
                 "packaged_rr",
@@ -63,7 +69,7 @@ function(request) {
                 selected = "zhao_rr"
               )
             ),
-            ## File upload for RR -
+            ## File upload for RR ----
             conditionalPanel(
               "input.source_rr == 'upload'",
               fileInput(
@@ -82,18 +88,19 @@ function(request) {
             br(),
 
             h3("Prevalence and Consumption Data", style = "margin-top: 0;"),
-            ## Upload your own PC csv or use a packaged one? -
+            ## Upload your own PC csv or use a packaged one? ----
             selectInput(
               "source_pc",
               "",
               c(
                 "Upload CSV" = "upload",
-                "Use packaged prevalence & consumption" = "packaged"
+                "Use packaged" = "packaged"
               ),
               selected = "upload"
             ),
-            ## Which PC data among packaged? -
+            ## Which PC data among packaged? ----
             conditionalPanel(
+              style = "height: 74px;",
               "input.source_pc == 'packaged'",
               selectInput(
                 "packaged_pc",
@@ -106,7 +113,7 @@ function(request) {
                 selected = "pc_bc"
               )
             ),
-            ## File upload for PC -
+            ## File upload for PC ----
             conditionalPanel(
               "input.source_pc == 'upload'",
               fileInput(
@@ -123,16 +130,17 @@ function(request) {
               )
             ),
             h3("Drinking Group Definitions"),
-            p("All measurements are made in units of grams-ethanol per day."),
-            ## Tabs for numerical drinking group defintions -
+            p("All measurements are in units of grams-ethanol per day."),
+            ## Tabs for numerical drinking group defintions ----
             tabsetPanel(
-              id = "numericalParamTab",
+              id = "paramTabset",
               type = "tabs",
 
-              ## Tab accepting global parameter input (methods) -
+              ## Tab accepting global parameter input (methods) ----
               tabPanel(
                 title = "Methods",
                 id = "methodTab",
+                br(),
                 numericInput(
                   "upper_bound",
                   "Upper limit of consumption",
@@ -151,10 +159,11 @@ function(request) {
                   selected = TRUE
                 )
               ),
-              ## Tab accepting female drinking group definitions -
+              ## Tab accepting female drinking group definitions ----
               tabPanel(
                 title = "Female",
                 id = "femaleTab",
+                br(),
                 numericInput(
                   "lm_f",
                   "Light-moderate barrier",
@@ -177,10 +186,11 @@ function(request) {
                   step = 1
                 )
               ),
-              ## Tab accepting male drinking group definitions -
+              ## Tab accepting male drinking group definitions ----
               tabPanel(
                 title = "Male",
                 id = "maleTab",
+                br(),
                 numericInput(
                   "lm_m",
                   "Light-moderate barrier",
@@ -203,24 +213,104 @@ function(request) {
                   step = 1
                 )
               )
-            ) ## end tabsetPanel -
-          ), ## end sidebarPanel -
+            ) ## end tabsetPanel ----
+          ), ## end sidebarPanel ----
+          ## Main Panel ----
           mainPanel(
             wellPanel(
               tabsetPanel(
-                id = "resultsTab",
+                id = "resultsTabset",
                 type = "tabs",
 
+                ## Groups Display Tab ----
                 tabPanel(
-                  title = "Show data",
-                  id = "tableTab"
+                  title = "Drinking Groups",
+                  id = "drinkgrpTab",
+                  fluidRow(
+                    ## Female Grouping Display ----
+                    column(
+                      width = 6,
+                      wellPanel(
+                        class = "scrollable",
+                        h4("Female"),
+                        tableOutput("drinking_groups_female"),
+                        textOutput("binge_barrier_female")
+                      )
+                    ),
+                    ## Male Grouping Display ----
+                    column(
+                      width = 6,
+                      wellPanel(
+                        class = "scrollable",
+                        h4("Male"),
+                        tableOutput("drinking_groups_male"),
+                        textOutput("binge_barrier_male")
+                      )
+                    )
+                  )
+                ),
+                ## Relative Risk Display ----
+                tabPanel(
+                  title = "Relative Risk",
+                  id = "relriskTab",
+                  tabsetPanel(
+                    id = "relrisksTabset",
+                    type = "tabs",
+                    tabPanel(
+                      # class = "scrollable",
+                      title = "Table",
+                      id = "relrisksTable",
+                      radioButtons(
+                        "rr_table_type",
+                        "",
+                        choices = c("Raw" = "raw", "Formatted" = "for"),
+                        selected = "raw",
+                        inline = TRUE
+                      ),
+                      div(
+                        DT::dataTableOutput("rrTable"),
+                        style = "overflow-x: hidden; overflow-y: scroll;
+                                height: 800px;"
+                      )
+                    ),
+                    tabPanel(
+                      title = "Plots",
+                      id = "relrisksPlots",
+                      fluidRow(
+                        br(),
+                        column(
+                          width = 4,
+                          uiOutput("select_condition")
+                        ),
+                        column(
+                          width = 4,
+                          uiOutput("select_gender")
+                        ),
+                        column(
+                          width = 4,
+                          uiOutput("select_outcome")
+                        )
+                      )
+                    )
+                  )
+                ),
+                ## PrevCons display ----
+                tabPanel(
+                  title = "Prevalence and Consumption",
+                  id = "prevconsTab"
+                ),
+
+                ## Output display ----
+                tabPanel(
+                  title = "Output",
+                  id = "outputTab"
                 )
-                ## To be added -
+                ## To be added ----
               )
             )
           )
         )
       )
-    ) ## end shinyjs::hidden -
-  ) ## end fluidPage -
+    ) ## end shinyjs::hidden ----
+  ) ## end fluidPage ----
 }
