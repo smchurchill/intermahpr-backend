@@ -146,7 +146,7 @@ outcome_splitter <- function(aaf_table, outcome) {
 vintegrate <- function(funs, vlower, vupper) {
   llower <- length(vlower)
   lupper <- length(vupper)
-  lfuns <- length(funs)
+  lfuns  <- length(funs)
 
   values <- rep(-1, lfuns)
 

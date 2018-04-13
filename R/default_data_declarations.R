@@ -1,15 +1,50 @@
 #' Default Prevalence and Consumption Data
 #'
-#' Default prevalence and consumption data from BC and Canada, 2015.input to
-#' generate relative risk curves.  Standard formatting is described in the
-#' InterMAHP user guides
+#' Default prevalence and consumption data from BC and Canada, 2015.
+#' Standard formatting is described in the InterMAHP user guides
 #'
 #' @docType data
 #'
-#' @usage data(pcr_default)
+#' @usage data(pc_default)
 #'
 #'
 "pc_default"
+
+#' Default Prevalence and Consumption Data restricted to BC
+#'
+#' Default prevalence and consumption data from BC, 2015.
+#' Standard formatting is described in the InterMAHP user guides
+#'
+#' @docType data
+#'
+#' @usage data(pc_bc)
+#'
+#'
+"pc_bc"
+
+#' Default Prevalence and Consumption Data restricted to Canada
+#'
+#' Default prevalence and consumption data from Canada, 2015.
+#' Standard formatting is described in the InterMAHP user guides
+#'
+#' @docType data
+#'
+#' @usage data(pc_can)
+#'
+#'
+"pc_can"
+
+#' Default Prevalence and Consumption Data
+#'
+#' Default prevalence and consumption data from BC and Canada, 2015.
+#' Standard formatting is described in the InterMAHP user guides
+#'
+#' @docType data
+#'
+#' @usage data(pc_bc_can)
+#'
+#'
+"pc_bc_can"
 
 #' Default Relative Risk Curve Definition
 #'

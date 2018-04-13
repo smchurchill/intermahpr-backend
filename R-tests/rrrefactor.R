@@ -14,7 +14,7 @@ impc_bc_2014 <- impc %>%
 
 impc_bc_2014
 
-path = "C:/Users/samuelch/Documents/RStudio/IMAHPROUTPUT/whats"
+path = "C:/Users/samuelch/Documents/RStudio/IMAHPROUTPUT/whatp"
 
 dir <- tempdir()
 

@@ -2,6 +2,7 @@
 
 export(intermahpr_base)
 export(intermahpr_raw)
+export(runExample)
 importFrom(dplyr,case_when)
 importFrom(dplyr,distinct)
 importFrom(dplyr,filter)
