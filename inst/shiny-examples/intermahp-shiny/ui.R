@@ -248,7 +248,8 @@ function(request) {
                       )
                     )
                   )
-                ),
+                ) ## end Groups display ----
+                ,
                 ## Relative Risk Display ----
                 tabPanel(
                   title = "Relative Risk",
@@ -257,7 +258,6 @@ function(request) {
                     id = "relrisksTabset",
                     type = "tabs",
                     tabPanel(
-                      # class = "scrollable",
                       title = "Table",
                       id = "relrisksTable",
                       radioButtons(
@@ -280,35 +280,105 @@ function(request) {
                         br(),
                         column(
                           width = 4,
-                          uiOutput("select_condition")
+                          uiOutput("select_condition_rr")
                         ),
                         column(
                           width = 4,
-                          uiOutput("select_gender")
+                          uiOutput("select_gender_rr")
                         ),
                         column(
                           width = 4,
-                          uiOutput("select_outcome")
+                          uiOutput("select_outcome_rr")
                         )
                       )
                     )
                   )
-                ),
+                ) ## end Rel Risks display ----
+                ,
                 ## PrevCons display ----
                 tabPanel(
                   title = "Prevalence and Consumption",
-                  id = "prevconsTab"
-                ),
-
+                  id = "prevconsTab",
+                  tabsetPanel(
+                    id = "prevconsTabset",
+                    type = "tabs",
+                    tabPanel(
+                      title = "Table",
+                      id = "prevconsTable",
+                      radioButtons(
+                        "pc_table_type",
+                        "",
+                        choices = c("Raw" = "raw", "Formatted" = "for"),
+                        selected = "raw",
+                        inline = TRUE
+                      ),
+                      div(
+                        DT::dataTableOutput("pcTable"),
+                        style = "overflow-x: hidden; overflow-y: scroll;
+                                height: 800px;"
+                      )
+                    ),
+                    tabPanel(
+                      title = "Plots",
+                      id = "prevconsPlots",
+                      fluidRow(
+                        br(),
+                        column(
+                          width = 6,
+                          uiOutput("select_gender_pc")
+                        ),
+                        column(
+                          width = 6,
+                          uiOutput("select_age_group_pc")
+                        )
+                      )
+                    )
+                  )
+                ) ## end PrevCons display ----
+                ,
                 ## Output display ----
                 tabPanel(
                   title = "Output",
-                  id = "outputTab"
-                )
-                ## To be added ----
+                  id = "outputTab",
+                  tabsetPanel(
+                    id = "outputTabset",
+                    type = "tabs",
+                    tabPanel(
+                      title = "Prevalence and Consumption",
+                      id = "outputPCTable",
+                      div(
+                        DT::dataTableOutput("prev_cons_output"),
+                        style = "overflow-x: hidden; overflow-y: scroll;
+                        height: 800px;"
+                      )
+                    ),
+                    tabPanel(
+                      title = "Mortality AAFs",
+                      id = "mortTable",
+                      div(
+                        DT::dataTableOutput("mortality_aaf"),
+                        style = "overflow-x: hidden; overflow-y: scroll;
+                        height: 800px;"
+                      )
+                    ),
+                    tabPanel(
+                      title = "Morbidity AAFs",
+                      id = "morbTable",
+                      div(
+                        DT::dataTableOutput("morbidity_aaf"),
+                        style = "overflow-x: hidden; overflow-y: scroll;
+                        height: 800px;"
+                      )
+                    ),
+                    tabPanel(
+                      title = "Plots",
+                      id = "aafPlots"
+                    )
+                  )
+                )## end Output Display ----
               )
             )
-          )
+          )## end mainPanel ----
         )
       )
     ) ## end shinyjs::hidden ----

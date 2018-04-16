@@ -76,7 +76,7 @@ server <- function(input, output, session) {
   ## Prev cons data input ----
   pcData <- reactive({
     ds <- NULL
-    if(input$pc_type == "packaged") {
+    if(input$source_pc == "packaged") {
       ds <- switch(input$packaged_pc,
                    "pc_bc" = intermahpr::pc_bc,
                    "pc_can" = intermahpr::pc_can,
@@ -111,14 +111,6 @@ server <- function(input, output, session) {
     }
   })
 
-  output$pcTable <- renderDataTable(
-    {
-      pcData()
-    },
-    options = list(pageLength = 18,
-                   lengthMenu = c(12, 18, 36, 72))
-  )
-
   ## Relative risk table render ----
   output$rrTable <- DT::renderDataTable(
     {
@@ -132,7 +124,7 @@ server <- function(input, output, session) {
       ds
     },
     filter = 'top',
-    server = FALSE,
+    server = TRUE,
     options = list(pageLength = 10,
                    scrollX = TRUE,
                    autoWidth = TRUE
@@ -140,34 +132,164 @@ server <- function(input, output, session) {
   )
 
   ## Relative risk plot render ----
-  conditions <- reactive({
+  conditions_rr <- reactive({
     dplyr::distinct(frrData()["CONDITION"])$CONDITION
   })
 
   genders_rr <- reactive({
-    distinct(frrData$GENDER)
+    dplyr::distinct(frrData()["GENDER"])$GENDER
   })
 
-  outcomes <- reactive({
-    distinct(frrData$OUTCOME)
+  outcomes_rr <- reactive({
+    dplyr::distinct(frrData()["OUTCOME"])$OUTCOME
   })
 
-  output$select_condition <- renderUI({
+  output$select_condition_rr <- renderUI({
     selectInput(
       "condition_rr_plot",
       "Conditions",
-      choices = conditions(),
+      choices = conditions_rr(),
       multiple = TRUE,
       selectize = TRUE
     )
   })
 
-  output$select_gender <- renderUI({
+  output$select_gender_rr <- renderUI({
   })
 
-  output$select_outcome <- renderUI({
+  output$select_outcome_rr <- renderUI({
   })
 
   ## Prev Cons table render ----
+  output$pcTable <- DT::renderDataTable(
+    {
+      ds <- NULL
+      if(input$pc_table_type == "raw") {
+        ds <- pcData()
+      }
+      else {
+        ds <- fpcData()
+      }
+      ds
+    },
+    filter = 'top',
+    server = TRUE,
+    options = list(pageLength = 18,
+                   lengthMenu = c(12,18,36,72),
+                   scrollX = TRUE,
+                   autoWidth = TRUE
+    )
+  )
 
+  ## Prev Cons plot render ----
+  genders_pc <- reactive({
+    dplyr::distinct(fpcData()["GENDER"])$GENDER
+  })
+
+  output$select_gender_pc <- renderUI({
+    selectInput(
+      "genders_pc_plot",
+      "Genders",
+      choices = genders_pc(),
+      multiple = TRUE,
+      selectize = TRUE
+    )
+  })
+
+  output$select_gender_rr <- renderUI({
+  })
+
+  output$select_outcome_rr <- renderUI({
+  })
+
+  ## AAF objects ----
+  assembled_fn <- reactive({
+    ds <- NULL
+    if((!is.null(dpcData())) && (!is.null(drrData()))) {
+      ds <- join_pc_rr(pc = dpcData(), rr = drrData())
+    }
+    ds
+  })
+
+  cuts <- reactive({
+    list("Female" = c(input$lm_f, input$mh_f),
+         "Male" = c(input$lm_m, input$mh_m))
+  })
+
+  ready_for_evaluation <- reactive({
+    ds <- NULL
+    if(!is.null(assembled_fn())) {
+      ds <- add_cutpoints(aaf_table = assembled_fn(), cuts = cuts())
+    }
+    ds
+  })
+
+  prev_cons_output_table <- reactive({
+    ds <- NULL
+    if(!is.null(ready_for_evaluation())) {
+      ds <- intermahpr::extract_prevcons(aaf_table = ready_for_evaluation())
+    }
+    ds
+  })
+
+  output$prev_cons_output <- DT::renderDataTable(
+    {
+      prev_cons_output_table()
+    },
+    filter = 'top',
+    server = TRUE,
+    options = list(pageLength = 18,
+                   lengthMenu = c(12,18,36,72),
+                   scrollX = TRUE,
+                   autoWidth = TRUE
+    )
+  )
+
+  evaluated <- reactive({
+    ds <- NULL
+    if(!is.null(ready_for_evaluation())) {
+      ds <- evaluate_at_cutpoints(ready_for_evaluation())
+    }
+    ds
+  })
+
+  mort_aaf_table <- reactive({
+      ds <- NULL
+      if(!is.null(evaluated())) {
+        ds <- outcome_splitter(aaf_table = evaluated(), outcome = "Mortality")
+      }
+      ds
+  })
+
+  morb_aaf_table <- reactive({
+    ds <- NULL
+    if(!is.null(evaluated())) {
+      ds <- outcome_splitter(aaf_table = evaluated(), outcome = "Morbidity")
+    }
+    ds
+  })
+
+  output$mortality_aaf <- DT::renderDataTable(
+    {
+      mort_aaf_table()
+    },
+    filter = 'top',
+    server = TRUE,
+    options = list(pageLength = 10,
+                   scrollX = TRUE,
+                   autoWidth = TRUE
+    )
+  )
+
+  output$morbidity_aaf <- DT::renderDataTable(
+    {
+      morb_aaf_table()
+    },
+    filter = 'top',
+    server = TRUE,
+    options = list(pageLength = 10,
+                   scrollX = TRUE,
+                   autoWidth = TRUE
+    )
+  )
 }

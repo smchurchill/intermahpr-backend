@@ -39,6 +39,43 @@ compute_aafs <- function(aaf_table, cuts) {
   aaf_table
 }
 
+#' Add evaluation cutpoints to a given datatable
+#'
+#' Written to provide additional reactivity to shiny app
+#'
+#'@param aaf_table a tibble as returned by assemble
+#'@param cuts a list of double vectors indexed by aaf_table$GENDER
+#'
+#'@importFrom purrr pmap
+#'@importFrom magrittr "%<>%"
+#'
+#'
+
+add_cutpoints <- function(aaf_table, cuts) {
+  aaf_table %<>%
+    mutate(CUTS = pmap(list(LB, cuts[GENDER], UB), c))
+  aaf_table
+}
+
+#' Evaluate a given datatable at pre-added cutpoints
+#'
+#' Written to provide additional reactivity to shiny app
+#'
+#'@param aaf_table_cuts a tibble as returned by add_cutpoints
+#'
+#'@importFrom purrr pmap map map2
+#'@importFrom magrittr "%>%" "%<>%"
+#'
+
+evaluate_at_cutpoints <- function(aaf_table_cuts) {
+  aaf_table_cuts %<>%
+    mutate(CUMUL_F = map2(AAF_CMP, CUTS, ~.x(.y))) %>%
+    mutate(AAF_GRP = map(CUMUL_F, ~diff(.x))) %>%
+    mutate(AAF_CD = unlist(map(CUMUL_F, ~`[`(.x, length(.x))))) %>%
+    mutate(AAF_TOTAL = AAF_FD + AAF_CD)
+  aaf_table_cuts
+}
+
 #' Takes all possible inputs, computes specified AAFs, returns TMI
 #'
 #'@description
@@ -160,6 +197,13 @@ vintegrate <- function(funs, vlower, vupper) {
 #' Helper function that tidies base AAF into the relevant prevalence and
 #' consumption data
 #'
+#' Intended for use with intermahp base functionality (assumes the positions of
+#' cutpoint variables)
+#'
+#'@param aaf_table a tibble as returned by add_cutpoints with cutpoints of the
+#'form c(LB, LM, MH, UB) where LM is the light-moderate barrier and MH is the
+#'moderate-heavy barrier.
+#'
 #'@importFrom dplyr distinct select case_when
 #'
 
@@ -189,7 +233,7 @@ extract_prevcons <- function(aaf_table) {
     mutate(P_CD_SUM = P_LD + P_MD + P_HD) %>%
     select(REGION, YEAR, GENDER, AGE_GROUP, POPULATION, PCC_AMONG_DRINKERS,
            GAMMA_SHAPE, GAMMA_SCALE, P_LA, P_FD, P_CD, P_LD, P_MD, P_HD,
-           EXTRAPOLATION, P_CD_SUM)
+           EXTRAPOLATION)
 
   aaf_table
 }
