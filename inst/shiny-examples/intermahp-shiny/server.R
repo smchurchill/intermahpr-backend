@@ -4,11 +4,6 @@
 # This is the server portion of a shiny demo for intermahp
 
 server <- function(input, output, session) {
-
-  ## Hide/show content ----
-  shinyjs::hide("loadingContent")
-  shinyjs::show("allContent")
-
   ## Female drinking groups ----
   output$drinking_groups_female <- renderTable({
     tibble::data_frame(Group = c("Light", "Moderate", "Heavy"),
@@ -114,21 +109,41 @@ server <- function(input, output, session) {
   ## Relative risk table render ----
   output$rrTable <- DT::renderDataTable(
     {
-      ds <- NULL
+      if(is.null(rrData())){return(NULL)}
+
       if(input$rr_table_type == "raw") {
         ds <- rrData()
       }
       else {
         ds <- frrData()
       }
+      ds <- DT::datatable(
+        data = ds,
+        options = list(
+          pageLength = 12,
+          lengthMenu = c(12,18,36,72),
+          scrollX = TRUE,
+          autoWidth = TRUE,
+          columnDefs = list(
+            list(
+              targets = 0,
+              visible = FALSE
+            ),
+            list(
+              targets = 2,
+              render = DT::JS(
+                "function(data, type, row, meta) {",
+                "return type === 'display' && data.length > 15 ?",
+                "'<span title=\"' + data + '\">' + data.substr(0, 13) + ",
+                "'...</span>' : data;",
+                "}")
+            )
+          ),
+          filter = 'top'
+        )
+      )
       ds
-    },
-    filter = 'top',
-    server = TRUE,
-    options = list(pageLength = 10,
-                   scrollX = TRUE,
-                   autoWidth = TRUE
-    )
+    }
   )
 
   ## Relative risk plot render ----
@@ -163,22 +178,29 @@ server <- function(input, output, session) {
   ## Prev Cons table render ----
   output$pcTable <- DT::renderDataTable(
     {
-      ds <- NULL
+      if(is.null(pcData())) {return(NULL)}
       if(input$pc_table_type == "raw") {
-        ds <- pcData()
+        table <- pcData()
       }
-      else {
-        ds <- fpcData()
+      else{
+        table <- fpcData()
       }
-      ds
-    },
-    filter = 'top',
-    server = TRUE,
-    options = list(pageLength = 18,
-                   lengthMenu = c(12,18,36,72),
-                   scrollX = TRUE,
-                   autoWidth = TRUE
-    )
+      DT::datatable(
+        data = table,
+        options = list(
+          filter = 'top',
+          pageLength = 18,
+          lengthMenu = c(12,18,36,72),
+          scrollX = TRUE,
+          columnDefs = list(
+            list(
+              targets = 0,
+              visible = FALSE
+            )
+          )
+        )
+      )
+    }
   )
 
   ## Prev Cons plot render ----
@@ -234,15 +256,22 @@ server <- function(input, output, session) {
 
   output$prev_cons_output <- DT::renderDataTable(
     {
-      prev_cons_output_table()
-    },
-    filter = 'top',
-    server = TRUE,
-    options = list(pageLength = 18,
-                   lengthMenu = c(12,18,36,72),
-                   scrollX = TRUE,
-                   autoWidth = TRUE
-    )
+      DT::datatable(
+        data = prev_cons_output_table(),
+        options = list(
+          filter = 'top',
+          pageLength = 18,
+          lengthMenu = c(12,18,36,72),
+          scrollX = TRUE,
+          columnDefs = list(
+            list(
+              targets = 0,
+              visible = FALSE
+            )
+          )
+        )
+      )
+    }
   )
 
   evaluated <- reactive({
@@ -254,11 +283,11 @@ server <- function(input, output, session) {
   })
 
   mort_aaf_table <- reactive({
-      ds <- NULL
-      if(!is.null(evaluated())) {
-        ds <- outcome_splitter(aaf_table = evaluated(), outcome = "Mortality")
-      }
-      ds
+    ds <- NULL
+    if(!is.null(evaluated())) {
+      ds <- outcome_splitter(aaf_table = evaluated(), outcome = "Mortality")
+    }
+    ds
   })
 
   morb_aaf_table <- reactive({
@@ -271,25 +300,94 @@ server <- function(input, output, session) {
 
   output$mortality_aaf <- DT::renderDataTable(
     {
-      mort_aaf_table()
-    },
-    filter = 'top',
-    server = TRUE,
-    options = list(pageLength = 10,
-                   scrollX = TRUE,
-                   autoWidth = TRUE
-    )
+      if(is.null(mort_aaf_table())) { return(NULL) }
+      table <- DT::datatable(
+        data = mort_aaf_table(),
+        options = list(
+          pageLength = 12,
+          lengthMenu = c(12,18,36,72),
+          scrollX = TRUE,
+          autoWidth = TRUE,
+          columnDefs = list(
+            list(
+              targets = 0,
+              visible = FALSE
+            ),
+            list(
+              targets = 6,
+              render = DT::JS(
+                "function(data, type, row, meta) {",
+                  "return type === 'display' && data.length > 15 ?",
+                  "'<span title=\"' + data + '\">' + data.substr(0, 13) + ",
+                  "'...</span>' : data;",
+                "}")
+              )
+            ),
+          filter = 'top'
+        )
+      )
+      if(input$mort_aaf_display_type == "dec") {
+        table <- DT::formatRound(table = table,
+                                 columns = c("AAF_FD", "AAF_LD", "AAF_MD",
+                                             "AAF_HD", "AAF_TOTAL"),
+                                 digits = 4)
+      }
+      else {
+        table <- DT::formatPercentage(table = table,
+                                      columns = c("AAF_FD", "AAF_LD", "AAF_MD",
+                                             "AAF_HD", "AAF_TOTAL"),
+                                      digits = 2)
+      }
+      table
+    }
   )
 
   output$morbidity_aaf <- DT::renderDataTable(
     {
-      morb_aaf_table()
-    },
-    filter = 'top',
-    server = TRUE,
-    options = list(pageLength = 10,
-                   scrollX = TRUE,
-                   autoWidth = TRUE
-    )
+      if(is.null(morb_aaf_table())) { return(NULL) }
+      table <- DT::datatable(
+        data = morb_aaf_table(),
+        options = list(
+          pageLength = 12,
+          lengthMenu = c(12,18,36,72),
+          scrollX = TRUE,
+          autoWidth = TRUE,
+          columnDefs = list(
+            list(
+              targets = 0,
+              visible = FALSE
+            ),
+            list(
+              targets = 6,
+              render = DT::JS(
+                "function(data, type, row, meta) {",
+                "return type === 'display' && data.length > 15 ?",
+                "'<span title=\"' + data + '\">' + data.substr(0, 13) + ",
+                "'...</span>' : data;",
+                "}")
+            )
+          ),
+          filter = 'top'
+        )
+      )
+      if(input$morb_aaf_display_type == "dec") {
+        table <- DT::formatRound(table = table,
+                                 columns = c("AAF_FD", "AAF_LD", "AAF_MD",
+                                             "AAF_HD", "AAF_TOTAL"),
+                                 digits = 4)
+      }
+      else {
+        table <- DT::formatPercentage(table = table,
+                                      columns = c("AAF_FD", "AAF_LD", "AAF_MD",
+                                                  "AAF_HD", "AAF_TOTAL"),
+                                      digits = 2)
+      }
+      table
+    }
   )
+
+
+  ## Hide/show content ----
+  shinyjs::hide("loadingContent")
+  shinyjs::show("allContent")
 }

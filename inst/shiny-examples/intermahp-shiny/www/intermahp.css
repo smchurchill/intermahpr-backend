@@ -1,8 +1,12 @@
 .scrollable {
-	overflow-x: scroll;
-	overflow-y: scroll;
+	overflow-x: hidden, scroll;
+	overflow-y: hidden, scroll;
 }
 
 .has-feedback .form-control {
   padding-right: 0px;
+}
+
+table {
+  white-space: nowrap;
 }

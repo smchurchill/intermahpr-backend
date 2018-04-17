@@ -15,7 +15,8 @@ function(request) {
       )
     ),
 
-    ## Enclose the header in it's own section for nicer styling ----
+    ## Enclose the header in it's own section ----
+    ## for nicer styling
     div(
       id = "headerSection",
       h1("The International Model of Alcohol Harms and Policies"),
@@ -53,7 +54,7 @@ function(request) {
                 "Upload CSV" = "upload",
                 "Use packaged" = "packaged"
               ),
-              selected = "upload"
+              selected = "packaged"
             ),
             ## Which IHD treatment among packaged risks? ----
             conditionalPanel(
@@ -96,7 +97,7 @@ function(request) {
                 "Upload CSV" = "upload",
                 "Use packaged" = "packaged"
               ),
-              selected = "upload"
+              selected = "packaged"
             ),
             ## Which PC data among packaged? ----
             conditionalPanel(
@@ -217,7 +218,7 @@ function(request) {
           ), ## end sidebarPanel ----
           ## Main Panel ----
           mainPanel(
-            wellPanel(
+            # wellPanel(
               tabsetPanel(
                 id = "resultsTabset",
                 type = "tabs",
@@ -226,26 +227,23 @@ function(request) {
                 tabPanel(
                   title = "Drinking Groups",
                   id = "drinkgrpTab",
+                  br(),
                   fluidRow(
                     ## Female Grouping Display ----
                     column(
                       width = 6,
-                      wellPanel(
-                        class = "scrollable",
-                        h4("Female"),
-                        tableOutput("drinking_groups_female"),
-                        textOutput("binge_barrier_female")
-                      )
+                      class = "scrollable",
+                      h4("Female"),
+                      tableOutput("drinking_groups_female"),
+                      textOutput("binge_barrier_female")
                     ),
                     ## Male Grouping Display ----
                     column(
                       width = 6,
-                      wellPanel(
-                        class = "scrollable",
-                        h4("Male"),
-                        tableOutput("drinking_groups_male"),
-                        textOutput("binge_barrier_male")
-                      )
+                      class = "scrollable",
+                      h4("Male"),
+                      tableOutput("drinking_groups_male"),
+                      textOutput("binge_barrier_male")
                     )
                   )
                 ) ## end Groups display ----
@@ -254,6 +252,7 @@ function(request) {
                 tabPanel(
                   title = "Relative Risk",
                   id = "relriskTab",
+                  br(),
                   tabsetPanel(
                     id = "relrisksTabset",
                     type = "tabs",
@@ -267,11 +266,7 @@ function(request) {
                         selected = "raw",
                         inline = TRUE
                       ),
-                      div(
-                        DT::dataTableOutput("rrTable"),
-                        style = "overflow-x: hidden; overflow-y: scroll;
-                                height: 800px;"
-                      )
+                      DT::dataTableOutput("rrTable")
                     ),
                     tabPanel(
                       title = "Plots",
@@ -299,6 +294,7 @@ function(request) {
                 tabPanel(
                   title = "Prevalence and Consumption",
                   id = "prevconsTab",
+                  br(),
                   tabsetPanel(
                     id = "prevconsTabset",
                     type = "tabs",
@@ -312,11 +308,7 @@ function(request) {
                         selected = "raw",
                         inline = TRUE
                       ),
-                      div(
-                        DT::dataTableOutput("pcTable"),
-                        style = "overflow-x: hidden; overflow-y: scroll;
-                                height: 800px;"
-                      )
+                      DT::dataTableOutput("pcTable")
                     ),
                     tabPanel(
                       title = "Plots",
@@ -336,50 +328,59 @@ function(request) {
                   )
                 ) ## end PrevCons display ----
                 ,
-                ## Output display ----
+                ## AAF display ----
                 tabPanel(
-                  title = "Output",
-                  id = "outputTab",
+                  title = "Alcohol Attributable Fractions",
+                  id = "aafTab",
+                  br(),
                   tabsetPanel(
-                    id = "outputTabset",
+                    id = "aafTabset",
                     type = "tabs",
                     tabPanel(
                       title = "Prevalence and Consumption",
-                      id = "outputPCTable",
-                      div(
-                        DT::dataTableOutput("prev_cons_output"),
-                        style = "overflow-x: hidden; overflow-y: scroll;
-                        height: 800px;"
-                      )
+                      id = "aafPCTable",
+                      DT::dataTableOutput("prev_cons_output")
                     ),
                     tabPanel(
-                      title = "Mortality AAFs",
+                      title = "Mortality",
                       id = "mortTable",
-                      div(
-                        DT::dataTableOutput("mortality_aaf"),
-                        style = "overflow-x: hidden; overflow-y: scroll;
-                        height: 800px;"
-                      )
+                      radioButtons(
+                        "mort_aaf_display_type",
+                        "",
+                        choices = c("Decimal" = "dec", "Percent" = "per"),
+                        selected = "per",
+                        inline = TRUE
+                      ),
+                      DT::dataTableOutput("mortality_aaf")
                     ),
                     tabPanel(
-                      title = "Morbidity AAFs",
+                      title = "Morbidity",
                       id = "morbTable",
-                      div(
-                        DT::dataTableOutput("morbidity_aaf"),
-                        style = "overflow-x: hidden; overflow-y: scroll;
-                        height: 800px;"
-                      )
+                      radioButtons(
+                        "morb_aaf_display_type",
+                        "",
+                        choices = c("Decimal" = "dec", "Percent" = "per"),
+                        selected = "per",
+                        inline = TRUE
+                      ),
+                      DT::dataTableOutput("morbidity_aaf")
                     ),
                     tabPanel(
                       title = "Plots",
                       id = "aafPlots"
                     )
                   )
-                )## end Output Display ----
+                )## end AAF Display ----
+                ,
+                ## Harm Reduction Display ----
+                tabPanel(
+                  title = "Harm Reduction",
+                  id = "harmReduction"
+                )## end Harm Reduction Display ----
               )
             )
           )## end mainPanel ----
-        )
+        # )
       )
     ) ## end shinyjs::hidden ----
   ) ## end fluidPage ----
