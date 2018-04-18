@@ -218,169 +218,174 @@ function(request) {
           ), ## end sidebarPanel ----
           ## Main Panel ----
           mainPanel(
-            # wellPanel(
-              tabsetPanel(
-                id = "resultsTabset",
-                type = "tabs",
+            tabsetPanel(
+              id = "resultsTabset",
+              type = "tabs",
 
-                ## Groups Display Tab ----
-                tabPanel(
-                  title = "Drinking Groups",
-                  id = "drinkgrpTab",
-                  br(),
-                  fluidRow(
-                    ## Female Grouping Display ----
-                    column(
-                      width = 6,
-                      class = "scrollable",
-                      h4("Female"),
-                      tableOutput("drinking_groups_female"),
-                      textOutput("binge_barrier_female")
-                    ),
-                    ## Male Grouping Display ----
-                    column(
-                      width = 6,
-                      class = "scrollable",
-                      h4("Male"),
-                      tableOutput("drinking_groups_male"),
-                      textOutput("binge_barrier_male")
-                    )
+              ## Groups Display Tab ----
+              tabPanel(
+                title = "Drinking Groups",
+                id = "drinkgrpTab",
+                br(),
+                fluidRow(
+                  ## Female Grouping Display ----
+                  column(
+                    width = 6,
+                    class = "scrollable",
+                    h4("Female"),
+                    tableOutput("drinking_groups_female"),
+                    textOutput("binge_barrier_female")
+                  ),
+                  ## Male Grouping Display ----
+                  column(
+                    width = 6,
+                    class = "scrollable",
+                    h4("Male"),
+                    tableOutput("drinking_groups_male"),
+                    textOutput("binge_barrier_male")
                   )
-                ) ## end Groups display ----
-                ,
-                ## Relative Risk Display ----
-                tabPanel(
-                  title = "Relative Risk",
-                  id = "relriskTab",
-                  br(),
-                  tabsetPanel(
-                    id = "relrisksTabset",
-                    type = "tabs",
-                    tabPanel(
-                      title = "Table",
-                      id = "relrisksTable",
-                      radioButtons(
-                        "rr_table_type",
-                        "",
-                        choices = c("Raw" = "raw", "Formatted" = "for"),
-                        selected = "raw",
-                        inline = TRUE
-                      ),
-                      DT::dataTableOutput("rrTable")
+                )
+              ) ## end Groups display ----
+              ,
+              ## Relative Risk Display ----
+              tabPanel(
+                title = "Relative Risk",
+                id = "relriskTab",
+                br(),
+                tabsetPanel(
+                  id = "relrisksTabset",
+                  type = "tabs",
+                  tabPanel(
+                    title = "Table",
+                    id = "relrisksTable",
+                    radioButtons(
+                      "rr_table_type",
+                      "",
+                      choices = c("Raw" = "raw", "Formatted" = "for"),
+                      selected = "raw",
+                      inline = TRUE
                     ),
-                    tabPanel(
-                      title = "Plots",
-                      id = "relrisksPlots",
-                      fluidRow(
-                        br(),
-                        column(
-                          width = 4,
-                          uiOutput("select_condition_rr")
-                        ),
-                        column(
-                          width = 4,
-                          uiOutput("select_gender_rr")
-                        ),
-                        column(
-                          width = 4,
-                          uiOutput("select_outcome_rr")
-                        )
+                    DT::dataTableOutput("rrTable")
+                  ),
+                  tabPanel(
+                    title = "Plots",
+                    id = "relrisksPlots",
+                    fluidRow(
+                      br(),
+                      column(
+                        width = 4,
+                        uiOutput("select_condition_rr")
+                      ),
+                      column(
+                        width = 4,
+                        uiOutput("select_gender_rr")
+                      ),
+                      column(
+                        width = 4,
+                        uiOutput("select_outcome_rr")
                       )
                     )
                   )
-                ) ## end Rel Risks display ----
-                ,
-                ## PrevCons display ----
-                tabPanel(
-                  title = "Prevalence and Consumption",
-                  id = "prevconsTab",
-                  br(),
-                  tabsetPanel(
-                    id = "prevconsTabset",
-                    type = "tabs",
-                    tabPanel(
-                      title = "Table",
-                      id = "prevconsTable",
-                      radioButtons(
-                        "pc_table_type",
-                        "",
-                        choices = c("Raw" = "raw", "Formatted" = "for"),
-                        selected = "raw",
-                        inline = TRUE
-                      ),
-                      DT::dataTableOutput("pcTable")
+                )
+              ) ## end Rel Risks display ----
+              ,
+              ## PrevCons display ----
+              tabPanel(
+                title = "Prevalence and Consumption",
+                id = "prevconsTab",
+                br(),
+                tabsetPanel(
+                  id = "prevconsTabset",
+                  type = "tabs",
+                  tabPanel(
+                    title = "Table",
+                    id = "prevconsTable",
+                    radioButtons(
+                      "inprev_display_type",
+                      "",
+                      choices = c("Decimal" = "dec", "Percentage" = "per"),
+                      selected = "per",
+                      inline = TRUE
                     ),
-                    tabPanel(
-                      title = "Plots",
-                      id = "prevconsPlots",
-                      fluidRow(
-                        br(),
-                        column(
-                          width = 6,
-                          uiOutput("select_gender_pc")
-                        ),
-                        column(
-                          width = 6,
-                          uiOutput("select_age_group_pc")
-                        )
+                    DT::dataTableOutput("pcTable")
+                  ),
+                  tabPanel(
+                    title = "Plots",
+                    id = "prevconsPlots",
+                    fluidRow(
+                      br(),
+                      column(
+                        width = 6,
+                        uiOutput("select_gender_pc")
+                      ),
+                      column(
+                        width = 6,
+                        uiOutput("select_age_group_pc")
                       )
                     )
                   )
-                ) ## end PrevCons display ----
-                ,
-                ## AAF display ----
-                tabPanel(
-                  title = "Alcohol Attributable Fractions",
-                  id = "aafTab",
-                  br(),
-                  tabsetPanel(
-                    id = "aafTabset",
-                    type = "tabs",
-                    tabPanel(
-                      title = "Prevalence and Consumption",
-                      id = "aafPCTable",
-                      DT::dataTableOutput("prev_cons_output")
+                )
+              ) ## end PrevCons display ----
+              ,
+              ## AAF display ----
+              tabPanel(
+                title = "Alcohol Attributable Fractions",
+                id = "aafTab",
+                br(),
+                tabsetPanel(
+                  id = "aafTabset",
+                  type = "tabs",
+                  tabPanel(
+                    title = "Prevalence and Consumption",
+                    id = "aafPCTable",
+                    radioButtons(
+                      "outprev_display_type",
+                      "",
+                      choices = c("Decimal" = "dec", "Percent" = "per"),
+                      selected = "per",
+                      inline = TRUE
                     ),
-                    tabPanel(
-                      title = "Mortality",
-                      id = "mortTable",
-                      radioButtons(
-                        "mort_aaf_display_type",
-                        "",
-                        choices = c("Decimal" = "dec", "Percent" = "per"),
-                        selected = "per",
-                        inline = TRUE
-                      ),
-                      DT::dataTableOutput("mortality_aaf")
+                    DT::dataTableOutput("prev_cons_output")
+                  ),
+                  tabPanel(
+                    title = "Mortality",
+                    id = "mortTable",
+                    radioButtons(
+                      "mort_aaf_display_type",
+                      "",
+                      choices = c("Decimal" = "dec", "Percent" = "per"),
+                      selected = "per",
+                      inline = TRUE
                     ),
-                    tabPanel(
-                      title = "Morbidity",
-                      id = "morbTable",
-                      radioButtons(
-                        "morb_aaf_display_type",
-                        "",
-                        choices = c("Decimal" = "dec", "Percent" = "per"),
-                        selected = "per",
-                        inline = TRUE
-                      ),
-                      DT::dataTableOutput("morbidity_aaf")
+                    DT::dataTableOutput("mortality_aaf")
+                  ),
+                  tabPanel(
+                    title = "Morbidity",
+                    id = "morbTable",
+                    radioButtons(
+                      "morb_aaf_display_type",
+                      "",
+                      choices = c("Decimal" = "dec", "Percent" = "per"),
+                      selected = "per",
+                      inline = TRUE
                     ),
-                    tabPanel(
-                      title = "Plots",
-                      id = "aafPlots"
-                    )
+                    DT::dataTableOutput("morbidity_aaf")
+                  ),
+                  tabPanel(
+                    title = "Plots",
+                    id = "aafPlots"
                   )
-                )## end AAF Display ----
-                ,
-                ## Harm Reduction Display ----
-                tabPanel(
-                  title = "Harm Reduction",
-                  id = "harmReduction"
-                )## end Harm Reduction Display ----
-              )
+                )
+              )## end AAF Display ----
+              ,
+              ## Harm Reduction Display ----
+              tabPanel(
+                title = "Harm Reduction",
+                id = "harmReduction"
+              )## end Harm Reduction Display ----
             )
           )## end mainPanel ----
-        # )
+        )
       )
     ) ## end shinyjs::hidden ----
   ) ## end fluidPage ----
