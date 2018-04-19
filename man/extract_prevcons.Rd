@@ -7,7 +7,12 @@ consumption data}
 \usage{
 extract_prevcons(aaf_table)
 }
+\arguments{
+\item{aaf_table}{a tibble as returned by add_cutpoints with cutpoints of the
+form c(LB, LM, MH, UB) where LM is the light-moderate barrier and MH is the
+moderate-heavy barrier.}
+}
 \description{
-Helper function that tidies base AAF into the relevant prevalence and
-consumption data
+Intended for use with intermahp base functionality (assumes the positions of
+cutpoint variables)
 }

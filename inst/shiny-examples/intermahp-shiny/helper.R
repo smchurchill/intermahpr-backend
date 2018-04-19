@@ -1,6 +1,6 @@
 ### Common DT options ----
 base_options <- list(
-  dom = 'Bfrtip',
+  dom = "Bfrtip",
   buttons = c("colvis", "pageLength"),
   pageLength = 12,
   lengthMenu = c(12,18,36,72),
@@ -8,7 +8,7 @@ base_options <- list(
   autoWidth = TRUE
 )
 
-# ** columnDefs elements ----
+# * columnDefs elements ----
 
 cd_hide0 <- list(
       targets = 0,
@@ -29,7 +29,7 @@ cd_dots <- function(targets, maxlength, after) {
   )
 }
 
-# ** Column formatting ----
+# * Column formatting ----
 
 reformat <- function(tbl, type, col) {
   if(type == "dec") {
@@ -46,3 +46,5 @@ reformat <- function(tbl, type, col) {
   }
   tbl
 }
+
+### Plot production ----

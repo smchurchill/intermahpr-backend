@@ -1,14 +1,21 @@
 # Sam Churchill
 # April 12 2018
-
+#
 # This is the server portion of a shiny demo for intermahp
 
+source("global.R") # import functions
 source("helper.R") # Have helpers available
+
+
+#'
+#'@importFrom dplyr filter
+#'@importFrom magrittr %>% %<>%
+#'
 
 server <- function(input, output, session) {
   ## reactive() Objects ----
 
-  ## ** Relative Risk ----
+  ## * Relative Risk ----
   rrData <- reactive({
     if(input$source_rr == "upload"){
       inFile <- input$uploaded_rr
@@ -26,20 +33,12 @@ server <- function(input, output, session) {
   frrData <- reactive(format_v0_rr(rrData()))
   drrData <- reactive(derive_v0_rr(rr = frrData(), ext = input$ext))
 
-  conditions_rr <- reactive({
-    dplyr::distinct(frrData()["CONDITION"])$CONDITION
-  })
-
-  genders_rr <- reactive({
-    dplyr::distinct(frrData()["GENDER"])$GENDER
-  })
-
-  outcomes_rr <- reactive({
-    dplyr::distinct(frrData()["OUTCOME"])$OUTCOME
-  })
+  conditions_rr <- reactive({dplyr::distinct(frrData()["CONDITION"])$CONDITION})
+  genders_rr <- reactive({dplyr::distinct(frrData()["GENDER"])$GENDER})
+  outcomes_rr <- reactive({dplyr::distinct(frrData()["OUTCOME"])$OUTCOME})
 
 
-  ## ** Prevalence and Consumption ----
+  ## * Prevalence and Consumption ----
   pcData <- reactive({
     if(input$source_pc == "upload") {
       inFile <- input$uploaded_pc
@@ -66,27 +65,12 @@ server <- function(input, output, session) {
     )
   )
 
-  genders_pc <- reactive({
-    dplyr::distinct(fpcData()["GENDER"])$GENDER
-  })
+  regions_pc <- reactive({dplyr::distinct(fpcData()["REGION"])$REGION})
+  years_pc <- reactive({dplyr::distinct(fpcData()["YEAR"])$YEAR})
+  genders_pc <- reactive({dplyr::distinct(fpcData()["GENDER"])$GENDER})
+  agegroups_pc <- reactive({dplyr::distinct(fpcData()["AGE_GROUP"])$AGE_GROUP})
 
-  output$select_gender_pc <- renderUI({
-    selectInput(
-      "genders_pc_plot",
-      "Genders",
-      choices = genders_pc(),
-      multiple = TRUE,
-      selectize = TRUE
-    )
-  })
-
-  output$select_gender_rr <- renderUI({
-  })
-
-  output$select_outcome_rr <- renderUI({
-  })
-
-  ## ** AAF ----
+  ## * AAF ----
   assembled_fn <- reactive({
     if(is.null(dpcData()) || is.null(drrData())) {return(NULL)}
     join_pc_rr(pc = dpcData(), rr = drrData())
@@ -124,8 +108,8 @@ server <- function(input, output, session) {
 
   ## Output ----
 
-  ## ** datatables ----
-  ## **** arguments ----
+  ## * datatables ----
+  ## ** arguments ----
   output$rrTable <- DT::renderDataTable(
     {
       if(is.null(rrData())) {return(NULL)}
@@ -172,7 +156,7 @@ server <- function(input, output, session) {
     }
   )
 
-  ## **** results ----
+  ## ** results ----
   output$prev_cons_output <- DT::renderDataTable(
     {
       if(is.null(pcData())) {return(NULL)}
@@ -247,7 +231,7 @@ server <- function(input, output, session) {
     }
   )
 
-  ## tables ----
+  ## * tables ----
   ## ** Female drinking groups ----
   output$drinking_groups_female <- renderTable({
     tibble::data_frame(Group = c("Light", "Moderate", "Heavy"),
@@ -278,10 +262,12 @@ server <- function(input, output, session) {
     )
   })
 
+  ## * renderUI ----
 
+  ## ** RR Plot selectors ----
   output$select_condition_rr <- renderUI({
     selectInput(
-      "condition_rr_plot",
+      "conditions_to_plot_rr",
       "Conditions",
       choices = conditions_rr(),
       multiple = TRUE,
@@ -290,14 +276,49 @@ server <- function(input, output, session) {
   })
 
   output$select_gender_rr <- renderUI({
+    selectInput(
+      "genders_to_plot_rr",
+      "Genders",
+      choices = genders_rr(),
+      multiple = TRUE,
+      selectize = TRUE
+    )
   })
 
   output$select_outcome_rr <- renderUI({
+    selectInput(
+      "outcomes_to_plot_rr",
+      "Outcomes",
+      choices = outcomes_rr(),
+      multiple = TRUE,
+      selectize = TRUE
+    )
+  })
+
+  ## ** PC Plot selectors ----
+  output$select_region_pc <- renderUI({
+    selectInput(
+      "regions_to_plot_pc",
+      "Regions",
+      choices = regions_pc(),
+      multiple = TRUE,
+      selectize = TRUE
+    )
+  })
+
+  output$select_year_pc <- renderUI({
+    selectInput(
+      "years_to_plot_pc",
+      "Years",
+      choices = years_pc(),
+      multiple = TRUE,
+      selectize = TRUE
+    )
   })
 
   output$select_gender_pc <- renderUI({
     selectInput(
-      "genders_pc_plot",
+      "genders_to_plot_pc",
       "Genders",
       choices = genders_pc(),
       multiple = TRUE,
@@ -305,11 +326,40 @@ server <- function(input, output, session) {
     )
   })
 
-  output$select_gender_rr <- renderUI({
+  output$select_agegroups_pc <- renderUI({
+    selectInput(
+      "agegroups_to_plot_pc",
+      "Age Groups",
+      choices = agegroups_pc(),
+      multiple = TRUE,
+      selectize = TRUE
+    )
   })
 
-  output$select_outcome_rr <- renderUI({
+  ## * Plots ----
+
+  ## ** RR ----
+  rrPlotPts <- reactive({
+    input$updateRRPlotList
+    ds <- rrPlotList()
+    evalAt <- seq_len(500) * input$upper_bound / 500
+    ds
+    lval <- dplyr::mutate(lval = map(rrPlotList(), evalAt, ~.x(evalAt)))
+    bval <- dplyr::mutate()
   })
+
+  rrPlotList <- reactive({
+    ds <- drrData()
+    ds %<>%
+      dplyr::filter(
+        CONDITION %in% input$conditions_to_plot_rr &
+          GENDER %in% input$genders_to_plot_rr &
+          OUTCOME %in% input$outcomes_to_plot_rr
+      )
+    ds[,1:7]
+  })
+
+  output$test <- renderTable(rrPlotList())
 
   ## Hide/show content ----
   shinyjs::hide("loadingContent")
