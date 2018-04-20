@@ -218,7 +218,7 @@ ext_rr <- function(rr_specs) {
   }
 
   function(x) {
-    ((0 < x) & (x < X2))*FN_RR(x) + (X2 < x)*LINE(x)
+    ((0 < x) & (x < X2))*FN_RR(x) + (X2 <= x)*LINE(x)
   }
 }
 

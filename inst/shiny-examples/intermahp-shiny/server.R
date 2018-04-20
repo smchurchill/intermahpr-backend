@@ -342,24 +342,41 @@ server <- function(input, output, session) {
   rrPlotPts <- reactive({
     input$updateRRPlotList
     ds <- rrPlotList()
-    evalAt <- seq_len(500) * input$upper_bound / 500
-    ds
-    lval <- dplyr::mutate(lval = map(rrPlotList(), evalAt, ~.x(evalAt)))
-    bval <- dplyr::mutate()
+
+    if(nrow(ds) == 0) {return(NULL)}
+
+    x <- seq_len(500) * input$upper_bound / 500
+    lnxt <- ds$LNXT_RR
+    bngd <- ds$BNGD_RR
+
+    lnxt_y <- tibble::as.tibble(sapply(lnxt, function(f) f(x)))
+    names(lnxt_y) <- ds$CONDITION
+    lnxt_y <- reshape2::melt(
+      lnxt_y,
+      variable.name = "CONDITION",
+      value.name = "y")
+    lnxt_y$x <- x
+    if(input$ext) {
+      lnxt_y$type <- "linear"
+    }
+    else {
+      lnxt_y$type <- "capped"
+    }
+    lnxt_y
   })
 
   rrPlotList <- reactive({
     ds <- drrData()
-    ds %<>%
-      dplyr::filter(
-        CONDITION %in% input$conditions_to_plot_rr &
-          GENDER %in% input$genders_to_plot_rr &
-          OUTCOME %in% input$outcomes_to_plot_rr
-      )
-    ds[,1:7]
+    ds <- dplyr::filter(
+      ds,
+      CONDITION %in% input$conditions_to_plot_rr &
+      GENDER %in% input$genders_to_plot_rr &
+      OUTCOME %in% input$outcomes_to_plot_rr
+    )
+    ds
   })
 
-  output$test <- renderTable(rrPlotList())
+  output$test <- renderTable(rrPlotPts())
 
   ## Hide/show content ----
   shinyjs::hide("loadingContent")
