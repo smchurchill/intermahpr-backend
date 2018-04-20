@@ -301,7 +301,7 @@ function(request) {
                         )
                       )
                     ),
-                    tableOutput("test")
+                    plotOutput("rrPlot")
                   )
                 )
               ) ## end Rel Risks display ----

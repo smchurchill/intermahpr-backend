@@ -338,31 +338,52 @@ server <- function(input, output, session) {
 
   ## * Plots ----
 
+
+
+
   ## ** RR ----
+  output$rrPlot <- renderPlot(
+    {
+      buildRRPlot()
+    }
+  )
+
+  buildRRPlot <- reactive({
+    ds <- rrPlotPts()
+    if(is.null(ds)) {return(NULL)}
+
+    p <-
+      ggplot2::ggplot(ds) +
+      ggplot2::aes(x = x, y = y) +
+      ggplot2::aes(group = interaction(CONDITION, GENDER, OUTCOME)) +
+      ggplot2::geom_line() +
+      ggplot2::theme(legend.position = "bottom") +
+      ggplot2::xlab("Daily Grams Ethanol") +
+      ggplot2::ylab("Relative Risk")
+    p
+  })
+
   rrPlotPts <- reactive({
     input$updateRRPlotList
     ds <- rrPlotList()
 
     if(nrow(ds) == 0) {return(NULL)}
+    x <- tibble::tibble(x = seq_len(500) * input$upper_bound / 500)
 
-    x <- seq_len(500) * input$upper_bound / 500
-    lnxt <- ds$LNXT_RR
-    bngd <- ds$BNGD_RR
+    lnxt <- ds[, c("CONDITION", "GENDER", "OUTCOME", "LNXT_RR")]
+    lnxt_x <- tidyr::crossing(lnxt, x)
+    lnxt_xy <- dplyr::mutate(
+      lnxt_x,
+      y = purrr::map2_dbl(
+        x,
+        LNXT_RR,
+        ~.y(.x)
+      )
+    )
 
-    lnxt_y <- tibble::as.tibble(sapply(lnxt, function(f) f(x)))
-    names(lnxt_y) <- ds$CONDITION
-    lnxt_y <- reshape2::melt(
-      lnxt_y,
-      variable.name = "CONDITION",
-      value.name = "y")
-    lnxt_y$x <- x
-    if(input$ext) {
-      lnxt_y$type <- "linear"
-    }
-    else {
-      lnxt_y$type <- "capped"
-    }
-    lnxt_y
+    lnxt_xy$LNXT_RR <- NULL
+    lnxt_xy$type <- ifelse(input$ext, "linear", "capped")
+    lnxt_xy
   })
 
   rrPlotList <- reactive({
