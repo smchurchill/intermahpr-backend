@@ -13,14 +13,12 @@ derive_v0_rr(rr, ext)
 }
 \value{
 tibble which is RR with an additional column that contains all
- relevent relative risk curves under the variable CURVES. The CURVES variable
- has the following structure:
-   RR[["CURVES"]][[i]] is a list
-   RR[["CURVES"]][[i]][["BASE_RR"]] is the base relative risk function (i.e.
-     no extrapolation after 100/150)
-   RR[["CURVES"]][[i]][["LNXT_RR"]] is the extrapolated relative risk curve
-   RR[["CURVES"]][[i]][["BNGD_RR"]] is the extrapolated relative risk curve
-     for binge drinkers
+ relevent relative risk curves under the variables BASE_RR, LNXT_RR, and
+ BNGD_RR.
+   RR[["BASE_RR"]] is the base relative risk function (i.e. no extrapolation
+     after 100/150)
+   RR[["LNXT_RR"]] is the extrapolated relative risk curve
+   RR[["BNGD_RR"]] is the extrapolated relative risk curve for binge drinkers
 }
 \description{
 Derives relative risk curves from relative risk data

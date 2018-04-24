@@ -12,5 +12,5 @@ add_cutpoints(aaf_table, cuts)
 \item{cuts}{a list of double vectors indexed by aaf_table$GENDER}
 }
 \description{
-Written to provide additional reactivity to shiny app
+Written to provide additional reactivity to Shiny InterMAHP app.
 }

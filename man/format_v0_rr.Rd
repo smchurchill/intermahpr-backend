@@ -6,6 +6,23 @@
 \usage{
 format_v0_rr(rr)
 }
+\arguments{
+\item{rr}{is a dataset that can be converted to tibble with the expected
+variables}
+}
 \description{
-Format relative risk input data to our desired specifications
+Formats all variable names to upper case and imputes imputable missing data.
+Intended for a relative risk sheet as described in the intermahp user guide.
+
+expected variables:
+Needed:
+ Gender (in order to pair with PC data)
+ Function (FP, Spline, with valid IM, or Step, for HIV only)
+ B1-B16 (only if Function == FP. need nonzero betas, rest can be missing)
+Imputable:
+ IM
+ Condition
+ Outcome
+ RR_FD
+ BingeF
 }

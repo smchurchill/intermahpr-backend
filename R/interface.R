@@ -28,6 +28,8 @@ assemble <- function(pc, rr, ext, lb, ub, bb, gc) {
 #'@importFrom purrr pmap map map2
 #'@importFrom magrittr "%>%" "%<>%"
 #'
+#'@export
+#'
 
 compute_aafs <- function(aaf_table, cuts) {
   aaf_table %<>%
@@ -41,7 +43,7 @@ compute_aafs <- function(aaf_table, cuts) {
 
 #' Add evaluation cutpoints to a given datatable
 #'
-#' Written to provide additional reactivity to shiny app
+#' Written to provide additional reactivity to Shiny InterMAHP app.
 #'
 #'@param aaf_table a tibble as returned by assemble
 #'@param cuts a list of double vectors indexed by aaf_table$GENDER
@@ -49,6 +51,7 @@ compute_aafs <- function(aaf_table, cuts) {
 #'@importFrom purrr pmap
 #'@importFrom magrittr "%<>%"
 #'
+#'@export
 #'
 
 add_cutpoints <- function(aaf_table, cuts) {
@@ -65,6 +68,8 @@ add_cutpoints <- function(aaf_table, cuts) {
 #'
 #'@importFrom purrr pmap map map2
 #'@importFrom magrittr "%>%" "%<>%"
+#'
+#'@export
 #'
 
 evaluate_at_cutpoints <- function(aaf_table_cuts) {
@@ -122,41 +127,50 @@ intermahpr_raw <- function(pc = intermahpr::pc_default,
   LEVELS_IDENTICAL <- all(LEVEL_MATCHES)
 
   if(!LEVELS_IDENTICAL) {
-    LEVELS_MESSAGE <- paste0("Prevalence/Consumption Gender levels: ",
-                             capture.output(PC_LEVELS),
-                             "\n",
-                             "Relative Risk Gender levels:          ",
-                             capture.output(RR_LEVELS),
-                             "\n",
-                             "Binge Barrier Gender levels:          ",
-                             capture.output(BB_LEVELS),
-                             "\n",
-                             "Gamma Constant Gender levels:         ",
-                             capture.output(GC_LEVELS),
-                             "\n",
-                             "Consumption Barrier Gender levels:    ",
-                             capture.output(CB_LEVELS),
-                             collapse = "\n")
-
-    stop(paste0("Levels of Gender variable within Prevalence/Consumption, R",
-                   "elative Risk, Binge Barrier, Gamma Constant, and Consumpti",
-                   "on Barriers must be equal.  The levels input are:\n",
-                   collapse = "\n"),
-            LEVELS_MESSAGE)
+    LEVELS_MESSAGE <- paste0(
+      "Prevalence/Consumption Gender levels: ",
+      capture.output(PC_LEVELS),
+      "\n",
+      "Relative Risk Gender levels:          ",
+      capture.output(RR_LEVELS),
+      "\n",
+      "Binge Barrier Gender levels:          ",
+      capture.output(BB_LEVELS),
+      "\n",
+      "Gamma Constant Gender levels:         ",
+      capture.output(GC_LEVELS),
+      "\n",
+      "Consumption Barrier Gender levels:    ",
+      capture.output(CB_LEVELS),
+      collapse = "\n"
+    )
+    stop(
+      paste0(
+        "Levels of Gender variable within Prevalence/Consumption, Relative ",
+        "Risk, Binge Barrier, Gamma Constant, and Consumption Barriers must ",
+        "be equal.  The levels input are:\n",
+        collapse = "\n"),
+      LEVELS_MESSAGE
+    )
   }
 
-  ASSEMBLED <- assemble(pc = PCF, rr = RRF,
-                        ext = ext, lb = lb, ub = ub,
-                        bb = bb, gc = gc)
+  ASSEMBLED <- assemble(
+    pc = PCF, rr = RRF, ext = ext, lb = lb, ub = ub, bb = bb, gc = gc
+  )
   COMPUTED <- compute_aafs(aaf_table = ASSEMBLED, cuts = cb)
   COMPUTED
 }
 
 #' Helper function that tidies base AAF into a certain outcome type
 #'
+#'@description
+#'  Filters AAFs into any of mortality, morbidity, or combined.  Exported for
+#'  use in the Shiny app, called behind the scenes when invoking intermahp_base.
 #'
 #'@importFrom magrittr "%>%" "%<>%"
 #'@importFrom dplyr filter
+#'
+#'@export
 #'
 
 
@@ -197,8 +211,10 @@ vintegrate <- function(funs, vlower, vupper) {
 #' Helper function that tidies base AAF into the relevant prevalence and
 #' consumption data
 #'
+#'@description
 #' Intended for use with intermahp base functionality (assumes the positions of
-#' cutpoint variables)
+#' cutpoint variables).  Exported for use in the Shiny app, called behind the
+#' scenes when invoking intermahp_base.
 #'
 #'@param aaf_table a tibble as returned by add_cutpoints with cutpoints of the
 #'form c(LB, LM, MH, UB) where LM is the light-moderate barrier and MH is the
@@ -206,40 +222,60 @@ vintegrate <- function(funs, vlower, vupper) {
 #'
 #'@importFrom dplyr distinct select case_when
 #'
+#'@export
+#'
 
 extract_prevcons <- function(aaf_table) {
   aaf_table %<>%
-    mutate(LM = sapply(CUTS, `[[`, 2),
-           MH = sapply(CUTS, `[[`, 3)) %>%
-    distinct(REGION, YEAR, GENDER, AGE_GROUP, POPULATION, PCC_AMONG_DRINKERS,
-             GAMMA_SHAPE, GAMMA_SCALE, P_LA, P_FD, P_CD, EXT, LB, LM, MH,
-             UB, .keep_all = TRUE) %>%
-    select(REGION, YEAR, GENDER, AGE_GROUP, POPULATION, PCC_AMONG_DRINKERS,
-           GAMMA_SHAPE, GAMMA_SCALE, P_LA, P_FD, P_CD, EXT, LB, LM, MH, UB,
-           N_GAMMA)
+    mutate(
+      LM = sapply(CUTS, `[[`, 2),
+      MH = sapply(CUTS, `[[`, 3)
+    ) %>%
+    distinct(
+      REGION, YEAR, GENDER, AGE_GROUP, POPULATION, PCC_AMONG_DRINKERS,
+      GAMMA_SHAPE, GAMMA_SCALE, P_LA, P_FD, P_CD, EXT, LB, LM, MH, UB,
+      .keep_all = TRUE
+    ) %>%
+    select(
+      REGION, YEAR, GENDER, AGE_GROUP, POPULATION, PCC_AMONG_DRINKERS,
+      GAMMA_SHAPE, GAMMA_SCALE, P_LA, P_FD, P_CD, EXT, LB, LM, MH, UB, N_GAMMA
+    )
 
   aaf_table %<>%
-    mutate(EXTRAPOLATION = case_when(EXT == TRUE  ~ "linear",
-                                     EXT == FALSE ~ "capped")) %>%
-    add_column(P_LD = vintegrate(aaf_table[["N_GAMMA"]],
-                                 aaf_table[["LB"]],
-                                 aaf_table[["LM"]]),
-               P_MD = vintegrate(aaf_table[["N_GAMMA"]],
-                                 aaf_table[["LM"]],
-                                 aaf_table[["MH"]]),
-               P_HD = vintegrate(aaf_table[["N_GAMMA"]],
-                                 aaf_table[["MH"]],
-                                 aaf_table[["UB"]]))%>%
+    mutate(
+      EXTRAPOLATION = case_when(
+        EXT == TRUE  ~ "linear",
+        EXT == FALSE ~ "capped")
+    ) %>%
+    add_column(
+      P_LD = vintegrate(
+        aaf_table[["N_GAMMA"]],
+        aaf_table[["LB"]],
+        aaf_table[["LM"]]),
+      P_MD = vintegrate(
+        aaf_table[["N_GAMMA"]],
+        aaf_table[["LM"]],
+        aaf_table[["MH"]]),
+      P_HD = vintegrate(
+        aaf_table[["N_GAMMA"]],
+        aaf_table[["MH"]],
+        aaf_table[["UB"]])
+    )%>%
     mutate(P_CD_SUM = P_LD + P_MD + P_HD) %>%
-    select(REGION, YEAR, GENDER, AGE_GROUP, POPULATION, PCC_AMONG_DRINKERS,
-           GAMMA_SHAPE, GAMMA_SCALE, P_LA, P_FD, P_CD, P_LD, P_MD, P_HD,
-           EXTRAPOLATION)
+    select(
+      REGION, YEAR, GENDER, AGE_GROUP, POPULATION, PCC_AMONG_DRINKERS,
+      GAMMA_SHAPE, GAMMA_SCALE, P_LA, P_FD, P_CD, P_LD, P_MD, P_HD,
+      EXTRAPOLATION
+    )
 
   aaf_table
 }
 
 
 #' Takes Base InterMAHP inputs, returns formatted data
+#'
+#'@description
+#'  Basic interface with intermahpr package.  Documentation TBW.
 #'
 #'@param RelativeRisks rr
 #'@param PrevalenceConsumption pc

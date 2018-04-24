@@ -3,7 +3,6 @@
 #
 # This is the server portion of a shiny demo for intermahp
 
-source("global.R") # import functions
 source("helper.R") # Have helpers available
 
 
@@ -370,18 +369,18 @@ server <- function(input, output, session) {
     if(nrow(ds) == 0) {return(NULL)}
     x <- tibble::tibble(x = seq_len(500) * input$upper_bound / 500)
 
-    lnxt <- ds[, c("CONDITION", "GENDER", "OUTCOME", "LNXT_RR")]
+    lnxt <- ds[, c("CONDITION", "GENDER", "OUTCOME", "BNGD_RR")]
     lnxt_x <- tidyr::crossing(lnxt, x)
     lnxt_xy <- dplyr::mutate(
       lnxt_x,
       y = purrr::map2_dbl(
         x,
-        LNXT_RR,
+        BNGD_RR,
         ~.y(.x)
       )
     )
 
-    lnxt_xy$LNXT_RR <- NULL
+    lnxt_xy$BNGD_RR <- NULL
     lnxt_xy$type <- ifelse(input$ext, "linear", "capped")
     lnxt_xy
   })

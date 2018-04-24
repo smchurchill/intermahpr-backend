@@ -33,5 +33,5 @@ intermahpr_base(RelativeRisks = intermahpr::rr_default, PrevalenceConsumption,
 \item{OutputPath}{op}
 }
 \description{
-Takes Base InterMAHP inputs, returns formatted data
+Basic interface with intermahpr package.  Documentation TBW.
 }

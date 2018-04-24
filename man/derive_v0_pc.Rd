@@ -11,7 +11,6 @@ derive_v0_pc(pc, bb, lb, ub, gc)
 \item{pc}{is assumed type tibble with names(PC) = c(YEAR, REGION, GENDER
 , AGE_GROUP, POPULATION, PCC_LITRES_YEAR, CORRECTION_FACTOR,
 RELATIVE_CONSUMPTION, P_LA, P_FD, P_CD, P_BD).
-This function is internally called only, not exported.
 
 Note that the bundled data set pc_default satisfies these constraints.}
 

@@ -14,5 +14,6 @@ moderate-heavy barrier.}
 }
 \description{
 Intended for use with intermahp base functionality (assumes the positions of
-cutpoint variables)
+cutpoint variables).  Exported for use in the Shiny app, called behind the
+scenes when invoking intermahp_base.
 }

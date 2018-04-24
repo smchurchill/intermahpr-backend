@@ -3,7 +3,7 @@
 #' What value is imputed when a variable is missing?
 #'
 #' In order to normalize code in future methods, missing data is removed either
-#' throug imputation when possible, or by throwing an error when the data is
+#' through imputation when possible, or by throwing an error when the data is
 #' necessary.  impute_with is called when a missing value \emph{can} be imputed.
 #'
 #' @param var is a string -- a variable name.
@@ -46,13 +46,36 @@ zero <- list(fn = function(...) 0)
 
 #' Format relative risk input data to our desired specifications
 #'
+#'@description
+#'Formats all variable names to upper case and imputes imputable missing data.
+#'Intended for a relative risk sheet as described in the intermahp user guide.
+#'
+#'expected variables:
+#' Needed:
+#'  Gender (in order to pair with PC data)
+#'  Function (FP, Spline, with valid IM, or Step, for HIV only)
+#'  B1-B16 (only if Function == FP. need nonzero betas, rest can be missing)
+#' Imputable:
+#'  IM
+#'  Condition
+#'  Outcome
+#'  RR_FD
+#'  BingeF
+#'
+#'@param rr is a dataset that can be converted to tibble with the expected
+#'  variables
+#'
+#'@export
+#'
 
 format_v0_rr <- function(rr) {
   RR <- tibble::as.tibble(rr)
   names(RR) <- do.call(stringr::str_to_upper, list(names(RR)))
   BETAS <- do.call(paste0, list(rep("B", 16), 1:16))
-  EXPECTED <- c("IM", "CONDITION", "GENDER", "OUTCOME", "RR_FD", "BINGEF",
-                    "FUNCTION", BETAS)
+  EXPECTED <- c(
+    "IM", "CONDITION", "GENDER", "OUTCOME",
+    "RR_FD", "BINGEF", "FUNCTION", BETAS
+  )
   MISSING <- EXPECTED[!(EXPECTED %in% names(RR))]
 
   RR[, MISSING] <- NA
@@ -66,23 +89,33 @@ format_v0_rr <- function(rr) {
 
 #' Format prevalence and consumption input data to our desired specifications
 #'
+#'#'@description
+#'Formats all variable names to upper case and imputes imputable missing data.
+#'Intended for a prevalence and consumption sheet as described in the intermahp
+#'user guide.
+#'
 #' expected variables:
 #'  Needed:
-#'    Proportion, Former Drinkers
-#'    Proportion, Binge Drinkers
-#'    Proportion, Lifetime Abstainers
-#'    Proportion, Current Drinkers
+#'    P_FD (Proportion, Former Drinkers)
+#'    P_BD (Proportion, Binge Drinkers)
+#'    P_LA (Proportion, Lifetime Abstainers)
+#'    P_CD (Proportion, Current Drinkers)
 #'    Gamma Distribution Parameters:
-#'      Per Capita Consumption
+#'      PCC_litres_year (Per Capita Consumption)
 #'      Population
-#'      Relative Consumption
-#'      Correction Factor
+#'      Relative_Consumption
+#'      Correction_Factor
 #'    Gender (in order to pair with RR curves)
 #'  Imputable as "Unspecified":
 #'    Region
 #'    Year
 #'    Gender
-#'    Age Group
+#'    Age_Group
+#'
+#'@param rr is a dataset that can be converted to tibble with the expected
+#'  variables
+#'
+#'@export
 #'
 
 format_v0_pc <- function(pc) {
@@ -90,16 +123,21 @@ format_v0_pc <- function(pc) {
   names(PC) <- do.call(stringr::str_to_upper, list(names(PC)))
 
 
-  EXPECTED <- c("REGION", "YEAR", "GENDER", "AGE_GROUP", "POPULATION",
-                    "PCC_LITRES_YEAR", "CORRECTION_FACTOR",
-                    "RELATIVE_CONSUMPTION", "P_LA", "P_FD", "P_CD", "P_BD")
+  EXPECTED <- c(
+    "REGION", "YEAR", "GENDER", "AGE_GROUP", "POPULATION", "PCC_LITRES_YEAR",
+    "CORRECTION_FACTOR", "RELATIVE_CONSUMPTION", "P_LA", "P_FD", "P_CD", "P_BD"
+  )
   MISSING <- EXPECTED[!(EXPECTED %in% names(PC))]
   NEEDED <- EXPECTED[c(3,5:12)]
   MISSING_NEEDED <- intersect(MISSING, NEEDED)
   if(length(MISSING_NEEDED) > 0) {
-    stop(paste0("Missing and needed variables from the supplied prevalence/",
-                "consumption sheet: "),
-                paste(MISSING_NEEDED, collapse = ", "))
+    stop(
+      paste0(
+        "Missing and needed variables from the supplied prevalence/",
+        "consumption sheet: "
+      ),
+      paste(MISSING_NEEDED, collapse = ", ")
+    )
   }
 
   PC[, MISSING] <- NA
@@ -119,21 +157,24 @@ format_v0_pc <- function(pc) {
 #'@param ext logical indicator of extrapolation, (TRUE = linear, FALSE = capped)
 #'
 #'@return tibble which is RR with an additional column that contains all
-#'  relevent relative risk curves under the variable CURVES. The CURVES variable
-#'  has the following structure:
-#'    RR[["CURVES"]][[i]] is a list
-#'    RR[["CURVES"]][[i]][["BASE_RR"]] is the base relative risk function (i.e.
-#'      no extrapolation after 100/150)
-#'    RR[["CURVES"]][[i]][["LNXT_RR"]] is the extrapolated relative risk curve
-#'    RR[["CURVES"]][[i]][["BNGD_RR"]] is the extrapolated relative risk curve
-#'      for binge drinkers
+#'  relevent relative risk curves under the variables BASE_RR, LNXT_RR, and
+#'  BNGD_RR.
+#'    RR[["BASE_RR"]] is the base relative risk function (i.e. no extrapolation
+#'      after 100/150)
+#'    RR[["LNXT_RR"]] is the extrapolated relative risk curve
+#'    RR[["BNGD_RR"]] is the extrapolated relative risk curve for binge drinkers
+#'
+#'@export
+#'
 
 derive_v0_rr <- function(rr, ext) {
   rr[, "EXT"] <- ext
-  rr <- add_column(rr,
-                   BASE_RR = zero,
-                   LNXT_RR = zero,
-                   BNGD_RR = zero)
+  rr <- add_column(
+    rr,
+    BASE_RR = zero,
+    LNXT_RR = zero,
+    BNGD_RR = zero
+  )
 
   for(n in 1:nrow(rr)) {
     base <- set_rr(rr[n,])
@@ -165,7 +206,6 @@ derive_v0_rr <- function(rr, ext) {
 #'@param pc is assumed type tibble with names(PC) = c(YEAR, REGION, GENDER
 #' , AGE_GROUP, POPULATION, PCC_LITRES_YEAR, CORRECTION_FACTOR,
 #' RELATIVE_CONSUMPTION, P_LA, P_FD, P_CD, P_BD).
-#' This function is internally called only, not exported.
 #'
 #' Note that the bundled data set pc_default satisfies these constraints.
 #'
@@ -201,6 +241,8 @@ derive_v0_rr <- function(rr, ext) {
 #'@importFrom magrittr "%>%" "%<>%"
 #'@importFrom dplyr group_by mutate
 #'@importFrom tibble add_column
+#'
+#'@export
 #'
 
 derive_v0_pc <- function(pc, bb, lb, ub, gc) {
@@ -294,7 +336,8 @@ normalized_gamma_factory <- function(pc_specs) {
 #' Joins PC and RR and obtains AAF functions
 #'
 #'@description Performs a full_join of RR and PC over GENDER and then obtains an
-#'  AAF function and AAF_FD computation for each observation
+#'  AAF function and AAF_FD computation for each observation.  Does a sanity
+#'  check, ensuring that the joining variable is well-matched.
 #'
 #'@param RR relative risk tibble as produced by derive_v*_rr
 #'@param PC prevalence and consumption tibble as produced by derive_v*_pc
@@ -302,6 +345,8 @@ normalized_gamma_factory <- function(pc_specs) {
 #'@return tibble with one row per unique region.year.gender.age_group.im combn,
 #'  an AAF_FD variable with alc.attr. fraction for former drinkers, and an
 #'  AAF_CMP variable that
+#'
+#'@export
 #'
 
 

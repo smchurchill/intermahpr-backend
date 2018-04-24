@@ -7,5 +7,6 @@
 outcome_splitter(aaf_table, outcome)
 }
 \description{
-Helper function that tidies base AAF into a certain outcome type
+Filters AAFs into any of mortality, morbidity, or combined.  Exported for
+ use in the Shiny app, called behind the scenes when invoking intermahp_base.
 }

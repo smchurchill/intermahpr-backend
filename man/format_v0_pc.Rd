@@ -6,22 +6,32 @@
 \usage{
 format_v0_pc(pc)
 }
+\arguments{
+\item{rr}{is a dataset that can be converted to tibble with the expected
+variables}
+}
 \description{
+#'@description
+Formats all variable names to upper case and imputes imputable missing data.
+Intended for a prevalence and consumption sheet as described in the intermahp
+user guide.
+}
+\details{
 expected variables:
  Needed:
-   Proportion, Former Drinkers
-   Proportion, Binge Drinkers
-   Proportion, Lifetime Abstainers
-   Proportion, Current Drinkers
+   P_FD (Proportion, Former Drinkers)
+   P_BD (Proportion, Binge Drinkers)
+   P_LA (Proportion, Lifetime Abstainers)
+   P_CD (Proportion, Current Drinkers)
    Gamma Distribution Parameters:
-     Per Capita Consumption
+     PCC_litres_year (Per Capita Consumption)
      Population
-     Relative Consumption
-     Correction Factor
+     Relative_Consumption
+     Correction_Factor
    Gender (in order to pair with RR curves)
  Imputable as "Unspecified":
    Region
    Year
    Gender
-   Age Group
+   Age_Group
 }

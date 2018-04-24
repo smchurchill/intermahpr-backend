@@ -18,5 +18,6 @@ tibble with one row per unique region.year.gender.age_group.im combn,
 }
 \description{
 Performs a full_join of RR and PC over GENDER and then obtains an
- AAF function and AAF_FD computation for each observation
+ AAF function and AAF_FD computation for each observation.  Does a sanity
+ check, ensuring that the joining variable is well-matched.
 }

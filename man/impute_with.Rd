@@ -14,6 +14,6 @@ A string or integer that is appropriate for imputation.
 }
 \description{
 In order to normalize code in future methods, missing data is removed either
-throug imputation when possible, or by throwing an error when the data is
+through imputation when possible, or by throwing an error when the data is
 necessary.  impute_with is called when a missing value \emph{can} be imputed.
 }
