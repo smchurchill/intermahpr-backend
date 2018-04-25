@@ -252,3 +252,5 @@ bng_rr <- function(rr_specs) {
   }
   function(x) BINGEF*FNC_RR(x)
 }
+
+#### 100% Calibration ----------------------------------------------------------

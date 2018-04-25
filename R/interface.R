@@ -1,86 +1,3 @@
-#' Collect and assemble AAF data from formatted RR and PC data
-#'
-#'@param pc  Prevalence / Consumption input
-#'@param rr  Relative Risk input
-#'@param ext logical, extrapolate linearly?
-#'@param lb  Double, consumption lower bound
-#'@param ub  Double, consumption upper bound
-#'@param bb  Double vector, Binge consumption level, Gender stratified
-#'@param gc  Gamma constant.  The linear relationship between mean and standard
-#'  deviation within the gamma distribution that describes consumption among
-#'  current drinkers.  Stratified by gender -- names(gc) must match levels of
-#'  rr$GENDER and pc$GENDER.
-#'
-#'
-
-assemble <- function(pc, rr, ext, lb, ub, bb, gc) {
-  RRD <- derive_v0_rr(rr = rr, ext = ext)
-  PCD <- derive_v0_pc(pc = pc, bb = bb, lb = lb, ub = ub, gc = gc)
-
-  join_pc_rr(pc = PCD, rr = RRD)
-}
-
-#' Compute AAFs for all conditions as separated by the given cutpoints
-#'
-#'@param aaf_table A tibble as returned by assemble
-#'@param cuts A list of double vectors indexed by aaf_table$GENDER
-#'
-#'@importFrom purrr pmap map map2
-#'@importFrom magrittr "%>%" "%<>%"
-#'
-#'@export
-#'
-
-compute_aafs <- function(aaf_table, cuts) {
-  aaf_table %<>%
-    mutate(CUTS = pmap(list(LB, cuts[GENDER], UB), c)) %>%
-    mutate(CUMUL_F = map2(AAF_CMP, CUTS, ~.x(.y))) %>%
-    mutate(AAF_GRP = map(CUMUL_F, ~diff(.x))) %>%
-    mutate(AAF_CD = unlist(map(CUMUL_F, ~`[`(.x, length(.x))))) %>%
-    mutate(AAF_TOTAL = AAF_FD + AAF_CD)
-  aaf_table
-}
-
-#' Add evaluation cutpoints to a given datatable
-#'
-#' Written to provide additional reactivity to Shiny InterMAHP app.
-#'
-#'@param aaf_table a tibble as returned by assemble
-#'@param cuts a list of double vectors indexed by aaf_table$GENDER
-#'
-#'@importFrom purrr pmap
-#'@importFrom magrittr "%<>%"
-#'
-#'@export
-#'
-
-add_cutpoints <- function(aaf_table, cuts) {
-  aaf_table %<>%
-    mutate(CUTS = pmap(list(LB, cuts[GENDER], UB), c))
-  aaf_table
-}
-
-#' Evaluate a given datatable at pre-added cutpoints
-#'
-#' Written to provide additional reactivity to shiny app
-#'
-#'@param aaf_table_cuts a tibble as returned by add_cutpoints
-#'
-#'@importFrom purrr pmap map map2
-#'@importFrom magrittr "%>%" "%<>%"
-#'
-#'@export
-#'
-
-evaluate_at_cutpoints <- function(aaf_table_cuts) {
-  aaf_table_cuts %<>%
-    mutate(CUMUL_F = map2(AAF_CMP, CUTS, ~.x(.y))) %>%
-    mutate(AAF_GRP = map(CUMUL_F, ~diff(.x))) %>%
-    mutate(AAF_CD = unlist(map(CUMUL_F, ~`[`(.x, length(.x))))) %>%
-    mutate(AAF_TOTAL = AAF_FD + AAF_CD)
-  aaf_table_cuts
-}
-
 #' Takes all possible inputs, computes specified AAFs, returns TMI
 #'
 #'@description
@@ -108,13 +25,14 @@ evaluate_at_cutpoints <- function(aaf_table_cuts) {
 #'@export
 #'
 
-intermahpr_raw <- function(pc = intermahpr::pc_default,
-                           rr = intermahpr::rr_default,
-                           ext = TRUE, lb = 0.03, ub = 250,
-                           bb = list("Female" = 53.8, "Male" = 67.25),
-                           gc = list("Female" = 1.258^2, "Male" = 1.171^2),
-                           cb = list("Female" = c(13.45, 26.9),
-                                     "Male" = c(20.2, 40.4))) {
+intermahpr_raw <- function(
+  pc = intermahpr::pc_default,
+  rr = intermahpr::rr_default,
+  ext = TRUE, lb = 0.03, ub = 250,
+  bb = list("Female" = 53.8, "Male" = 67.25),
+  gc = list("Female" = 1.258^2, "Male" = 1.171^2),
+  cb = list("Female" = c(13.45, 26.9), "Male" = c(20.2, 40.4))
+){
   PCF <- format_v0_pc(pc = pc)
   RRF <- format_v0_rr(rr = rr)
   PC_LEVELS <- levels(as.factor(PCF$GENDER))
@@ -122,8 +40,10 @@ intermahpr_raw <- function(pc = intermahpr::pc_default,
   BB_LEVELS <- levels(as.factor(names(bb)))
   GC_LEVELS <- levels(as.factor(names(gc)))
   CB_LEVELS <- levels(as.factor(names(cb)))
-  LEVEL_MATCHES <- sapply(list(RR_LEVELS, BB_LEVELS, GC_LEVELS, CB_LEVELS),
-                          FUN = identical, PC_LEVELS)
+  LEVEL_MATCHES <- sapply(
+    X = list(RR_LEVELS, BB_LEVELS, GC_LEVELS, CB_LEVELS),
+    FUN = identical, PC_LEVELS
+  )
   LEVELS_IDENTICAL <- all(LEVEL_MATCHES)
 
   if(!LEVELS_IDENTICAL) {
@@ -161,117 +81,6 @@ intermahpr_raw <- function(pc = intermahpr::pc_default,
   COMPUTED
 }
 
-#' Helper function that tidies base AAF into a certain outcome type
-#'
-#'@description
-#'  Filters AAFs into any of mortality, morbidity, or combined.  Exported for
-#'  use in the Shiny app, called behind the scenes when invoking intermahp_base.
-#'
-#'@importFrom magrittr "%>%" "%<>%"
-#'@importFrom dplyr filter
-#'
-#'@export
-#'
-
-
-outcome_splitter <- function(aaf_table, outcome) {
-  aaf_table %<>%
-    filter(OUTCOME == outcome | OUTCOME == "Combined") %>%
-    mutate(AAF_LD = sapply(AAF_GRP, `[[`, 1),
-           AAF_MD = sapply(AAF_GRP, `[[`, 2),
-           AAF_HD = sapply(AAF_GRP, `[[`, 3)) %>%
-    select(REGION, YEAR, GENDER, AGE_GROUP, IM, CONDITION,
-           AAF_FD, AAF_LD, AAF_MD, AAF_HD, AAF_TOTAL)
-
-  aaf_table
-}
-
-#' Integrate that takes as input a list funs of functions, a vector vlower of
-#' "lower" values and a vector vupper of "upper" values, assumes that
-#' length(vlower) = length(vupper) = length(funs), and returns a
-#' vector of integrals of funs between the lower and upper values.
-#'
-#'
-#'
-
-vintegrate <- function(funs, vlower, vupper) {
-  llower <- length(vlower)
-  lupper <- length(vupper)
-  lfuns  <- length(funs)
-
-  values <- rep(-1, lfuns)
-
-  for(i in 1:lfuns) {
-    values[[i]] <- integrate(funs[[i]], vlower[[i]], vupper[[i]])$value
-  }
-
-  values
-}
-
-#' Helper function that tidies base AAF into the relevant prevalence and
-#' consumption data
-#'
-#'@description
-#' Intended for use with intermahp base functionality (assumes the positions of
-#' cutpoint variables).  Exported for use in the Shiny app, called behind the
-#' scenes when invoking intermahp_base.
-#'
-#'@param aaf_table a tibble as returned by add_cutpoints with cutpoints of the
-#'form c(LB, LM, MH, UB) where LM is the light-moderate barrier and MH is the
-#'moderate-heavy barrier.
-#'
-#'@importFrom dplyr distinct select case_when
-#'
-#'@export
-#'
-
-extract_prevcons <- function(aaf_table) {
-  aaf_table %<>%
-    mutate(
-      LM = sapply(CUTS, `[[`, 2),
-      MH = sapply(CUTS, `[[`, 3)
-    ) %>%
-    distinct(
-      REGION, YEAR, GENDER, AGE_GROUP, POPULATION, PCC_AMONG_DRINKERS,
-      GAMMA_SHAPE, GAMMA_SCALE, P_LA, P_FD, P_CD, EXT, LB, LM, MH, UB,
-      .keep_all = TRUE
-    ) %>%
-    select(
-      REGION, YEAR, GENDER, AGE_GROUP, POPULATION, PCC_AMONG_DRINKERS,
-      GAMMA_SHAPE, GAMMA_SCALE, P_LA, P_FD, P_CD, EXT, LB, LM, MH, UB, N_GAMMA
-    )
-
-  aaf_table %<>%
-    mutate(
-      EXTRAPOLATION = case_when(
-        EXT == TRUE  ~ "linear",
-        EXT == FALSE ~ "capped")
-    ) %>%
-    add_column(
-      P_LD = vintegrate(
-        aaf_table[["N_GAMMA"]],
-        aaf_table[["LB"]],
-        aaf_table[["LM"]]),
-      P_MD = vintegrate(
-        aaf_table[["N_GAMMA"]],
-        aaf_table[["LM"]],
-        aaf_table[["MH"]]),
-      P_HD = vintegrate(
-        aaf_table[["N_GAMMA"]],
-        aaf_table[["MH"]],
-        aaf_table[["UB"]])
-    )%>%
-    mutate(P_CD_SUM = P_LD + P_MD + P_HD) %>%
-    select(
-      REGION, YEAR, GENDER, AGE_GROUP, POPULATION, PCC_AMONG_DRINKERS,
-      GAMMA_SHAPE, GAMMA_SCALE, P_LA, P_FD, P_CD, P_LD, P_MD, P_HD,
-      EXTRAPOLATION
-    )
-
-  aaf_table
-}
-
-
 #' Takes Base InterMAHP inputs, returns formatted data
 #'
 #'@description
@@ -292,45 +101,71 @@ extract_prevcons <- function(aaf_table) {
 #'@export
 #'
 
-intermahpr_base <- function(RelativeRisks = intermahpr::rr_default,
-                            PrevalenceConsumption,
-                            FemaleLightModerateBarrier,
-                            FemaleModerateHeavyBarrier,
-                            FemaleBingeBarrier,
-                            MaleLightModerateBarrier,
-                            MaleModerateHeavyBarrier,
-                            MaleBingeBarrier,
-                            UpperBound,
-                            Extrapolation,
-                            OutputPath = NULL,
-                            FilePrefix = "") {
-
+intermahpr_base <- function(
+  RelativeRisks = intermahpr::rr_default,
+  PrevalenceConsumption,
+  FemaleLightModerateBarrier,
+  FemaleModerateHeavyBarrier,
+  FemaleBingeBarrier,
+  MaleLightModerateBarrier,
+  MaleModerateHeavyBarrier,
+  MaleBingeBarrier,
+  UpperBound,
+  Extrapolation,
+  OutputPath = NULL,
+  FilePrefix = ""
+){
   BB <- list("Female" = FemaleBingeBarrier, "Male" = MaleBingeBarrier)
   GC <- list("Female" = 1.258^2, "Male" = 1.171^2)
-  CB <- list("Female" = c(FemaleLightModerateBarrier,
-                          FemaleModerateHeavyBarrier),
-             "Male" = c(MaleLightModerateBarrier,
-                        MaleModerateHeavyBarrier))
-  AAF_OUT <- intermahpr_raw(rr = RelativeRisks, pc = PrevalenceConsumption,
-                            ext = Extrapolation, lb = 0.03, ub = UpperBound,
-                            bb = BB, gc = GC, cb = CB)
+  CB <- list(
+    "Female" = c(
+      FemaleLightModerateBarrier,
+      FemaleModerateHeavyBarrier
+    ),
+    "Male" = c(
+      MaleLightModerateBarrier,
+      MaleModerateHeavyBarrier
+    )
+  )
+  AAF_OUT <- intermahpr_raw(
+    rr = RelativeRisks, pc = PrevalenceConsumption, ext = Extrapolation,
+    lb = 0.03, ub = UpperBound, bb = BB, gc = GC, cb = CB
+  )
   InterMAHP_AAFs_morbidity <- outcome_splitter(AAF_OUT, "Morbidity")
   InterMAHP_AAFs_mortality <- outcome_splitter(AAF_OUT, "Mortality")
   InterMAHP_prev_cons_output <- extract_prevcons(AAF_OUT)
 
   if(file.access(OutputPath, 2) == 0) {
-    readr::write_csv(x = InterMAHP_AAFs_morbidity,
-                     path = file.path(OutputPath,
-                                      paste0(FilePrefix,
-                                             "InterMAHP_AAFs_morbidity.csv")))
-    readr::write_csv(x = InterMAHP_AAFs_mortality,
-                     path = file.path(OutputPath,
-                                      paste0(FilePrefix,
-                                             "InterMAHP_AAFs_mortality.csv")))
-    readr::write_csv(x = InterMAHP_AAFs_morbidity,
-                     path = file.path(OutputPath,
-                                      paste0(FilePrefix,
-                                             "InterMAHP_prev_cons_output.csv")))
+    readr::write_csv(
+      x = InterMAHP_AAFs_morbidity,
+      path = file.path(
+        OutputPath,
+        paste0(
+          FilePrefix,
+          "InterMAHP_AAFs_morbidity.csv"
+        )
+      )
+    )
+    readr::write_csv(
+      x = InterMAHP_AAFs_mortality,
+      path = file.path(
+        OutputPath,
+        paste0(
+          FilePrefix,
+          "InterMAHP_AAFs_mortality.csv"
+        )
+      )
+    )
+    readr::write_csv(
+      x = InterMAHP_AAFs_morbidity,
+      path = file.path(
+        OutputPath,
+        paste0(
+          FilePrefix,
+          "InterMAHP_prev_cons_output.csv"
+        )
+      )
+    )
   }
   else if(!is.null(OutputPath)) {
     message(

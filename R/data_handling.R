@@ -23,7 +23,9 @@ impute_with <- function(var) {
          FUNCTION = "FP",
          RR_FD = 1,
          BINGEF = 1,
-         BETA = 0)
+         BETA = 0,
+         DEATHS = NA,
+         HOSPS = NA)
 }
 
 #' Definition of missing data for the purposes of intermahpr
@@ -89,7 +91,7 @@ format_v0_rr <- function(rr) {
 
 #' Format prevalence and consumption input data to our desired specifications
 #'
-#'#'@description
+#'@description
 #'Formats all variable names to upper case and imputes imputable missing data.
 #'Intended for a prevalence and consumption sheet as described in the intermahp
 #'user guide.
@@ -147,6 +149,59 @@ format_v0_pc <- function(pc) {
   }
 
   readr::type_convert(PC)
+}
+
+#' Format Count Data
+#'
+#'@description
+#'Formats all variable names to upper case and imputes imputable missing data.
+#'Intended for a count sheet
+#'
+#' expected variables:
+#'  Needed:
+#'    IM (Used to join this data with aafs)
+#'    Region
+#'    Year
+#'    Gender
+#'    Age_Group
+#'  Imputable as "NA":
+#'    Deaths
+#'    Hosps (hospitalizations)
+#'
+#'@param rr is a dataset that can be converted to tibble with the expected
+#'  variables
+#'
+#'@export
+#'
+
+format_v0_dh <- function(dh) {
+  DH <- tibble::as.tibble(dh)
+  names(DH) <- do.call(stringr::str_to_upper, list(names(DH)))
+
+
+  EXPECTED <- c(
+    "REGION", "YEAR", "GENDER", "AGE_GROUP",
+    "DEATHS", "HOSPS"
+  )
+  MISSING <- EXPECTED[!(EXPECTED %in% names(PC))]
+  NEEDED <- EXPECTED[c(1,2,3,4)]
+  MISSING_NEEDED <- intersect(MISSING, NEEDED)
+  if(length(MISSING_NEEDED) > 0) {
+    stop(
+      paste0(
+        "Missing and needed variables from the supplied counts sheet: "
+      ),
+      paste(MISSING_NEEDED, collapse = ", ")
+    )
+  }
+
+  DH[, MISSING] <- NA
+
+  for(var in names(DH)) {
+    DH[var][is.missing(DH[var])] <- impute_with(DH)
+  }
+
+  readr::type_convert(DH)
 }
 
 #### Process formatted data ----------------------------------------------------
@@ -331,7 +386,7 @@ normalized_gamma_factory <- function(pc_specs) {
   }
 }
 
-#### Add AAF computing functions -----------------------------------------------
+#### Process Derived Data ------------------------------------------------------
 
 #' Joins PC and RR and obtains AAF functions
 #'
@@ -360,13 +415,17 @@ join_pc_rr <- function(pc, rr) {
 
     ignore_message <- paste0(capture.output(IGNORE), collapse = "\n")
 
-    warning(paste0("\nNAs introduced by joining of prevalence and consumption ",
-                   "data with relative risk data.\nTo avoid this, ensure that",
-                   " the levels in the Gender column of prevalence and consump",
-                   "tion input match the levels in the Gender column of the re",
-                   "lative risk input exactly.\nThe following observations wi",
-                   "ll be ignored:\n", collapse = "\n"),
-            ignore_message)
+    warning(
+      paste0(
+        "\nNAs introduced by joining of prevalence and consumption data with ",
+        "relative risk data.\nTo avoid this, ensure that the levels in the ",
+        "Gender column of prevalence and consumption input match the levels ",
+        "in the Gender column of the relative risk input exactly.\nThe ",
+        "following observations will be ignored:\n",
+        collapse = "\n"
+      ),
+      ignore_message
+    )
 
     JOINT <- JOINT[rowSums(is.na(JOINT)) == 0,]
   }
@@ -384,3 +443,34 @@ join_pc_rr <- function(pc, rr) {
   JOINT
 }
 
+#' Collect and assemble AAF data from formatted RR and PC data
+#'
+#'@param pc  Prevalence / Consumption input as produced by format_v*_pc
+#'@param rr  Relative Risk input as produced by format_v*_rr
+#'@param ext logical, extrapolate linearly?
+#'@param lb  Double, consumption lower bound
+#'@param ub  Double, consumption upper bound
+#'@param bb  Double vector, Binge consumption level, Gender stratified
+#'@param gc  Gamma constant.  The linear relationship between mean and standard
+#'  deviation within the gamma distribution that describes consumption among
+#'  current drinkers.  Stratified by gender -- names(gc) must match levels of
+#'  rr$GENDER and pc$GENDER.
+#'
+#'
+
+assemble <- function(pc, rr, ext, lb, ub, bb, gc) {
+  RRD <- derive_v0_rr(rr = rr, ext = ext)
+  PCD <- derive_v0_pc(pc = pc, bb = bb, lb = lb, ub = ub, gc = gc)
+
+  join_pc_rr(pc = PCD, rr = RRD)
+}
+
+#' Combine Prev/Cons and Death/Hosp data to calibrate wholly attributable curves
+#'
+#'@param pc Prev/Cons
+#'@param dh
+#'
+
+process_v0_wa <- function(pc, dh) {
+
+}
