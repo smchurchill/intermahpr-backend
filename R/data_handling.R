@@ -6,26 +6,29 @@
 #' through imputation when possible, or by throwing an error when the data is
 #' necessary.  impute_with is called when a missing value \emph{can} be imputed.
 #'
+#'
 #' @param var is a string -- a variable name.
 #'
 #' @return A string or integer that is appropriate for imputation.
 #'
+#'
 
 impute_with <- function(var) {
   if(grepl("B[0-9]", var)) {var = "BETA"}
-  switch(var,
-         IM = "(0).(0)",
-         CONDITION = "Unspecified",
-         REGION = "Unspecified",
-         YEAR = "Unspecified",
-         AGE_GROUP = "Unspecified",
-         OUTCOME = "Combined",
-         FUNCTION = "FP",
-         RR_FD = 1,
-         BINGEF = 1,
-         BETA = 0,
-         DEATHS = NA,
-         HOSPS = NA)
+  switch(
+    var,
+    IM = "(0).(0)",
+    CONDITION = "Unspecified",
+    REGION = "Unspecified",
+    YEAR = "Unspecified",
+    AGE_GROUP = "Unspecified",
+    OUTCOME = "Combined",
+    FUNCTION = "FP",
+    RR_FD = 1,
+    BINGEF = 1,
+    BETA = 0,
+    COUNT = 0
+  )
 }
 
 #' Definition of missing data for the purposes of intermahpr
@@ -53,11 +56,9 @@ zero <- list(fn = function(...) 0)
 #'Intended for a relative risk sheet as described in the intermahp user guide.
 #'
 #'expected variables:
-#' Needed:
-#'  Gender (in order to pair with PC data)
+#'  Gender (paired with PC, DH data)
 #'  Function (FP, Spline, with valid IM, or Step, for HIV only)
 #'  B1-B16 (only if Function == FP. need nonzero betas, rest can be missing)
-#' Imputable:
 #'  IM
 #'  Condition
 #'  Outcome
@@ -79,14 +80,18 @@ format_v0_rr <- function(rr) {
     "RR_FD", "BINGEF", "FUNCTION", BETAS
   )
   MISSING <- EXPECTED[!(EXPECTED %in% names(RR))]
-
-  RR[, MISSING] <- NA
+  if(length(MISSING) > 0) {
+    stop(
+      "Missing variables from the supplied relative risk sheet: ",
+      paste(MISSING, collapse = ", ")
+    )
+  }
 
   for(var in names(RR)) {
     RR[var][is.missing(RR[var])] <- impute_with(var)
   }
 
-  readr::type_convert(RR)
+  readr::type_convert(RR[EXPECTED])
 }
 
 #' Format prevalence and consumption input data to our desired specifications
@@ -97,7 +102,6 @@ format_v0_rr <- function(rr) {
 #'user guide.
 #'
 #' expected variables:
-#'  Needed:
 #'    P_FD (Proportion, Former Drinkers)
 #'    P_BD (Proportion, Binge Drinkers)
 #'    P_LA (Proportion, Lifetime Abstainers)
@@ -108,7 +112,6 @@ format_v0_rr <- function(rr) {
 #'      Relative_Consumption
 #'      Correction_Factor
 #'    Gender (in order to pair with RR curves)
-#'  Imputable as "Unspecified":
 #'    Region
 #'    Year
 #'    Gender
@@ -130,25 +133,18 @@ format_v0_pc <- function(pc) {
     "CORRECTION_FACTOR", "RELATIVE_CONSUMPTION", "P_LA", "P_FD", "P_CD", "P_BD"
   )
   MISSING <- EXPECTED[!(EXPECTED %in% names(PC))]
-  NEEDED <- EXPECTED[c(3,5:12)]
-  MISSING_NEEDED <- intersect(MISSING, NEEDED)
-  if(length(MISSING_NEEDED) > 0) {
+  if(length(MISSING) > 0) {
     stop(
-      paste0(
-        "Missing and needed variables from the supplied prevalence/",
-        "consumption sheet: "
-      ),
-      paste(MISSING_NEEDED, collapse = ", ")
+      "Missing variables from the supplied prevalence/consumption sheet: ",
+      paste(MISSING, collapse = ", ")
     )
   }
-
-  PC[, MISSING] <- NA
 
   for(var in names(PC)) {
     PC[var][is.missing(PC[var])] <- impute_with(var)
   }
 
-  readr::type_convert(PC)
+  readr::type_convert(PC[EXPECTED])
 }
 
 #' Format Count Data
@@ -158,17 +154,15 @@ format_v0_pc <- function(pc) {
 #'Intended for a count sheet
 #'
 #' expected variables:
-#'  Needed:
 #'    IM (Used to join this data with aafs)
 #'    Region
 #'    Year
 #'    Gender
 #'    Age_Group
-#'  Imputable as "NA":
-#'    Deaths
-#'    Hosps (hospitalizations)
+#'    Outcome
+#'    Count
 #'
-#'@param rr is a dataset that can be converted to tibble with the expected
+#'@param dh is a dataset that can be converted to tibble with the expected
 #'  variables
 #'
 #'@export
@@ -178,30 +172,25 @@ format_v0_dh <- function(dh) {
   DH <- tibble::as.tibble(dh)
   names(DH) <- do.call(stringr::str_to_upper, list(names(DH)))
 
-
   EXPECTED <- c(
-    "REGION", "YEAR", "GENDER", "AGE_GROUP",
-    "DEATHS", "HOSPS"
+    "IM", "CONDITION", "REGION", "YEAR", "GENDER", "AGE_GROUP",
+    "OUTCOME", "COUNT"
   )
-  MISSING <- EXPECTED[!(EXPECTED %in% names(PC))]
-  NEEDED <- EXPECTED[c(1,2,3,4)]
-  MISSING_NEEDED <- intersect(MISSING, NEEDED)
-  if(length(MISSING_NEEDED) > 0) {
+  MISSING <- EXPECTED[!(EXPECTED %in% names(DH))]
+  if(length(MISSING) > 0) {
     stop(
       paste0(
         "Missing and needed variables from the supplied counts sheet: "
       ),
-      paste(MISSING_NEEDED, collapse = ", ")
+      paste(MISSING, collapse = ", ")
     )
   }
 
-  DH[, MISSING] <- NA
-
   for(var in names(DH)) {
-    DH[var][is.missing(DH[var])] <- impute_with(DH)
+    DH[var][is.missing(DH[var])] <- impute_with(var)
   }
 
-  readr::type_convert(DH)
+  readr::type_convert(DH[EXPECTED])
 }
 
 #### Process formatted data ----------------------------------------------------
@@ -304,24 +293,27 @@ derive_v0_pc <- function(pc, bb, lb, ub, gc) {
   PC <- pc
   PC %<>%
     group_by(REGION, YEAR) %>%
-    mutate(PCC_G_DAY = PCC_LITRES_YEAR * 1000 *
-             0.7893 * CORRECTION_FACTOR * 0.002739726,
-           DRINKERS = POPULATION * P_CD,
-           PCAD = PCC_G_DAY * sum(POPULATION) / sum(DRINKERS),
-           PCC_AMONG_DRINKERS = RELATIVE_CONSUMPTION * PCAD * sum(DRINKERS) /
-             sum(RELATIVE_CONSUMPTION*DRINKERS))
+    mutate(
+      PCC_G_DAY = PCC_LITRES_YEAR * 1000 *
+        0.7893 * CORRECTION_FACTOR * 0.002739726,
+      DRINKERS = POPULATION * P_CD,
+      PCAD = PCC_G_DAY * sum(POPULATION) / sum(DRINKERS),
+      PCC_AMONG_DRINKERS = RELATIVE_CONSUMPTION * PCAD * sum(DRINKERS) /
+        sum(RELATIVE_CONSUMPTION*DRINKERS))
 
   PC %<>%
     add_column(GAMMA_CONSTANT = sapply(gc[PC$GENDER], `[[`, 1))
 
   PC %<>%
-    mutate(GAMMA_SHAPE = 1/GAMMA_CONSTANT,
-           GAMMA_SCALE = GAMMA_CONSTANT*PCC_AMONG_DRINKERS)
+    mutate(
+      GAMMA_SHAPE = 1/GAMMA_CONSTANT,
+      GAMMA_SCALE = GAMMA_CONSTANT*PCC_AMONG_DRINKERS)
 
   PC %<>%
-    mutate(BB = bb[GENDER][[1]],
-           LB = lb,
-           UB = ub)
+    mutate(
+      BB = bb[GENDER][[1]],
+      LB = lb,
+      UB = ub)
 
   PC[, "NC"] <- 0
   for(n in 1:nrow(PC)) {
@@ -351,12 +343,14 @@ derive_v0_pc <- function(pc, bb, lb, ub, gc) {
     PC[[n, "P_BAT"]] <- integrate(dfgamma, lower = BB, upper = UB)$value
   }
   PC %<>%
-    mutate(R1 = (P_CD - P_BD)  / (P_CD - P_BAT),
-           R2 = (P_BD - P_BAT) / (P_CD - P_BAT),
-           AAF_FD = 0) %>%
-    add_column(N_GAMMA = zero,
-               INTGRND = zero,
-               AAF_CMP = zero)
+    mutate(
+      R1 = (P_CD - P_BD)  / (P_CD - P_BAT),
+      R2 = (P_BD - P_BAT) / (P_CD - P_BAT),
+      AAF_FD = 0) %>%
+    add_column(
+      N_GAMMA = zero,
+      INTGRND = zero,
+      AAF_CMP = zero)
 
   for(n in 1:nrow(PC)) {
     PC[[n, "N_GAMMA"]] <- normalized_gamma_factory(PC[n, ])
@@ -384,6 +378,34 @@ normalized_gamma_factory <- function(pc_specs) {
   function(x) {
     DF * dgamma(x, shape = GAMMA_SHAPE, scale = GAMMA_SCALE)
   }
+}
+
+
+#' Derives count data for use in calibration and portioning
+#'
+#'@description
+#' -Melts Deaths/Hosps variables into outcome/count (provides better abstraction
+#' for calibration methods)
+#' -Derives as count/drinkers the region/year/cohort prevalence among drinkers
+#' -
+#'
+#'@param dh Deaths/Hosps as returned by format_v0_dh
+#'@param pc Prev/Cons as returned by derive_v0_pc
+#'
+#'@importFrom magrittr %>% %<>%
+#'
+#'@export
+
+derive_v0_dh <- function(dh, pc) {
+  PC <- pc[
+    c("REGION", "YEAR", "GENDER", "AGE_GROUP", "DRINKERS",
+      "BB", "LB", "UB", "N_GAMMA")]
+  DH <- dh %>%
+    dplyr::inner_join(
+      PC,
+      by = c("REGION", "YEAR", "GENDER", "AGE_GROUP")
+    )
+  DH
 }
 
 #### Process Derived Data ------------------------------------------------------
@@ -467,10 +489,44 @@ assemble <- function(pc, rr, ext, lb, ub, bb, gc) {
 
 #' Combine Prev/Cons and Death/Hosp data to calibrate wholly attributable curves
 #'
-#'@param pc Prev/Cons
-#'@param dh
+#'@description
+#' Wholly attributable conditions have an AAF_TOTAL of 1.00, but we can still
+#' distribute this mass over the interval of interest (i.e. 0.03 to UB).
+#' When applicable (4.(1, 2, 3), 6.(1, 5) we calibrate a loglinear conditional
+#' probability curve whose area is equal to the regional yearly prevalence of
+#' the given condition among current drinkers.
+#'
+#'@param dh as returned by derive_v*_dh
+#'
+#'@importFrom magrittr %<>% %>%
 #'
 
-process_v0_wa <- function(pc, dh) {
+calibrate <- function(dh) {
+  ## Applicable IMs
+  CABLE <- c("(4).(1)", "(4).(2)", "(4).(3)", "(6).(1)", "(6).(5)")
+
+  dh %<>%
+    filter(IM %in% CABLE)
+
+
+  ## Start with a tibble of wholly attributable conditions and how we deal with
+  ## them
+  WA <- tibble::tibble(
+    IM = c(
+      "(4).(1)",
+      "(4).(2)",
+      "(4).(3)",
+      "(6).(1)",
+      "(6).(5)"
+    ),
+    THRESHOLD = c(
+      "BB",
+      "BB",
+      "BB",
+      "LB",
+      "LB"
+    )
+  )
+
 
 }

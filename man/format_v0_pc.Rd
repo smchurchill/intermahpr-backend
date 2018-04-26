@@ -11,14 +11,11 @@ format_v0_pc(pc)
 variables}
 }
 \description{
-#'@description
 Formats all variable names to upper case and imputes imputable missing data.
 Intended for a prevalence and consumption sheet as described in the intermahp
 user guide.
-}
-\details{
+
 expected variables:
- Needed:
    P_FD (Proportion, Former Drinkers)
    P_BD (Proportion, Binge Drinkers)
    P_LA (Proportion, Lifetime Abstainers)
@@ -29,7 +26,6 @@ expected variables:
      Relative_Consumption
      Correction_Factor
    Gender (in order to pair with RR curves)
- Imputable as "Unspecified":
    Region
    Year
    Gender

@@ -1,8 +1,15 @@
-#' Postprocessing function that tidies base AAF into a certain outcome type
+#' Postprocessing function that tidies base AAF by outcome type
 #'
 #'@description
-#'  Filters AAFs into any of mortality, morbidity, or combined.  Exported for
-#'  use in the Shiny app, called behind the scenes when invoking intermahp_base.
+#'  Splits "Combined" levels of an OUTCOME variable into Morbidity and Mortality
+#'
+#'@param aaf_table Any table with an OUTCOME variable whose levels are:
+#'  "Mortality", "Morbidity", and "Combined".
+#'
+#'@return aaf_table with an OUTCOME variable whose levels are: "Mortality" and
+#'  "Morbidity" and 2c+t+b rows, where c is the number of OUTCOME = "Combined"
+#'  rows in aaf_table, t is the number of OUTCOME = "Mortaility", and b is the
+#'  number of OUTCOME  = "Morbidity".
 #'
 #'@importFrom magrittr "%>%" "%<>%"
 #'@importFrom dplyr filter
@@ -10,27 +17,48 @@
 #'@export
 #'
 
+outcome_splitter <- function(aaf_table) {
+  mortality <- filter(aaf_table, OUTCOME == "Mortality" | OUTCOME == "Combined")
+  morbidity <- filter(aaf_table, OUTCOME == "Morbidity" | OUTCOME == "Combined")
 
-outcome_splitter <- function(aaf_table, outcome) {
+  mortality$OUTCOME <- "Mortality"
+  morbidity$OUTCOME <- "Morbidity"
+
+  rbind(mortality, morbidity)
+}
+
+
+
+#' Postprocessing function that extracts Light, Moderate, Heavy group AAFs
+#'
+#'
+#'
+#'@export
+#'
+
+name_cuts <- function(aaf_table) {
   aaf_table %<>%
-    filter(OUTCOME == outcome | OUTCOME == "Combined") %>%
-    mutate(AAF_LD = sapply(AAF_GRP, `[[`, 1),
-           AAF_MD = sapply(AAF_GRP, `[[`, 2),
-           AAF_HD = sapply(AAF_GRP, `[[`, 3)) %>%
-    select(REGION, YEAR, GENDER, AGE_GROUP, IM, CONDITION,
-           AAF_FD, AAF_LD, AAF_MD, AAF_HD, AAF_TOTAL)
-
+    mutate(
+      AAF_LD = sapply(AAF_GRP, `[[`, 1),
+      AAF_MD = sapply(AAF_GRP, `[[`, 2),
+      AAF_HD = sapply(AAF_GRP, `[[`, 3)) %>%
+    select(
+      REGION, YEAR, GENDER, AGE_GROUP, IM, CONDITION, OUTCOME,
+      AAF_FD, AAF_LD, AAF_MD, AAF_HD, AAF_TOTAL)
   aaf_table
 }
 
 
-#' Postprocessing function that integrates a list of functions from a list of
-#' lower bounds to a list of upper bounds.
+#' Postprocessing helper function that integrates a list of functions from a
+#' list of lower bounds to a list of upper bounds.
 #'
 #' Integrate that takes as input a list funs of functions, a vector vlower of
 #' "lower" values and a vector vupper of "upper" values, assumes that
 #' length(vlower) = length(vupper) = length(funs), and returns a
 #' vector of integrals of funs between the lower and upper values.
+#'
+#' This function is not optimized or "vectorized," it simply assigns memory and
+#' uses a for loop to perform each integral.
 #'
 #'
 #'

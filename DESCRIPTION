@@ -4,15 +4,16 @@ Version: 0.0.0.9001
 Authors@R: person("Sam", "Churchill", email = "meadowschurchill@gmail.com", role = c("aut", "cre"))
 Description: R Implementation of CISUR's International Model of Alcohol Harms and Policies
 Imports:
-    tidyr,
-    reshape2,
-    magrittr,
-    tibble,
-    dplyr,
-    readr,
-    purrr,
-    shiny,
-    shinyjs
+  nloptr,
+  tidyr,
+  reshape2,
+  magrittr,
+  tibble,
+  dplyr,
+  readr,
+  purrr,
+  shiny,
+  shinyjs
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true

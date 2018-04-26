@@ -131,11 +131,23 @@ intermahpr_base <- function(
     rr = RelativeRisks, pc = PrevalenceConsumption, ext = Extrapolation,
     lb = 0.03, ub = UpperBound, bb = BB, gc = GC, cb = CB
   )
-  InterMAHP_AAFs_morbidity <- outcome_splitter(AAF_OUT, "Morbidity")
-  InterMAHP_AAFs_mortality <- outcome_splitter(AAF_OUT, "Mortality")
+
+  SPLIT <- outcome_splitter(AAF_OUT)
+  NAMED <- name_cuts(SPLIT)
+
+  InterMAHP_AAFs_morbidity <- NAMED[NAMED$OUTCOME == "Morbidity", ]
+  InterMAHP_AAFs_mortality <- NAMED[NAMED$OUTCOME == "Mortality", ]
   InterMAHP_prev_cons_output <- extract_prevcons(AAF_OUT)
 
-  if(file.access(OutputPath, 2) == 0) {
+  output <- list(
+    "InterMAHP_AAFs_morbidity" = InterMAHP_AAFs_morbidity,
+    "InterMAHP_AAFs_mortality" = InterMAHP_AAFs_mortality,
+    "InterMAHP_prev_cons_output" = InterMAHP_prev_cons_output
+  )
+
+
+  if(is.null(OutputPath)) {return(output)}
+  else if(file.access(file.path(OutputPath), 2) == 0) {
     readr::write_csv(
       x = InterMAHP_AAFs_morbidity,
       path = file.path(
@@ -167,7 +179,7 @@ intermahpr_base <- function(
       )
     )
   }
-  else if(!is.null(OutputPath)) {
+  else {
     message(
       paste0(
         "Path does not exist, or R does not have write permission to the speci",
@@ -178,11 +190,5 @@ intermahpr_base <- function(
     )
   }
 
-  invisible(
-    list(
-      "InterMAHP_AAFs_morbidity" = InterMAHP_AAFs_morbidity,
-      "InterMAHP_AAFs_mortality" = InterMAHP_AAFs_mortality,
-      "InterMAHP_prev_cons_output" = InterMAHP_prev_cons_output
-    )
-  )
+  output
 }
