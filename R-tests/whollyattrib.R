@@ -44,5 +44,13 @@ aaf <- intermahpr_raw() %>%
   outcome_splitter() %>%
   name_cuts()
 
+aaf
 
-aaf[aaf$OUTCOME == "Mortality", ]
+epi_sim <- epilepsy <- filter(aaf, IM == "(4).(5)")
+epi_aaf <- epilepsy[c("AAF_LD", "AAF_MD", "AAF_HD", "AAF_TOTAL")]
+
+epi_xaaf <- epi_aaf / epi_aaf$AAF_TOTAL
+epi_sim[c("AAF_LD", "AAF_MD", "AAF_HD", "AAF_TOTAL")] <- epi_xaaf
+
+epilepsy
+epi_sim

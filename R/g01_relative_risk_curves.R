@@ -94,7 +94,7 @@ acute_pancreatitis_f_rr <- function(x){
 
 
 
-fp_rr <- function(betas) {
+fractional_polynomial_rr <- function(betas) {
   force(betas)
   function(x) {
     M = matrix(0,length(x),16)
@@ -157,7 +157,7 @@ set_rr <- function(rr_specs) {
   FN_RR <- function(x) {0}
 
   if(FUNCTION == "FP"){
-    FN_RR <- fp_rr(BETAS)
+    FN_RR <- fractional_polynomial_rr(BETAS)
   }
 
   if(FUNCTION == "Step" & GENDER == "Female") {

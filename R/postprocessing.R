@@ -140,6 +140,50 @@ extract_prevcons <- function(aaf_table) {
   aaf_table
 }
 
+
+## Split Similar AAF rows ----
+#' Split Similar AAF rows
+#'
+#'@description
+#'  condition specific method.
+#'   - 4.5 AAFs are proportionally distributed to 4.4, 4.6, and 4.7.
+#'   - 5.3 receives the AAF distribution of LD: 0, MD: 0, HD: 0.
+#'   - 8.all and 9.all are split exactly over 8.1-4, 8.6 and 9.1, 9.3-5 resp.,
+#'       and proportionally over 8.5 and 9.2 resp.
+#'
+#'@param aaf_table as produced by name_cuts (i.e has names(aaf_table) of
+#'  REGION, YEAR, GENDER, AGE_GROUP, IM, CONDITION, OUTCOME,
+#'  AAF_FD, AAF_LD, AAF_MD, AAF_HD, AAF_TOTAL)
+#'
+#'
+
+split_sim <- function(aaf_table) {
+  epi_sim <- epilepsy <- filter(aaf_table, IM == "(4).(5)")
+  epi_aaf <- epilepsy[c("AAF_LD", "AAF_MD", "AAF_HD", "AAF_TOTAL")]
+
+  epi_xaaf <- epi_aaf / epi_aaf$AAF_TOTAL
+  epi_sim[c("AAF_LD", "AAF_MD", "AAF_HD", "AAF_TOTAL")] <- epi_xaaf
+
+  c44 <- "Degeneration of nervous system due to alcohol"
+  c46 <- "Alcoholic polyneuropathy"
+  c47 <- "Alcoholic myopathy"
+
+  degen <- mutate(epi_sim, IM = "(4).(4)", CONDITION = c44)
+  polyn <- mutate(epi_sim, IM = "(4).(6)", CONDITION = c46)
+  myopa <- mutate(epi_sim, IM = "(4).(7)", CONDITION = c47)
+
+
+
+
+
+
+}
+
+
+
+
+
+## Compute Alcohol Attributable Counts ----
 #' Compute Alcohol Attributable Counts
 #'
 #'@description
