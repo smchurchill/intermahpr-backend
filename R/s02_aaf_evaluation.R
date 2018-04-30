@@ -14,7 +14,7 @@
 
 base_aafs <- function(aaf_table) {
   aaf_table %<>%
-    mutate(AAF_CD = map2(AAF_CMP, UB, ~.x(.y))) %>%
+    mutate(AAF_CD = unlist(map2(AAF_CMP, UB, ~(.x(.y))))) %>%
     mutate(AAF_TOTAL = AAF_FD + AAF_CD)
   aaf_table
 }

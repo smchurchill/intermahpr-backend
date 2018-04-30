@@ -255,6 +255,11 @@ bng_rr <- function(rr_specs) {
 
 #### 100% Calibration ----------------------------------------------------------
 
+
+calibration_factory <- function(dh_specs) {
+  function(x) 0
+}
+
 #' Slope Solver for Thresholded Loglinear Functions
 #'
 #' Uses a nonlinear optimizer (COBYLA) to find a loglinear slope for the
@@ -280,19 +285,18 @@ bng_rr <- function(rr_specs) {
 #'  DRINKERS: dbl
 #'
 
-fit_slope <- function(pc_dh_specs) {
+fit_slope <- function(dh_specs) {
   IM <- pc_dh_specs[["IM"]]
   COUNT <- pc_dh_specs[["COUNT"]]
   N_GAMMA <- pc_dh_specs[["N_GAMMA"]]
   LB <- pc_dh_specs[["LB"]]
-  BB <- pc_dh_specs[["BB"]]
+  BB <- 0
+
   UB <- pc_dh_specs[["UB"]]
   DRINKERS <- pc_dh_specs[["DRINKERS"]]
 
   THRESHOLD <- BB
-  if(grepl("6", IM)) {
-    THRESHOLD <- LB
-  }
+  if(grepl("6", IM))
 
   FN <- function(k) {
     function(x) {

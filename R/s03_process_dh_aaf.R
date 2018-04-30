@@ -17,7 +17,13 @@
 #'
 
 
-join_dh_aaf <- function(pc, rr) {
+join_dh_aaf <- function(dh, aaf) {
+  SIMILAR <- c("IM", "REGION", "YEAR", "GENDER", "AGE_GROUP", "OUTCOME")
+  aaf$CONDITION <- NULL
+  JOINED <- full_join(dh, aaf, by = SIMILAR)
+
+
+
   JOINT <- dplyr::full_join(pc, rr, by = "GENDER")
 
   if(any(is.na(JOINT))) {
@@ -53,28 +59,6 @@ join_dh_aaf <- function(pc, rr) {
   }
 
   JOINT
-}
-
-#' Collect and assemble AAF data from formatted RR and PC data
-#'
-#'@param pc  Prevalence / Consumption input as produced by format_v*_pc
-#'@param rr  Relative Risk input as produced by format_v*_rr
-#'@param ext logical, extrapolate linearly?
-#'@param lb  Double, consumption lower bound
-#'@param ub  Double, consumption upper bound
-#'@param bb  Double vector, Binge consumption level, Gender stratified
-#'@param gc  Gamma constant.  The linear relationship between mean and standard
-#'  deviation within the gamma distribution that describes consumption among
-#'  current drinkers.  Stratified by gender -- names(gc) must match levels of
-#'  rr$GENDER and pc$GENDER.
-#'
-#'
-
-assemble <- function(pc, rr, ext, lb, ub, bb, gc) {
-  RRD <- derive_v0_rr(rr = rr, ext = ext)
-  PCD <- derive_v0_pc(pc = pc, bb = bb, lb = lb, ub = ub, gc = gc)
-
-  join_pc_rr(pc = PCD, rr = RRD)
 }
 
 #' Combine Prev/Cons and Death/Hosp data to calibrate wholly attributable curves
