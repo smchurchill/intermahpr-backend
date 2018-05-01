@@ -302,7 +302,7 @@ derive_v0_pc <- function(pc, bb, lb, ub, gc) {
         sum(RELATIVE_CONSUMPTION*DRINKERS))
 
   PC %<>%
-    add_column(GAMMA_CONSTANT = sapply(gc[PC$GENDER], `[[`, 1))
+    add_column(GAMMA_CONSTANT = vapply(gc[PC$GENDER], `[[`, 1, FUN.VALUE = 0))
 
   PC %<>%
     mutate(

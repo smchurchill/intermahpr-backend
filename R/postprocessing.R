@@ -39,9 +39,9 @@ outcome_splitter <- function(aaf_table) {
 name_cuts <- function(aaf_table) {
   aaf_table %<>%
     mutate(
-      AAF_LD = sapply(AAF_GRP, `[[`, 1),
-      AAF_MD = sapply(AAF_GRP, `[[`, 2),
-      AAF_HD = sapply(AAF_GRP, `[[`, 3)) %>%
+      AAF_LD = vapply(AAF_GRP, `[[`, 1, FUN.VALUE = 0),
+      AAF_MD = vapply(AAF_GRP, `[[`, 2, FUN.VALUE = 0),
+      AAF_HD = vapply(AAF_GRP, `[[`, 3, FUN.VALUE = 0)) %>%
     select(
       REGION, YEAR, GENDER, AGE_GROUP, IM, CONDITION, OUTCOME,
       AAF_FD, AAF_LD, AAF_MD, AAF_HD, AAF_TOTAL)
@@ -97,8 +97,8 @@ vintegrate <- function(funs, vlower, vupper) {
 extract_prevcons <- function(aaf_table) {
   aaf_table %<>%
     mutate(
-      LM = sapply(CUTS, `[[`, 2),
-      MH = sapply(CUTS, `[[`, 3)
+      LM = vapply(CUTS, `[[`, 2, FUN.VALUE = 0),
+      MH = vapply(CUTS, `[[`, 3, FUN.VALUE = 0)
     ) %>%
     distinct(
       REGION, YEAR, GENDER, AGE_GROUP, POPULATION, PCC_AMONG_DRINKERS,
