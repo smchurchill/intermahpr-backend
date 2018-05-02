@@ -95,6 +95,7 @@ aaf_fd <- function(aaf_specs) {
   UB <- aaf_specs[["UB"]]
   P_FD <- aaf_specs[["P_FD"]]
   RR_FD <- aaf_specs[["RR_FD"]]
+  if(sum(is.na(c(LB, UB, P_FD, RR_FD)))) { return (0.0) }
   INTGRND <- aaf_specs[["INTGRND"]][[1]]
   CD_FACTOR <- integrate(INTGRND, lower = LB, upper = UB)$value
   FD_FACTOR <- P_FD * (RR_FD - 1)
@@ -106,7 +107,15 @@ aaf_fd <- function(aaf_specs) {
 #### 100% Calibration ----------------------------------------------------------
 
 
+#'@title
+#'Rescales a given AAF computing function into a wholly attributable AAF
+#'computing function
 #'
+#'@description
+#'When a 100% condition is reasonably similar to a partially attributable
+#'condition, it is reasonable to simply rescale the partially attributable AAF
+#'computing function by the reciprocal of AAF_TOTAL and attribute that to the
+#'100% condition.
 #'
 #'@param aaf_specs is a tibble that contains the variables:
 #'  AAF_CMP: fn
@@ -125,6 +134,11 @@ scaled_aaf_cmp_factory <- function(aaf_specs) {
   }
 }
 
+#'Produces a copy of a given AAF computing function
+#'
+#'@description
+#'This is a function because the given AAF computing function apparently needs
+#'an environment buffer.  Also normalizes the code in join_dh_aaf
 #'
 #'@param aaf_specs is a tibble that contains the variables:
 #'  AAF_CMP: fn

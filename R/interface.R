@@ -33,6 +33,7 @@ intermahpr_raw <- function(
   gc = list("Female" = 1.258^2, "Male" = 1.171^2),
   cb = list("Female" = c(13.45, 26.9), "Male" = c(20.2, 40.4))
 ){
+  stop("Function Deprecated")
   PCF <- format_v0_pc(pc = pc)
   RRF <- format_v0_rr(rr = rr)
   PC_LEVELS <- levels(as.factor(PCF$GENDER))
@@ -115,6 +116,7 @@ intermahpr_base <- function(
   OutputPath = NULL,
   FilePrefix = ""
 ){
+  stop("Function Deprecated")
   BB <- list("Female" = FemaleBingeBarrier, "Male" = MaleBingeBarrier)
   GC <- list("Female" = 1.258^2, "Male" = 1.171^2)
   CB <- list(

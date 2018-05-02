@@ -28,7 +28,9 @@ dh_in <- readr::read_csv(
 
 dh <- dh_in %>%
   rename(region = Province) %>%
-  rename(condition = Condition_Alcohol)
+  rename(condition = Condition_Alcohol) %>%
+  filter(region == "10:BC" & Year == 2015)
+
 
 dh$Outcome <- "Morbidity"
 
@@ -46,15 +48,18 @@ DH
 
 SIMILAR <- c("IM", "REGION", "YEAR", "GENDER", "AGE_GROUP", "OUTCOME")
 
+res <- join_dh_aaf(DH, aaf_split)
+
+
 aaf_split %<>%
   filter(OUTCOME == "Morbidity") %>%
   select(-c(CONDITION, DRINKERS, BB, LB, UB, N_GAMMA))
 
 aaf_split
 
-JOINED_FULL <- full_join(DH, aaf_split, by = SIMILAR)
+JOINED <- full_join(DH, aaf_split, by = SIMILAR)
 
-JOINED_FULL %<>%
+JOINED %<>%
   mutate(BLOCK = as_factor(purrr::pmap_chr(
     list(REGION, YEAR, GENDER, AGE_GROUP, OUTCOME),
     .f = paste0))) %>%
@@ -63,14 +68,58 @@ JOINED_FULL %<>%
     .f = paste0))) %>%
   mutate(CC = substr(IM, 1, 3))
 
-JCOPY <- JOINED_FULL
+KEEP <- filter(JOINED,!grepl("(4...[^5]|5...[37]|6...[15]|[89]..\\()", IM))
+MOD  <- filter(JOINED, grepl("(4...[^5]|5...[37]|6...[15]|[89]..\\([^a])", IM))
+USE  <- filter(JOINED, grepl("(4.*5|6.*2|all)", IM))
 
-ims <- JCOPY$IM
+for(n in 1:nrow(MOD)) {
+  im <- MOD[[n, "IM"]]
+  if(grepl("(4...[123]|5...3|6...[15])", im)) {
+    expr <- NULL
+    use <- MOD[n, ]
+    get_aaf_fn <- calibration_factory
+  }
+  else {
+    block <- MOD[[n, "BLOCK"]]
+    cc <- MOD[[n, "CC"]]
+    if(grepl("(4...[467]|8...5|9...2)", im)) {
+      expr <- "(4.*5|all)"
+      get_aaf_fn <- scaled_aaf_cmp_factory
+    }
+    else if(grepl("(5...7|8...[^5]|9...[^2])", im)) {
+      if(grepl("5...7", im)) {
+        cc <- "(6)"
+      }
+      expr <- "(6.*2|all)"
+      get_aaf_fn <- copy_aaf_cmp_factory
+    }
+    else {
+      stop(
+        paste0(
+          "IM of ",
+          im,
+          " does not match any of the following regular expressions:\n",
+          "(4...[123]|5...3|6...[15])\n",
+          "(4...[467]|8...5|9...2)\n",
+          "(5...7|8...[^5]|9...[^2])",
+          collapse = "\n"
+        )
+      )
+    }
+    use <- filter(USE, grepl(expr, IM) & BLOCK == block & CC == cc)
+  }
+  MOD[[n, "AAF_CMP"]] <- get_aaf_fn(use)
+  MOD[[n, "AAF_FD"]] <- aaf_fd(use)
+}
 
-ims[grepl("4.*[123]", ims)]
-ims[grepl("(4.*[123]|6.*[15])", ims)]
+COMB <- rbind(KEEP, MOD)
 
-ims[grepl("8.*5", ims)]
+check_comb <- COMB %>%
+  mutate(CUTS = pmap(list(0.03, 50, 100, 150, 200, 250), c)) %>%
+  mutate(CUMUL_F = map2(AAF_CMP, CUTS, ~.x(.y))) %>%
+  mutate(AAF_GRP = map(CUMUL_F, ~diff(.x))) %>%
+  mutate(AAF_CD = unlist(map(CUMUL_F, ~`[`(.x, length(.x))))) %>%
+  mutate(AA_COUNTS = map2(AAF_GRP, COUNT, `*`))
 
 
 clbr <- filter(JOINED_FULL, grepl("(4.*[123]|5.*3|6.*[15])", IM))
@@ -80,11 +129,12 @@ clbr
 clbr$AAF_FD <- 0
 clbr$AAF_TOTAL <- 1
 
-for(n in 1:nrow(calibre)) {
-  calibre[[n, "AAF_CMP"]] <- calibration_factory(calibre[n, ])
+for(n in 1:nrow(clbr)) {
+  clbr[[n, "AAF_CMP"]] <- calibration_factory(clbr[n, ])
+  clbr[[n, "AAF_FD"]] <- aaf_fd(clbr[n, ])
 }
 
-check_calibre <- calibre %>%
+check_clbr <- clbr %>%
   mutate(CUTS = pmap(list(0.03, 50, 100, 150, 200, 250), c)) %>%
   mutate(CUMUL_F = map2(AAF_CMP, CUTS, ~.x(.y))) %>%
   mutate(AAF_GRP = map(CUMUL_F, ~diff(.x))) %>%
@@ -94,9 +144,9 @@ sims <- filter(JOINED_FULL, grepl("(4.*[467]|8...5|9...2)", IM))
 sims_use <- filter(JOINED_FULL, grepl("(4.*5|all)", IM))
 
 for(n in 1:nrow(sims)) {
-  sims[[n, "AAF_CMP"]] <- scaled_aaf_cmp_factory(
-    filter(sims_use, BLOCK == sims[[n, "BLOCK"]] & CC == sims[[n, "CC"]])
-  )
+  use <- filter(sims_use, BLOCK == sims[[n, "BLOCK"]] & CC == sims[[n, "CC"]])
+  sims[[n, "AAF_CMP"]] <- scaled_aaf_cmp_factory(use)
+  sims[[n, "AAF_FD"]] <- aaf_fd(use)
 }
 
 check_sims <- sims %>%
@@ -110,9 +160,12 @@ copy_use <- filter(JOINED_FULL, grepl("(6.*2|all)", IM))
 
 for(n in 1:nrow(copy)) {
   category <- copy[[n, "CC"]]
-  if(category == "(5)") {category = "(6)"}
+  if(category == "(5)") {
+    category = "(6)"
+  }
   use <- filter(copy_use, BLOCK == copy[[n, "BLOCK"]] & CC == category)
   copy[[n, "AAF_CMP"]] <- copy_aaf_cmp_factory(use)
+  copy[[n, "AAF_FD"]] <- aaf_fd(use)
 }
 
 check_copy <- copy %>%

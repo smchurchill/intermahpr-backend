@@ -165,6 +165,8 @@ format_v0_pc <- function(pc) {
 #'@param dh is a dataset that can be converted to tibble with the expected
 #'  variables
 #'
+#'@importFrom magrittr %>% %<>%
+#'
 #'@export
 #'
 
@@ -190,7 +192,22 @@ format_v0_dh <- function(dh) {
     DH[var][is.missing(DH[var])] <- impute_with(var)
   }
 
-  readr::type_convert(DH[EXPECTED])
+  DH <- readr::type_convert(DH[EXPECTED])
+  SUPPORTED <- paste0(
+        "(7...1",
+        "|3...[12]",
+        "|1...[123]",
+     "|[69]...[1-5]",
+        "|8...[1-6]",
+    "|[245]...[1-7])")
+  IGNORE <- filter(DH, !grepl(SUPPORTED, IM))
+  ignore_message <- paste0(
+    "The following IMs are not supported by InterMAHP and will be ignored:\n",
+    capture.output(unique(IGNORE$IM)),
+    collapse = "\n"
+  )
+  warning(ignore_message)
+  filter(DH, grepl(SUPPORTED, IM))
 }
 
 #### Derive params for initial AAF evaluation ----------------------------------
