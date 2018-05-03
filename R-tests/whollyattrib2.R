@@ -1,21 +1,32 @@
 library(tidyverse)
 library(magrittr)
+library(pryr)
+
+.data <- rr
+
+names(.data)[grep("[0-9]$", names(.data))]
+
 
 rr <- rr_default
 RR <- rr %>%
-  format_v0_rr() %>%
-  derive_v0_rr(TRUE)
+  format_v1_rr() %>%
+  derive_v1_rr(TRUE)
+
+RR
 
 pc <- pc_default
 PC <- pc_bc %>%
-  format_v0_pc() %>%
-  derive_v0_pc(
+  format_v1_pc %>%
+  derive_v1_pc(
     bb = list("Female" = 50, "Male" = 60),
     lb = 0.03,
     ub = 250,
     gc = list("Female" = 1.258^2, "Male" = 1.171^2))
 
 joined <- join_pc_rr(PC, RR)
+
+
+
 
 aaf <- base_aafs(joined)
 
@@ -42,14 +53,13 @@ DH <- dh %>%
 
 DH$REGION = "BC"
 
-DH %<>% derive_v0_dh(PC)
+DH %<>% derive_v1_dh(PC)
 
 DH
 
 SIMILAR <- c("IM", "REGION", "YEAR", "GENDER", "AGE_GROUP", "OUTCOME")
 
 res <- join_dh_aaf(DH, aaf_split)
-
 
 aaf_split %<>%
   filter(OUTCOME == "Morbidity") %>%
@@ -70,9 +80,16 @@ JOINED %<>%
 
 KEEP <- filter(JOINED,!grepl("(4...[^5]|5...[37]|6...[15]|[89]..\\()", IM))
 MOD  <- filter(JOINED, grepl("(4...[^5]|5...[37]|6...[15]|[89]..\\([^a])", IM))
+
+MOD
+
 USE  <- filter(JOINED, grepl("(4.*5|6.*2|all)", IM))
 
+c(address(MOD), refs(MOD))
+tracemem(MOD)
+
 for(n in 1:nrow(MOD)) {
+
   im <- MOD[[n, "IM"]]
   if(grepl("(4...[123]|5...3|6...[15])", im)) {
     expr <- NULL

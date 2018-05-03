@@ -44,9 +44,18 @@ join_dh_aaf <- function(dh, aaf) {
     mutate(CC = substr(IM, 1, 3))
 
   KEEP <- filter(JOINED,!grepl("(4...[^5]|5...[37]|6...[15]|[89]..\\()", IM))
-  MOD  <- filter(JOINED, grepl("(4...[^5]|5...[37]|6...[15]|[89]..\\([^a])", IM))
-  USE  <- filter(JOINED, grepl("(4.*5|6.*2|all)", IM))
+  MOD <- filter(JOINED, grepl("(4...[^5]|5...[37]|6...[15]|[89]..\\([^a])", IM))
+  USE <- filter(JOINED, grepl("(4.*5|6.*2|all)", IM))
 
+  tracemem(MOD)
+
+  MOD %<>% mutate(AAF_CMP = zero)
+
+  ## Use mutate(case_when) to avoid for loops?  if it works & is significantly
+  ## faster, would want to refactor a lot of code... will leave alone for now.
+  ##
+  ## The loops should be fast enough considering the memory is already allocated
+  ## and the assignments should be happening in place... will confirm...
   for(n in 1:nrow(MOD)) {
     im <- MOD[[n, "IM"]]
     if(grepl("(4...[123]|5...3|6...[15])", im)) {
@@ -83,8 +92,11 @@ join_dh_aaf <- function(dh, aaf) {
       }
       use <- filter(USE, grepl(expr, IM) & BLOCK == block & CC == cc)
     }
+    print(address(MOD))
     MOD[[n, "AAF_CMP"]] <- get_aaf_fn(use)
+    print(address(MOD))
     MOD[[n, "AAF_FD"]] <- aaf_fd(use)
+    print(address(MOD))
   }
 
   bind_rows(KEEP, MOD)

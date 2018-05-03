@@ -7,14 +7,14 @@
 join_pc_rr(pc, rr)
 }
 \arguments{
-\item{RR}{relative risk tibble as produced by derive_v*_rr}
+\item{pc}{prevalence and consumption tibble as produced by derive_v*_pc}
 
-\item{PC}{prevalence and consumption tibble as produced by derive_v*_pc}
+\item{rr}{relative risk tibble as produced by derive_v*_rr}
 }
 \value{
 tibble with one row per unique region.year.gender.age_group.im combn,
  an AAF_FD variable with alc.attr. fraction for former drinkers, and an
- AAF_CMP variable that
+ AAF_CMP fn and aaf_cd, aaf_total dbl variables
 }
 \description{
 Performs a full_join of RR and PC over GENDER and then obtains an

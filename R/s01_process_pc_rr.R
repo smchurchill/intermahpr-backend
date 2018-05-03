@@ -6,12 +6,12 @@
 #'  AAF function and AAF_FD computation for each observation.  Does a sanity
 #'  check, ensuring that the joining variable is well-matched.
 #'
-#'@param RR relative risk tibble as produced by derive_v*_rr
-#'@param PC prevalence and consumption tibble as produced by derive_v*_pc
+#'@param rr relative risk tibble as produced by derive_v*_rr
+#'@param pc prevalence and consumption tibble as produced by derive_v*_pc
 #'
 #'@return tibble with one row per unique region.year.gender.age_group.im combn,
 #'  an AAF_FD variable with alc.attr. fraction for former drinkers, and an
-#'  AAF_CMP variable that
+#'  AAF_CMP fn and aaf_cd, aaf_total dbl variables
 #'
 #'@export
 #'
@@ -38,21 +38,32 @@ join_pc_rr <- function(pc, rr) {
       ),
       ignore_message
     )
-
     JOINT <- JOINT[rowSums(is.na(JOINT)) == 0,]
   }
 
-  for(n in 1:nrow(JOINT)) {
-    intgrnd <- intgrnd_factory(JOINT[n, ])
-    JOINT[[n, "INTGRND"]] <- intgrnd
-
-    aaf_cmp <- aaf_cmp_factory(JOINT[n, ])
-    JOINT[[n, "AAF_CMP"]] <- aaf_cmp
-
-    JOINT[[n, "AAF_FD"]] <- aaf_fd(JOINT[n, ])
-  }
-
-  JOINT
+  JOINT %>%
+    mutate(
+      INTGRND = pmap(
+        list(BB, LB, UB, R1, R2, LNXT_RR, BNGD_RR, N_GAMMA),
+        intgrnd_factory
+      )
+    ) %>%
+    mutate(
+      AAF_CMP = pmap(
+        list(LB, UB, RR_FD, P_FD, INTGRND),
+        aaf_cmp_factory
+      )
+    ) %>%
+    mutate(
+      AAF_FD = pmap_dbl(
+        list(LB, UB, RR_FD, P_FD, INTGRND),
+        aaf_fd
+      ),
+      AAF_CD = map2_dbl(AAF_CMP, UB, ~(.x(.y)))
+    ) %>%
+    mutate(
+      AAF_TOTAL = AAF_CD + AAF_FD
+    )
 }
 
 #' Collect and assemble AAF data from formatted RR and PC data

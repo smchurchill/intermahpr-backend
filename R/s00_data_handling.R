@@ -1,52 +1,3 @@
-#### Handle missing data -------------------------------------------------------
-
-#' What value is imputed when a variable is missing?
-#'
-#' In order to normalize code in future methods, missing data is removed either
-#' through imputation when possible, or by throwing an error when the data is
-#' necessary.  impute_with is called when a missing value \emph{can} be imputed.
-#'
-#'
-#' @param var is a string -- a variable name.
-#'
-#' @return A string or integer that is appropriate for imputation.
-#'
-#'
-
-impute_with <- function(var) {
-  if(grepl("B[0-9]", var)) {var = "BETA"}
-  switch(
-    var,
-    IM = "(0).(0)",
-    CONDITION = "Unspecified",
-    REGION = "Unspecified",
-    YEAR = "Unspecified",
-    AGE_GROUP = "Unspecified",
-    OUTCOME = "Combined",
-    FUNCTION = "FP",
-    RR_FD = 1,
-    BINGEF = 1,
-    BETA = 0,
-    COUNT = 0
-  )
-}
-
-#' Definition of missing data for the purposes of intermahpr
-#'
-
-is.missing <- function(obs) {
-  is.na(obs) | is.null(obs) | obs == "."
-}
-
-#' Dummy function for allocating memory
-#'
-#'@param ... Accepts any input
-#'
-#'@return Always returns 0
-
-zero <- list(fn = function(...) 0)
-
-
 #### Verify and wrangle data ---------------------------------------------------
 
 #' Format relative risk input data to our desired specifications
@@ -65,21 +16,21 @@ zero <- list(fn = function(...) 0)
 #'  RR_FD
 #'  BingeF
 #'
-#'@param rr is a dataset that can be converted to tibble with the expected
+#'@param .data is a dataset that can be converted to tibble with the expected
 #'  variables
 #'
 #'@export
 #'
 
-format_v0_rr <- function(rr) {
-  RR <- tibble::as.tibble(rr)
-  names(RR) <- do.call(stringr::str_to_upper, list(names(RR)))
-  BETAS <- do.call(paste0, list(rep("B", 16), 1:16))
+format_v1_rr <- function(.data) {
+  .data <- tibble::as.tibble(.data)
+  names(.data) <- do.call(stringr::str_to_upper, list(names(.data)))
+  BETAS <- names(.data)[grep("[0-9]$", names(.data))]
   EXPECTED <- c(
     "IM", "CONDITION", "GENDER", "OUTCOME",
     "RR_FD", "BINGEF", "FUNCTION", BETAS
   )
-  MISSING <- EXPECTED[!(EXPECTED %in% names(RR))]
+  MISSING <- EXPECTED[!(EXPECTED %in% names(.data))]
   if(length(MISSING) > 0) {
     stop(
       "Missing variables from the supplied relative risk sheet: ",
@@ -87,11 +38,11 @@ format_v0_rr <- function(rr) {
     )
   }
 
-  for(var in names(RR)) {
-    RR[var][is.missing(RR[var])] <- impute_with(var)
+  for(var in names(.data)) {
+    .data[var][is.missing(.data[var])] <- impute_with(var)
   }
 
-  readr::type_convert(RR[EXPECTED])
+  readr::type_convert(.data[EXPECTED])
 }
 
 #' Format prevalence and consumption input data to our desired specifications
@@ -117,22 +68,21 @@ format_v0_rr <- function(rr) {
 #'    Gender
 #'    Age_Group
 #'
-#'@param rr is a dataset that can be converted to tibble with the expected
+#'@param .data is a dataset that can be converted to tibble with the expected
 #'  variables
 #'
 #'@export
 #'
 
-format_v0_pc <- function(pc) {
-  PC <- tibble::as.tibble(pc)
-  names(PC) <- do.call(stringr::str_to_upper, list(names(PC)))
-
+format_v1_pc <- function(.data) {
+  .data <- tibble::as.tibble(.data)
+  names(.data) <- do.call(stringr::str_to_upper, list(names(.data)))
 
   EXPECTED <- c(
     "REGION", "YEAR", "GENDER", "AGE_GROUP", "POPULATION", "PCC_LITRES_YEAR",
     "CORRECTION_FACTOR", "RELATIVE_CONSUMPTION", "P_LA", "P_FD", "P_CD", "P_BD"
   )
-  MISSING <- EXPECTED[!(EXPECTED %in% names(PC))]
+  MISSING <- EXPECTED[!(EXPECTED %in% names(.data))]
   if(length(MISSING) > 0) {
     stop(
       "Missing variables from the supplied prevalence/consumption sheet: ",
@@ -140,11 +90,11 @@ format_v0_pc <- function(pc) {
     )
   }
 
-  for(var in names(PC)) {
-    PC[var][is.missing(PC[var])] <- impute_with(var)
+  for(var in names(.data)) {
+    .data[var][is.missing(.data[var])] <- impute_with(var)
   }
 
-  readr::type_convert(PC[EXPECTED])
+  readr::type_convert(.data[EXPECTED])
 }
 
 #' Format Count Data
@@ -154,7 +104,7 @@ format_v0_pc <- function(pc) {
 #'Intended for a count sheet
 #'
 #' expected variables:
-#'    IM (Used to join this data with aafs)
+#'    IM
 #'    Region
 #'    Year
 #'    Gender
@@ -162,7 +112,7 @@ format_v0_pc <- function(pc) {
 #'    Outcome
 #'    Count
 #'
-#'@param dh is a dataset that can be converted to tibble with the expected
+#'@param .data is a dataset that can be converted to tibble with the expected
 #'  variables
 #'
 #'@importFrom magrittr %>% %<>%
@@ -170,15 +120,15 @@ format_v0_pc <- function(pc) {
 #'@export
 #'
 
-format_v0_dh <- function(dh) {
-  DH <- tibble::as.tibble(dh)
-  names(DH) <- do.call(stringr::str_to_upper, list(names(DH)))
+format_v1_dh <- function(.data) {
+  .data <- tibble::as.tibble(.data)
+  names(.data) <- do.call(stringr::str_to_upper, list(names(.data)))
 
   EXPECTED <- c(
     "IM", "CONDITION", "REGION", "YEAR", "GENDER", "AGE_GROUP",
     "OUTCOME", "COUNT"
   )
-  MISSING <- EXPECTED[!(EXPECTED %in% names(DH))]
+  MISSING <- EXPECTED[!(EXPECTED %in% names(.data))]
   if(length(MISSING) > 0) {
     stop(
       paste0(
@@ -188,11 +138,11 @@ format_v0_dh <- function(dh) {
     )
   }
 
-  for(var in names(DH)) {
-    DH[var][is.missing(DH[var])] <- impute_with(var)
+  for(var in names(.data)) {
+    .data[var][is.missing(.data[var])] <- impute_with(var)
   }
 
-  DH <- readr::type_convert(DH[EXPECTED])
+  .data <- readr::type_convert(.data[EXPECTED])
   SUPPORTED <- paste0(
         "(7...1",
         "|3...[12]",
@@ -200,55 +150,78 @@ format_v0_dh <- function(dh) {
      "|[69]...[1-5]",
         "|8...[1-6]",
     "|[245]...[1-7])")
-  IGNORE <- filter(DH, !grepl(SUPPORTED, IM))
+  IGNORE <- filter(.data, !grepl(SUPPORTED, IM))
   ignore_message <- paste0(
     "The following IMs are not supported by InterMAHP and will be ignored:\n",
     capture.output(unique(IGNORE$IM)),
     collapse = "\n"
   )
   warning(ignore_message)
-  filter(DH, grepl(SUPPORTED, IM))
+  filter(.data, grepl(SUPPORTED, IM))
 }
 
 #### Derive params for initial AAF evaluation ----------------------------------
 
 #' Derives relative risk curves from relative risk data
 #'
-#'@param rr tibble as formatted above
+#'@param .data tibble as formatted in format_v*_rr
 #'@param ext logical indicator of extrapolation, (TRUE = linear, FALSE = capped)
 #'
-#'@return tibble which is RR with an additional column that contains all
-#'  relevent relative risk curves under the variables BASE_RR, LNXT_RR, and
-#'  BNGD_RR.
-#'    RR[["BASE_RR"]] is the base relative risk function (i.e. no extrapolation
-#'      after 100/150)
-#'    RR[["LNXT_RR"]] is the extrapolated relative risk curve
-#'    RR[["BNGD_RR"]] is the extrapolated relative risk curve for binge drinkers
+#'@importFrom magrittr %>% %<>%
+#'@importFrom purrr map map2 pmap
 #'
 #'@export
 #'
 
-derive_v0_rr <- function(rr, ext) {
-  rr[, "EXT"] <- ext
-  rr <- add_column(
-    rr,
-    BASE_RR = zero,
-    LNXT_RR = zero,
-    BNGD_RR = zero
-  )
+derive_v1_rr <- function(.data, ext) {
+  NO_B <- .data[-grep("[0-9]", names(.data))]
+  YES_B <- .data[grep("[0-9]$", names(.data))]
 
-  for(n in 1:nrow(rr)) {
-    base <- set_rr(rr[n,])
-    rr[[n, "BASE_RR"]] <- base
+  BLIST <- split(as.matrix(YES_B), 1:nrow(YES_B))
+  NO_B$BETAS <- BLIST
 
-    lnxt <- ext_rr(rr[n,])
-    rr[[n, "LNXT_RR"]] <- lnxt
-
-    bngd <- bng_rr(rr[n,])
-    rr[[n, "BNGD_RR"]] <- bngd
-  }
-
-  rr
+  NO_B %>%
+    mutate(
+      BASE_RR = pmap(
+        list(IM, GENDER, FUNCTION, BETAS),
+        base_rr_factory)
+    ) %>%
+    mutate(
+      EXT = ifelse(
+        FUNCTION == "Spline" & GENDER == "Female",
+        FALSE, ext)
+    ) %>%
+    mutate(
+      X1 = ifelse(
+        grepl("5...2", IM),
+        50, 100
+      )
+    ) %>%
+    mutate(
+      X2 = X1 + 50
+    ) %>%
+    mutate(
+      Y1 = unlist(map2(BASE_RR, X1, ~.x(.y))),
+      Y2 = unlist(map2(BASE_RR, X2, ~.x(.y)))
+    ) %>%
+    mutate(
+      CMP_SLOPE = (Y2-Y1)/(X2-X1)
+    ) %>%
+    mutate(
+      SLOPE = ifelse(EXT, CMP_SLOPE, 0)
+    ) %>%
+    mutate(
+      LNXT_RR = pmap(
+        list(BASE_RR, X2, Y2, SLOPE),
+        linear_extrapolation_factory
+      )
+    ) %>%
+    mutate(
+      BNGD_RR = pmap(
+        list(IM, BINGEF, LNXT_RR),
+        binge_risk_factory
+      )
+    )
 }
 
 
@@ -264,13 +237,9 @@ derive_v0_rr <- function(rr, ext) {
 #' Gamma parameters are derivable entirely from prevalence and consumption,
 #' no additional input is necessary.
 #'
-#'@param pc is assumed type tibble with names(PC) = c(YEAR, REGION, GENDER
-#' , AGE_GROUP, POPULATION, PCC_LITRES_YEAR, CORRECTION_FACTOR,
-#' RELATIVE_CONSUMPTION, P_LA, P_FD, P_CD, P_BD).
+#'@param .data tibble as formatted in format_v*_pc
 #'
-#' Note that the bundled data set pc_default satisfies these constraints.
-#'
-#'@param bb User supplied gender stratified binge barrier
+#'@param bb Gender stratified binge barrier
 #'@param lb Lower bound
 #'@param ub Upper bound
 #'@param gc Gender stratified gamma constants
@@ -289,7 +258,6 @@ derive_v0_rr <- function(rr, ext) {
 #'     are related by GAMMA_CONSTANT, stratified by gender
 #'   GAMMA_SHAPE: Computed from GAMMA_CONSTANT
 #'   GAMMA_SCALE: Computed from GAMMA_CONSTANT
-#'   INDEX: Among vector inputs, which index refers to this cohort?
 #'   BB: Binge barrier
 #'   LB: Lower bound of integration (0.03)
 #'   UB: Upper bound of integration (user-specified, typical values are 150,250)
@@ -306,9 +274,8 @@ derive_v0_rr <- function(rr, ext) {
 #'@export
 #'
 
-derive_v0_pc <- function(pc, bb, lb, ub, gc) {
-  PC <- pc
-  PC %<>%
+derive_v1_pc <- function(.data, bb, lb, ub, gc) {
+  .data %>%
     group_by(REGION, YEAR) %>%
     mutate(
       PCC_G_DAY = PCC_LITRES_YEAR * 1000 *
@@ -316,104 +283,54 @@ derive_v0_pc <- function(pc, bb, lb, ub, gc) {
       DRINKERS = POPULATION * P_CD,
       PCAD = PCC_G_DAY * sum(POPULATION) / sum(DRINKERS),
       PCC_AMONG_DRINKERS = RELATIVE_CONSUMPTION * PCAD * sum(DRINKERS) /
-        sum(RELATIVE_CONSUMPTION*DRINKERS))
-
-  PC %<>%
-    add_column(GAMMA_CONSTANT = vapply(gc[PC$GENDER], `[[`, 1, FUN.VALUE = 0))
-
-  PC %<>%
+        sum(RELATIVE_CONSUMPTION*DRINKERS)
+      )%>%
+    ungroup %>%
+    mutate(
+      GAMMA_CONSTANT = map_dbl(GENDER, ~`[[`(gc, .x))
+    ) %>%
     mutate(
       GAMMA_SHAPE = 1/GAMMA_CONSTANT,
-      GAMMA_SCALE = GAMMA_CONSTANT*PCC_AMONG_DRINKERS)
-
-  PC %<>%
-    mutate(
-      BB = bb[GENDER][[1]],
+      GAMMA_SCALE = GAMMA_CONSTANT*PCC_AMONG_DRINKERS,
+      BB = map_dbl(GENDER, ~`[[`(bb, .x)),
       LB = lb,
-      UB = ub)
-
-  PC[, "NC"] <- 0
-  for(n in 1:nrow(PC)) {
-    GAMMA_SHAPE <- PC[[n, "GAMMA_SHAPE"]]
-    GAMMA_SCALE <- PC[[n, "GAMMA_SCALE"]]
-    LB <- PC[[n, "LB"]]
-    UB <- PC[[n, "UB"]]
-    imgamma <- function(x) {
-      dgamma(x, shape = GAMMA_SHAPE, scale = GAMMA_SCALE)
-    }
-    PC[[n, "NC"]] <- integrate(imgamma, lower = LB, upper = UB)$value
-  }
-
-  PC %<>%
-    mutate(DF = P_CD / NC)
-
-  PC[, "P_BAT"] <- 0
-  for(n in 1:nrow(PC)) {
-    GAMMA_SHAPE <- PC[[n, "GAMMA_SHAPE"]]
-    GAMMA_SCALE <- PC[[n, "GAMMA_SCALE"]]
-    BB <- PC[[n, "BB"]]
-    UB <- PC[[n, "UB"]]
-    DF <- PC[[n, "DF"]]
-    dfgamma <- function(x) {
-      DF * dgamma(x, shape = GAMMA_SHAPE, scale = GAMMA_SCALE)
-    }
-    PC[[n, "P_BAT"]] <- integrate(dfgamma, lower = BB, upper = UB)$value
-  }
-  PC %<>%
+      UB = ub
+    ) %>%
+    mutate(
+      GLB = pgamma(q = LB, shape = GAMMA_SHAPE, scale = GAMMA_SCALE),
+      GBB = pgamma(q = BB, shape = GAMMA_SHAPE, scale = GAMMA_SCALE),
+      GUB = pgamma(q = UB, shape = GAMMA_SHAPE, scale = GAMMA_SCALE)
+    ) %>%
+    mutate(
+      NC = GUB - GLB
+    ) %>%
+    mutate(
+      DF = P_CD / NC
+    ) %>%
+    mutate(
+      N_GAMMA = pmap(
+        list(GAMMA_SHAPE, GAMMA_SCALE, DF),
+        normalized_gamma_factory
+      ),
+      P_BAT = DF * (GUB - GBB)
+    ) %>%
     mutate(
       R1 = (P_CD - P_BD)  / (P_CD - P_BAT),
-      R2 = (P_BD - P_BAT) / (P_CD - P_BAT),
-      AAF_FD = 0) %>%
-    add_column(
-      N_GAMMA = zero,
-      INTGRND = zero,
-      AAF_CMP = zero)
-
-  for(n in 1:nrow(PC)) {
-    PC[[n, "N_GAMMA"]] <- normalized_gamma_factory(PC[n, ])
-  }
-
-  PC
-}
-
-#' Factory for normalized gamma distributions
-#'
-#'@param pc_specs is a tibble that contains the variables:
-#'  GAMMA_SHAPE: dbl
-#'  GAMMA_SCALE: dbl
-#'  DF: dbl
-#'
-#'@return a function object that repreents the normalized gamma distribution
-#'  (defined as defined as DF*gamma(x,shape,scale))
-#'
-
-normalized_gamma_factory <- function(pc_specs) {
-  force(pc_specs)
-  GAMMA_SHAPE <- pc_specs[["GAMMA_SHAPE"]]
-  GAMMA_SCALE <- pc_specs[["GAMMA_SCALE"]]
-  DF <- pc_specs[["DF"]]
-  function(x) {
-    DF * dgamma(x, shape = GAMMA_SHAPE, scale = GAMMA_SCALE)
-  }
+      R2 = (P_BD - P_BAT) / (P_CD - P_BAT)
+    )
 }
 
 
 #' Derives count data for use in calibration and portioning
 #'
-#'@description
-#' -Melts Deaths/Hosps variables into outcome/count (provides better abstraction
-#' for calibration methods)
-#' -Derives as count/drinkers the region/year/cohort prevalence among drinkers
-#' -
-#'
-#'@param dh Deaths/Hosps as returned by format_v0_dh
-#'@param pc Prev/Cons as returned by derive_v0_pc
+#'@param dh Deaths/Hosps as returned by format_v1_dh
+#'@param pc Prev/Cons as returned by derive_v1_pc
 #'
 #'@importFrom magrittr %>% %<>%
 #'
 #'@export
 
-derive_v0_dh <- function(dh, pc) {
+derive_v1_dh <- function(dh, pc) {
   PC <- pc[
     c("REGION", "YEAR", "GENDER", "AGE_GROUP", "DRINKERS",
       "BB", "LB", "UB", "N_GAMMA")]
