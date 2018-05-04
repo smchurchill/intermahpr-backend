@@ -4,7 +4,7 @@
 \alias{calibration_factory}
 \title{Produce a Conditional Probability curve from the given input}
 \usage{
-calibration_factory(dh_specs)
+calibration_factory(IM, COUNT, DRINKERS, N_GAMMA, LB, BB, UB)
 }
 \arguments{
 \item{rr_specs}{is a tibble that contains the variables:

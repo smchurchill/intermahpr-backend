@@ -19,8 +19,10 @@
 
 
 join_dh_aaf <- function(dh, aaf) {
+  ## Variables to join DH and AAF by
   SIMILAR <- c("IM", "REGION", "YEAR", "GENDER", "AGE_GROUP", "OUTCOME")
 
+  ## [89].all will be distributed and dropped, so don't need as many vars
   NO_INJ <- aaf %>%
     filter(!grepl("all", IM)) %>%
     select(-c(CONDITION, DRINKERS, BB, LB, UB, N_GAMMA))
@@ -29,75 +31,73 @@ join_dh_aaf <- function(dh, aaf) {
     filter(grepl("all", IM)) %>%
     mutate(COUNT = -1)
 
-  JOINED <- dplyr::bind_rows(
+  ## Join the tables and add Block and Category variables
+  JOIN <- dplyr::bind_rows(
     left_join(x = dh, y = NO_INJ, by = SIMILAR),
     INJ
     ) %>%
     mutate(BLOCK = as_factor(purrr::pmap_chr(
       list(REGION, YEAR, GENDER, AGE_GROUP, OUTCOME),
       .f = paste0))
-    ) %>%
-    mutate(KEY = as_factor(purrr::pmap_chr(
-      list(IM, REGION, YEAR, GENDER, AGE_GROUP, OUTCOME),
-      .f = paste0))
-    ) %>%
+    )
     mutate(CC = substr(IM, 1, 3))
 
-  KEEP <- filter(JOINED,!grepl("(4...[^5]|5...[37]|6...[15]|[89]..\\()", IM))
-  MOD <- filter(JOINED, grepl("(4...[^5]|5...[37]|6...[15]|[89]..\\([^a])", IM))
-  USE <- filter(JOINED, grepl("(4.*5|6.*2|all)", IM))
+  ## These rows are fine as is
+  KEEP <- filter(JOIN,!grepl("(4...[^5]|5...[37]|6...[15]|^.[89])", IM))
 
-  tracemem(MOD)
+  ## These rows get a calibrated AAF_CMP
+  CLBR <- JOIN %>%
+    filter(
+      grepl("(4.*[123]|5.*3|6.*[15])", IM)
+    ) %>%
+    mutate(
+      AAF_CMP = pmap(
+        list(IM, COUNT, DRINKERS, N_GAMMA, LB, BB, UB),
+        calibration_factory
+      ),
+      AAF_FD = 0
+    )
 
-  MOD %<>% mutate(AAF_CMP = zero)
+  ## These rows get rescaled AAF_CMPs from similar conditions
+  SIMS_L <- JOIN %>%
+    filter(
+      grepl("(4.*[467]|8...5|9...2)", IM)
+    ) %>%
+    select(-c(AAF_FD, AAF_CMP, AAF_TOTAL))
+  SIMS_R <- JOIN %>%
+    filter(
+      grepl("(4.*5|all)", IM)
+    ) %>%
+    select(c(AAF_FD, AAF_CMP, AAF_TOTAL, BLOCK, CC))
 
-  ## Use mutate(case_when) to avoid for loops?  if it works & is significantly
-  ## faster, would want to refactor a lot of code... will leave alone for now.
-  ##
-  ## The loops should be fast enough considering the memory is already allocated
-  ## and the assignments should be happening in place... will confirm...
-  for(n in 1:nrow(MOD)) {
-    im <- MOD[[n, "IM"]]
-    if(grepl("(4...[123]|5...3|6...[15])", im)) {
-      expr <- NULL
-      use <- MOD[n, ]
-      get_aaf_fn <- calibration_factory
-    }
-    else {
-      block <- MOD[[n, "BLOCK"]]
-      cc <- MOD[[n, "CC"]]
-      if(grepl("(4...[467]|8...5|9...2)", im)) {
-        expr <- "(4.*5|all)"
-        get_aaf_fn <- scaled_aaf_cmp_factory
-      }
-      else if(grepl("(5...7|8...[^5]|9...[^2])", im)) {
-        if(grepl("5...7", im)) {
-          cc <- "(6)"
-        }
-        expr <- "(6.*2|all)"
-        get_aaf_fn <- copy_aaf_cmp_factory
-      }
-      else {
-        stop(
-          paste0(
-            "IM of ",
-            im,
-            " does not match any of the following regular expressions:\n",
-            "(4...[123]|5...3|6...[15])\n",
-            "(4...[467]|8...5|9...2)\n",
-            "(5...7|8...[^5]|9...[^2])",
-            collapse = "\n"
-          )
-        )
-      }
-      use <- filter(USE, grepl(expr, IM) & BLOCK == block & CC == cc)
-    }
-    print(address(MOD))
-    MOD[[n, "AAF_CMP"]] <- get_aaf_fn(use)
-    print(address(MOD))
-    MOD[[n, "AAF_FD"]] <- aaf_fd(use)
-    print(address(MOD))
-  }
+  SIMS <- left_join(x = SIMS_L, y = SIMS_R, by = c("BLOCK", "CC")) %>%
+    mutate(RESCALE = 1 / AAF_TOTAL) %>%
+    mutate(
+      AAF_CMP = map2(RESCALE, AAF_CMP, ~{function(x) .x * .y(x)}),
+      AAF_TOTAL = 1)
 
-  bind_rows(KEEP, MOD)
+  ## These rows get full copies of AAF_CMP from related conditions
+  COPY_L <- JOIN %>%
+    filter(
+      grepl("(5.*7|8...[12346]|9...[1345])", IM)
+    ) %>%
+    select(-c(AAF_FD, AAF_CMP, AAF_TOTAL))
+  COPY_R <- JOIN %>%
+    filter(
+      grepl("(6.*2|all)", IM)
+    ) %>%
+    select(
+      c(AAF_FD, AAF_CMP, AAF_TOTAL, BLOCK, CC)
+    ) %>%
+    mutate(
+      CC = ifelse(CC == "(6)", "(5)", CC)
+    )
+
+  COPY <- left_join(x = COPY_L, y = COPY_R, by = c("BLOCK", "CC"))
+
+  ## Combine everything back together, recompute total aafs, and apply to counts
+  bind_rows(KEEP, CLBR, SIMS, COPY) %>%
+    mutate(AAF_CD = map2_dbl(AAF_CMP, UB, ~(.x(.y)))) %>%
+    mutate(AAF_TOTAL = AAF_CD + AAF_FD) %>%
+    mutate(AA_COUNT = AAF_TOTAL * COUNT)
 }

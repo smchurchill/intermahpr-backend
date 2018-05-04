@@ -30,7 +30,7 @@ joined <- join_pc_rr(PC, RR)
 
 aaf <- base_aafs(joined)
 
-aaf_split <- outcome_splitter(aaf)
+aaf_split <- outcome_splitter(joined)
 
 dh_in <- readr::read_csv(
   file.path("data-raw", "dh.csv"),
@@ -48,7 +48,7 @@ dh$Outcome <- "Morbidity"
 dh
 
 DH <- dh %>%
-  intermahpr::format_v0_dh() %>%
+  intermahpr::format_v1_dh() %>%
   filter(REGION == "10:BC" & YEAR == 2015)
 
 DH$REGION = "BC"
@@ -57,9 +57,35 @@ DH %<>% derive_v1_dh(PC)
 
 DH
 
+res <- join_dh_aaf(DH, aaf_split)
+
+res
+
+check_res <- res %>%
+  mutate(CUTS = pmap(list(0.03, 50, 100, 150, 200, 250), c)) %>%
+  mutate(CUMUL_F = map2(AAF_CMP, CUTS, ~.x(.y))) %>%
+  mutate(AAF_GRP = map(CUMUL_F, ~diff(.x))) %>%
+  mutate(AAF_CD = map_dbl(CUMUL_F, ~`[`(.x, length(.x))))
+
+check_res$AAF_CD
+
+res[8,]$BLOCK
+
+(res[8,]$ARGS)[[1]][["BLOCK"]]
+
+str(res)
+
+
+
+
+
+
+
+
+
+
 SIMILAR <- c("IM", "REGION", "YEAR", "GENDER", "AGE_GROUP", "OUTCOME")
 
-res <- join_dh_aaf(DH, aaf_split)
 
 aaf_split %<>%
   filter(OUTCOME == "Morbidity") %>%

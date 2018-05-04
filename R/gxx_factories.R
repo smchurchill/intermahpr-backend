@@ -218,49 +218,7 @@ aaf_fd <- function(LB, UB, RR_FD, P_FD, INTGRND) {
   FRACTION
 }
 
-#### Scale, Copy, Calibrate AAF Computer Factories -----------------------------
-
-#'@title
-#'Rescales a given AAF computing function into a wholly attributable AAF
-#'computing function
-#'
-#'@description
-#'When a 100% condition is reasonably similar to a partially attributable
-#'condition, it is reasonable to simply rescale the partially attributable AAF
-#'computing function by the reciprocal of AAF_TOTAL and attribute that to the
-#'100% condition.
-#'
-#'@param aaf_specs is a tibble that contains the variables:
-#'  AAF_CMP: fn
-#'  AAF_TOTAL: dbl
-#'  P_FD: dbl
-#'  RR_FD: dbl
-#'  INTGRND: fn
-#'
-#'
-
-scaled_aaf_cmp_factory <- function(aaf_specs) {
-  AAF_CMP <- aaf_specs[["AAF_CMP"]][[1]]
-  RESCALE <- 1/aaf_specs[["AAF_TOTAL"]]
-  function(x) {
-    RESCALE * AAF_CMP(x)
-  }
-}
-
-#'Produces a copy of a given AAF computing function
-#'
-#'@description
-#'This is a function because the given AAF computing function apparently needs
-#'an environment buffer.  Also normalizes the code in join_dh_aaf
-#'
-#'@param aaf_specs is a tibble that contains the variables:
-#'  AAF_CMP: fn
-#'
-
-copy_aaf_cmp_factory <- function(aaf_specs) {
-  return(aaf_specs[["AAF_CMP"]][[1]])
-}
-
+#### Calibrate AAF Computer Factory --------------------------------------------
 
 #' Produce a Conditional Probability curve from the given input
 #'
@@ -302,13 +260,13 @@ copy_aaf_cmp_factory <- function(aaf_specs) {
 #'  protective effect at low levels of consumption
 #'
 
-calibration_factory <- function(dh_specs) {
+calibration_factory <- function(IM, COUNT, DRINKERS, N_GAMMA, LB, BB, UB) {
   ## Determine whether we want to return early.
-  IM <- dh_specs[["IM"]]
-  COUNT <- dh_specs[["COUNT"]]
-  LB <- dh_specs[["LB"]]
-  BB <- dh_specs[["BB"]]
-  UB <- dh_specs[["UB"]]
+  # IM <- dh_specs[["IM"]]
+  # COUNT <- dh_specs[["COUNT"]]
+  # LB <- dh_specs[["LB"]]
+  # BB <- dh_specs[["BB"]]
+  # UB <- dh_specs[["UB"]]
   THRESHOLD <- BB
   if(grepl("6", IM)) {
     THRESHOLD <- LB
@@ -324,8 +282,8 @@ calibration_factory <- function(dh_specs) {
     )
   }
 
-  DRINKERS <- dh_specs[["DRINKERS"]]
-  N_GAMMA <- dh_specs[["N_GAMMA"]][[1]]
+  # DRINKERS <- dh_specs[["DRINKERS"]]
+  # N_GAMMA <- dh_specs[["N_GAMMA"]][[1]]
 
   MASS <- function(k) {
     function(x) {
@@ -362,6 +320,7 @@ calibration_factory <- function(dh_specs) {
     vapply(x, integral_up_to, 0)
   }
 }
+
 
 #### Relative Risk Curves ------------------------------------------------------
 

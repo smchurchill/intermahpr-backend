@@ -12,11 +12,10 @@
 #'@export
 #'
 
-base_aafs <- function(aaf_table) {
-  aaf_table %<>%
-    mutate(AAF_CD = unlist(map2(AAF_CMP, UB, ~(.x(.y))))) %>%
+aaf_total <- function(aaf_table) {
+  aaf_table %>%
+    mutate(AAF_CD = map2_dbl(AAF_CMP, UB, ~(.x(.y)))) %>%
     mutate(AAF_TOTAL = AAF_FD + AAF_CD)
-  aaf_table
 }
 
 
@@ -39,13 +38,12 @@ base_aafs <- function(aaf_table) {
 #'
 
 compute_aafs <- function(aaf_table, cuts) {
-  aaf_table %<>%
+  aaf_table %>%
     mutate(CUTS = pmap(list(LB, cuts[GENDER], UB), c)) %>%
     mutate(CUMUL_F = map2(AAF_CMP, CUTS, ~.x(.y))) %>%
     mutate(AAF_GRP = map(CUMUL_F, ~diff(.x))) %>%
-    mutate(AAF_CD = unlist(map(CUMUL_F, ~`[`(.x, length(.x))))) %>%
+    mutate(AAF_CD = map2_dbl(AAF_CMP, UB, ~(.x(.y)))) %>%
     mutate(AAF_TOTAL = AAF_FD + AAF_CD)
-  aaf_table
 }
 
 #' Add evaluation cutpoints to a given datatable
@@ -62,9 +60,8 @@ compute_aafs <- function(aaf_table, cuts) {
 #'
 
 add_cutpoints <- function(aaf_table, cuts) {
-  aaf_table %<>%
+  aaf_table %>%
     mutate(CUTS = pmap(list(LB, cuts[GENDER], UB), c))
-  aaf_table
 }
 
 #' Evaluate a given datatable at pre-added cutpoints
@@ -80,10 +77,9 @@ add_cutpoints <- function(aaf_table, cuts) {
 #'
 
 evaluate_at_cutpoints <- function(aaf_table_cuts) {
-  aaf_table_cuts %<>%
+  aaf_table_cuts %>%
     mutate(CUMUL_F = map2(AAF_CMP, CUTS, ~.x(.y))) %>%
     mutate(AAF_GRP = map(CUMUL_F, ~diff(.x))) %>%
-    mutate(AAF_CD = unlist(map(CUMUL_F, ~`[`(.x, length(.x))))) %>%
+    mutate(AAF_CD = map2_dbl(AAF_CMP, UB, ~(.x(.y)))) %>%
     mutate(AAF_TOTAL = AAF_FD + AAF_CD)
-  aaf_table_cuts
 }
