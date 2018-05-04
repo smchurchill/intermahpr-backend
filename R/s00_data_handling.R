@@ -201,8 +201,8 @@ derive_v1_rr <- function(.data, ext) {
       X2 = X1 + 50
     ) %>%
     mutate(
-      Y1 = unlist(map2(BASE_RR, X1, ~.x(.y))),
-      Y2 = unlist(map2(BASE_RR, X2, ~.x(.y)))
+      Y1 = map2_dbl(BASE_RR, X1, ~.x(.y)),
+      Y2 = map2_dbl(BASE_RR, X2, ~.x(.y))
     ) %>%
     mutate(
       CMP_SLOPE = (Y2-Y1)/(X2-X1)

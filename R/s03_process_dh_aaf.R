@@ -39,7 +39,7 @@ join_dh_aaf <- function(dh, aaf) {
     mutate(BLOCK = as_factor(purrr::pmap_chr(
       list(REGION, YEAR, GENDER, AGE_GROUP, OUTCOME),
       .f = paste0))
-    )
+    ) %>%
     mutate(CC = substr(IM, 1, 3))
 
   ## These rows are fine as is

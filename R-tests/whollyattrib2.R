@@ -12,7 +12,6 @@ RR <- rr %>%
   format_v1_rr() %>%
   derive_v1_rr(TRUE)
 
-RR
 
 pc <- pc_default
 PC <- pc_bc %>%

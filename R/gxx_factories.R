@@ -419,13 +419,48 @@ acute_pancreatitis_f_rr <- function(x){
 #### Fractional polynomial Factory ---------------------------------------------
 
 fractional_polynomial_rr <- function(betas) {
-  force(betas)
+  FP_LIST <- list(
+    function(x) 1 / x / x,
+    function(x) 1 / x,
+    function(x) 1 / sqrt(x),
+    function(x) log(x),
+    function(x) sqrt(x),
+    function(x) x,
+    function(x) x*x,
+    function(x) x*x*x,
+    function(x) log(x) / x / x,
+    function(x) log(x) / x,
+    function(x) log(x) / sqrt(x),
+    function(x) log(x)^2,
+    function(x) log(x) * sqrt(x),
+    function(x) x*log(x),
+    function(x) x*x*log(x),
+    function(x) x*x*x*log(x)
+  )
+
+  NONZERO_FP <- FP_LIST[betas != 0]
+  NONZERO_BETAS <- betas[betas != 0]
+
+  if(length(NONZERO_BETAS) == 0) {return(function(...) 0)}
+
+  function(x) {
+    exp(sapply(NONZERO_FP, function(f) f(x)) %*% NONZERO_BETAS)
+  }
+}
+
+
+#' Old FP function that works but...
+#'
+#'
+
+DEP_FP_RR <- function(betas) {
   function(x) {
     M = matrix(0,length(x),16)
     sqrtx = sqrt(x)
     logx = log(x)
     rx = 1 / x
     rsqrtx = 1/sqrtx
+    ifelse(betas == 0, 0)
     if(betas[[1]]!=0) {M[,1] = betas[[1]] *rx*rx       }
     if(betas[[2]]!=0) {M[,2] = betas[[2]] *rx          }
     if(betas[[3]]!=0) {M[,3] = betas[[3]] *rsqrtx      }
