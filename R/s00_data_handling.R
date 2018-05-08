@@ -156,7 +156,7 @@ format_v1_dh <- function(.data) {
     capture.output(unique(IGNORE$IM)),
     collapse = "\n"
   )
-  warning(ignore_message)
+  if(length(IGNORE$IM) > 0) { warning(ignore_message) }
   filter(.data, grepl(SUPPORTED, IM))
 }
 
@@ -274,7 +274,13 @@ derive_v1_rr <- function(.data, ext) {
 #'@export
 #'
 
-derive_v1_pc <- function(.data, bb, lb, ub, gc) {
+derive_v1_pc <- function(
+  .data,
+  bb = list("Female" = 53.8, "Male" = 67.25),
+  lb = 0.03,
+  ub = 250,
+  gc = list("Female" = 1.258^2, "Male" = 1.171^2)
+) {
   .data %>%
     group_by(REGION, YEAR) %>%
     mutate(

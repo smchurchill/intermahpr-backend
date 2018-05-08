@@ -7,7 +7,7 @@
 fractional_polynomial_rr(betas)
 }
 \arguments{
-\item{B}{The numeric vector of Beta values needed to produce a fractional
+\item{betas}{The numeric vector of Beta values needed to produce a fractional
 polynomial}
 }
 \description{

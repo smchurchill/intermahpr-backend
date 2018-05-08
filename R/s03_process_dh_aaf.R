@@ -43,12 +43,12 @@ join_dh_aaf <- function(dh, aaf) {
     mutate(CC = substr(IM, 1, 3))
 
   ## These rows are fine as is
-  KEEP <- filter(JOIN,!grepl("(4...[^5]|5...[37]|6...[15]|^.[89])", IM))
+  KEEP <- filter(JOIN,!grepl("(3...2|4...[^5]|5...[37]|6...[15]|^.[89])", IM))
 
   ## These rows get a calibrated AAF_CMP
   CLBR <- JOIN %>%
     filter(
-      grepl("(4.*[123]|5.*3|6.*[15])", IM)
+      grepl("(3...2|4.*[123]|5.*3|6.*[15])", IM)
     ) %>%
     mutate(
       AAF_CMP = pmap(
@@ -96,7 +96,7 @@ join_dh_aaf <- function(dh, aaf) {
   COPY <- left_join(x = COPY_L, y = COPY_R, by = c("BLOCK", "CC"))
 
   ## Combine everything back together, recompute total aafs, and apply to counts
-  bind_rows(KEEP, CLBR, SIMS, COPY) %>%
+  return(bind_rows(KEEP, CLBR, SIMS, COPY)) %>%
     mutate(AAF_CD = map2_dbl(AAF_CMP, UB, ~(.x(.y)))) %>%
     mutate(AAF_TOTAL = AAF_CD + AAF_FD) %>%
     mutate(AA_COUNT = AAF_TOTAL * COUNT)

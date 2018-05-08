@@ -7,14 +7,13 @@ library(pryr)
 names(.data)[grep("[0-9]$", names(.data))]
 
 
-rr <- rr_default
-RR <- rr %>%
+RR <- rr_default %>%
   format_v1_rr() %>%
   derive_v1_rr(TRUE)
 
+pc_big <- readr::read_csv(file.path("data-raw", "impc.csv"))
 
-pc <- pc_default
-PC <- pc_bc %>%
+PC <- pc_big %>%
   format_v1_pc %>%
   derive_v1_pc(
     bb = list("Female" = 50, "Male" = 60),
@@ -23,11 +22,6 @@ PC <- pc_bc %>%
     gc = list("Female" = 1.258^2, "Male" = 1.171^2))
 
 joined <- join_pc_rr(PC, RR)
-
-
-
-
-aaf <- base_aafs(joined)
 
 aaf_split <- outcome_splitter(joined)
 
@@ -38,8 +32,9 @@ dh_in <- readr::read_csv(
 
 dh <- dh_in %>%
   rename(region = Province) %>%
-  rename(condition = Condition_Alcohol) %>%
-  filter(region == "10:BC" & Year == 2015)
+  rename(condition = Condition_Alcohol)
+# %>%
+#   filter(region == "10:BC" & Year == 2015)
 
 
 dh$Outcome <- "Morbidity"
@@ -47,8 +42,10 @@ dh$Outcome <- "Morbidity"
 dh
 
 DH <- dh %>%
-  intermahpr::format_v1_dh() %>%
-  filter(REGION == "10:BC" & YEAR == 2015)
+  intermahpr::format_v1_dh()
+
+# %>%
+#   filter(REGION == "10:BC" & YEAR == 2015)
 
 DH$REGION = "BC"
 
@@ -58,7 +55,15 @@ DH
 
 res <- join_dh_aaf(DH, aaf_split)
 
-res
+smlres <- res %>% select(c(IM, CONDITION, REGION, YEAR, GENDER, AGE_GROUP, AAF_CMP, AAF_FD, AAF_TOTAL, COUNT, AA_COUNT, BB))
+
+smlres %>% mutate(AAF_QD = map2_dbl(AAF_CMP, BB, ~(.x(.y))))
+
+res %>% mutate(AAF_CD = map2_dbl(AAF_CMP, UB, ~(.x(.y))))
+
+res[[1]][264, ]$IM
+
+reres <- .Last.value
 
 check_res <- res %>%
   mutate(CUTS = pmap(list(0.03, 50, 100, 150, 200, 250), c)) %>%

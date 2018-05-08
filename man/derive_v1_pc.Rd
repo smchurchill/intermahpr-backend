@@ -5,7 +5,8 @@
 \title{Derives probability distribution parameters from Prevalence and Consumption
 data}
 \usage{
-derive_v1_pc(.data, bb, lb, ub, gc)
+derive_v1_pc(.data, bb = list(Female = 53.8, Male = 67.25), lb = 0.03,
+  ub = 250, gc = list(Female = 1.258^2, Male = 1.171^2))
 }
 \arguments{
 \item{.data}{tibble as formatted in format_v*_pc}

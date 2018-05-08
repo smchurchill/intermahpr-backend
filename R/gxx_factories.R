@@ -259,6 +259,7 @@ aaf_fd <- function(LB, UB, RR_FD, P_FD, INTGRND) {
 #'  5.2 and 5.5, ischaemic heart disease and stroke respectively, by removing a
 #'  protective effect at low levels of consumption
 #'
+#'
 
 calibration_factory <- function(IM, COUNT, DRINKERS, N_GAMMA, LB, BB, UB) {
   ## Determine whether we want to return early.
@@ -410,13 +411,13 @@ acute_pancreatitis_f_rr <- function(x){
   exp(spline)
 }
 
+#### Fractional polynomial Factory ---------------------------------------------
+
 #' Get Fractional Polynomial Relative Risk Function
 #'
-#'@param B The numeric vector of Beta values needed to produce a fractional
+#'@param betas The numeric vector of Beta values needed to produce a fractional
 #'  polynomial
 #'
-
-#### Fractional polynomial Factory ---------------------------------------------
 
 fractional_polynomial_rr <- function(betas) {
   FP_LIST <- list(
@@ -444,7 +445,17 @@ fractional_polynomial_rr <- function(betas) {
   if(length(NONZERO_BETAS) == 0) {return(function(...) 0)}
 
   function(x) {
-    exp(sapply(NONZERO_FP, function(f) f(x)) %*% NONZERO_BETAS)
+    exp(
+      Reduce(
+        x = lapply(
+          X = NONZERO_FP,
+          FUN = function(f) f(x)
+        ),
+        f = cbind,
+        init = numeric(0)
+      ) %*%
+        NONZERO_BETAS
+    )
   }
 }
 
