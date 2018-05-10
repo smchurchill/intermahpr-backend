@@ -7,9 +7,9 @@
 join_pc_rr(pc, rr)
 }
 \arguments{
-\item{pc}{prevalence and consumption tibble as produced by derive_v*_pc}
+\item{pc}{prevalence and consumption tibble as produced by derive_pc}
 
-\item{rr}{relative risk tibble as produced by derive_v*_rr}
+\item{rr}{relative risk tibble as produced by derive_rr}
 }
 \value{
 tibble with one row per unique region.year.gender.age_group.im combn,

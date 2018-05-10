@@ -6,8 +6,8 @@
 #'  AAF function and AAF_FD computation for each observation.  Does a sanity
 #'  check, ensuring that the joining variable is well-matched.
 #'
-#'@param rr relative risk tibble as produced by derive_v*_rr
-#'@param pc prevalence and consumption tibble as produced by derive_v*_pc
+#'@param rr relative risk tibble as produced by derive_rr
+#'@param pc prevalence and consumption tibble as produced by derive_pc
 #'
 #'@return tibble with one row per unique region.year.gender.age_group.im combn,
 #'  an AAF_FD variable with alc.attr. fraction for former drinkers, and an
@@ -68,8 +68,8 @@ join_pc_rr <- function(pc, rr) {
 
 #' Collect and assemble AAF data from formatted RR and PC data
 #'
-#'@param pc  Prevalence / Consumption input as produced by format_v*_pc
-#'@param rr  Relative Risk input as produced by format_v*_rr
+#'@param pc  Prevalence / Consumption input as produced by format_pc
+#'@param rr  Relative Risk input as produced by format_rr
 #'@param ext logical, extrapolate linearly?
 #'@param lb  Double, consumption lower bound
 #'@param ub  Double, consumption upper bound
@@ -82,8 +82,8 @@ join_pc_rr <- function(pc, rr) {
 #'
 
 assemble <- function(pc, rr, ext, lb, ub, bb, gc) {
-  RRD <- derive_v0_rr(rr = rr, ext = ext)
-  PCD <- derive_v0_pc(pc = pc, bb = bb, lb = lb, ub = ub, gc = gc)
+  RRD <- derive_rr(rr = rr, ext = ext)
+  PCD <- derive_pc(pc = pc, bb = bb, lb = lb, ub = ub, gc = gc)
 
   join_pc_rr(pc = PCD, rr = RRD)
 }

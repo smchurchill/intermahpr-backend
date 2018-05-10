@@ -22,7 +22,7 @@
 #'@export
 #'
 
-format_v1_rr <- function(.data) {
+format_rr <- function(.data) {
   .data <- tibble::as.tibble(.data)
   names(.data) <- do.call(stringr::str_to_upper, list(names(.data)))
   BETAS <- names(.data)[grep("[0-9]$", names(.data))]
@@ -74,7 +74,7 @@ format_v1_rr <- function(.data) {
 #'@export
 #'
 
-format_v1_pc <- function(.data) {
+format_pc <- function(.data) {
   .data <- tibble::as.tibble(.data)
   names(.data) <- do.call(stringr::str_to_upper, list(names(.data)))
 
@@ -120,7 +120,7 @@ format_v1_pc <- function(.data) {
 #'@export
 #'
 
-format_v1_dh <- function(.data) {
+format_dh <- function(.data) {
   .data <- tibble::as.tibble(.data)
   names(.data) <- do.call(stringr::str_to_upper, list(names(.data)))
 
@@ -164,7 +164,7 @@ format_v1_dh <- function(.data) {
 
 #' Derives relative risk curves from relative risk data
 #'
-#'@param .data tibble as formatted in format_v*_rr
+#'@param .data tibble as formatted in format_rr
 #'@param ext logical indicator of extrapolation, (TRUE = linear, FALSE = capped)
 #'
 #'@importFrom magrittr %>% %<>%
@@ -173,7 +173,7 @@ format_v1_dh <- function(.data) {
 #'@export
 #'
 
-derive_v1_rr <- function(.data, ext) {
+derive_rr <- function(.data, ext) {
   NO_B <- .data[-grep("[0-9]", names(.data))]
   YES_B <- .data[grep("[0-9]$", names(.data))]
 
@@ -237,7 +237,7 @@ derive_v1_rr <- function(.data, ext) {
 #' Gamma parameters are derivable entirely from prevalence and consumption,
 #' no additional input is necessary.
 #'
-#'@param .data tibble as formatted in format_v*_pc
+#'@param .data tibble as formatted in format_pc
 #'
 #'@param bb Gender stratified binge barrier
 #'@param lb Lower bound
@@ -274,7 +274,7 @@ derive_v1_rr <- function(.data, ext) {
 #'@export
 #'
 
-derive_v1_pc <- function(
+derive_pc <- function(
   .data,
   bb = list("Female" = 53.8, "Male" = 67.25),
   lb = 0.03,
@@ -329,14 +329,14 @@ derive_v1_pc <- function(
 
 #' Derives count data for use in calibration and portioning
 #'
-#'@param dh Deaths/Hosps as returned by format_v1_dh
-#'@param pc Prev/Cons as returned by derive_v1_pc
+#'@param dh Deaths/Hosps as returned by format_dh
+#'@param pc Prev/Cons as returned by derive_pc
 #'
 #'@importFrom magrittr %>% %<>%
 #'
 #'@export
 
-derive_v1_dh <- function(dh, pc) {
+derive_dh <- function(dh, pc) {
   PC <- pc[
     c("REGION", "YEAR", "GENDER", "AGE_GROUP", "DRINKERS",
       "BB", "LB", "UB", "N_GAMMA")]

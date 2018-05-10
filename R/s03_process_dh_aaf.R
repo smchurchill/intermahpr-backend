@@ -8,7 +8,7 @@
 #'rescaling similar aaf_cmps (4.[467]|8.5|9.2).
 #'Granulates [89].all into respective boxes, copies 6.2 into 5.7.
 #'
-#'@param dh death/hosp tibble as produced by derive_v*_dh
+#'@param dh death/hosp tibble as produced by derive_dh
 #'@param aaf aaf tibble as produced by base_aafs
 #'
 #'
@@ -71,10 +71,10 @@ join_dh_aaf <- function(dh, aaf) {
     select(c(AAF_FD, AAF_CMP, AAF_TOTAL, BLOCK, CC))
 
   SIMS <- left_join(x = SIMS_L, y = SIMS_R, by = c("BLOCK", "CC")) %>%
-    mutate(RESCALE = 1 / AAF_TOTAL) %>%
     mutate(
-      AAF_CMP = map2(RESCALE, AAF_CMP, ~{function(x) .x * .y(x)}),
+      AAF_CMP = map2(1 / AAF_TOTAL, AAF_CMP, ~{function(x) .x * .y(x)}),
       AAF_TOTAL = 1)
+
 
   ## These rows get full copies of AAF_CMP from related conditions
   COPY_L <- JOIN %>%
@@ -96,8 +96,9 @@ join_dh_aaf <- function(dh, aaf) {
   COPY <- left_join(x = COPY_L, y = COPY_R, by = c("BLOCK", "CC"))
 
   ## Combine everything back together, recompute total aafs, and apply to counts
-  return(bind_rows(KEEP, CLBR, SIMS, COPY)) %>%
+  bind_rows(KEEP, CLBR, SIMS, COPY) %>%
     mutate(AAF_CD = map2_dbl(AAF_CMP, UB, ~(.x(.y)))) %>%
     mutate(AAF_TOTAL = AAF_CD + AAF_FD) %>%
-    mutate(AA_COUNT = AAF_TOTAL * COUNT)
+    mutate(AA_CD_COUNT = AAF_TOTAL * COUNT) %>%
+    mutate(AA_FD_COUNT = AAF_FD * COUNT)
 }

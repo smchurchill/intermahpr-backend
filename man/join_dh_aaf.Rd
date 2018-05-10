@@ -7,7 +7,7 @@
 join_dh_aaf(dh, aaf)
 }
 \arguments{
-\item{dh}{death/hosp tibble as produced by derive_v*_dh}
+\item{dh}{death/hosp tibble as produced by derive_dh}
 
 \item{aaf}{aaf tibble as produced by base_aafs}
 }

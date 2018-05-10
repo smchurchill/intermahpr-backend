@@ -7,9 +7,9 @@
 assemble(pc, rr, ext, lb, ub, bb, gc)
 }
 \arguments{
-\item{pc}{Prevalence / Consumption input as produced by format_v*_pc}
+\item{pc}{Prevalence / Consumption input as produced by format_pc}
 
-\item{rr}{Relative Risk input as produced by format_v*_rr}
+\item{rr}{Relative Risk input as produced by format_rr}
 
 \item{ext}{logical, extrapolate linearly?}
 
