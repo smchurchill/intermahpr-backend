@@ -274,8 +274,7 @@ derive_rr <- function(.data, ext) {
 #'@export
 #'
 
-derive_pc <- function(
-  .data,
+derive_pc <- function(.data,
   bb = list("Female" = 53.8, "Male" = 67.25),
   lb = 0.03,
   ub = 250,
@@ -338,13 +337,41 @@ derive_pc <- function(
 
 derive_dh <- function(dh, pc) {
   PC <- pc[
-    c("REGION", "YEAR", "GENDER", "AGE_GROUP", "DRINKERS",
-      "BB", "LB", "UB", "N_GAMMA")]
+    c("REGION", "YEAR", "GENDER", "AGE_GROUP",
+      "DRINKERS", "BB", "LB", "UB", "N_GAMMA")]
   DH <- dh %>%
   dplyr::inner_join(
     PC,
     by = c("REGION", "YEAR", "GENDER", "AGE_GROUP")
   )
   DH
+}
+
+
+
+#### Generate new Prev/Cons sheet from consumption reduction -------------------
+
+#' Reduces the per capita consumption and binge drinker prevalence
+#'
+#'@param .data a prev/cons sheet as would be accepted by format_pc
+#'@param reduction a percentage of the current consumption expected in the
+#'scenario under study
+#'
+#'@importFrom magrittr %>% %<>%
+#'@importFrom dplyr mutate select
+#'
+
+
+reduce_pc <- function(.data, reduction) {
+  base_f <- format_pc(.data)
+  name_r <- names(base_f)
+  base_d <- derive_pc(base_f)
+
+  .data %>%
+    mutate(PCC_litres_year = reduction * PCC_litres_year) %>%
+    format_pc() %>%
+    derive_pc() %>%
+    mutate(P_BD = P_BD * P_BAT / base_d$P_BAT) %>%
+    select(name_r)
 }
 

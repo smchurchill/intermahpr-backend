@@ -22,8 +22,8 @@ join_pc_rr <- function(pc, rr) {
 
   if(any(is.na(JOINT))) {
     MANGLED <- JOINT[rowSums(is.na(JOINT)) > 0,]
-    IGNORE <- MANGLED[, c("REGION", "YEAR", "GENDER",
-                        "AGE_GROUP", "IM", "CONDITION")]
+    IGNORE <- MANGLED[, c(
+      "REGION", "YEAR", "GENDER", "AGE_GROUP", "IM", "CONDITION")]
 
     ignore_message <- paste0(capture.output(IGNORE), collapse = "\n")
 
@@ -82,8 +82,8 @@ join_pc_rr <- function(pc, rr) {
 #'
 
 assemble <- function(pc, rr, ext, lb, ub, bb, gc) {
-  RRD <- derive_rr(rr = rr, ext = ext)
-  PCD <- derive_pc(pc = pc, bb = bb, lb = lb, ub = ub, gc = gc)
+  RRD <- derive_rr(.data = rr, ext = ext)
+  PCD <- derive_pc(.data = pc, bb = bb, lb = lb, ub = ub, gc = gc)
 
   join_pc_rr(pc = PCD, rr = RRD)
 }

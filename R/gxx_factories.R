@@ -132,6 +132,9 @@ normalized_gamma_factory <- function(GAMMA_SHAPE, GAMMA_SCALE, DF) {
 }
 
 
+
+
+
 #### Base AAF Computer Factories -----------------------------------------------
 
 #' Factory for aaf integrands
@@ -442,7 +445,7 @@ fractional_polynomial_rr <- function(betas) {
   NONZERO_FP <- FP_LIST[betas != 0]
   NONZERO_BETAS <- betas[betas != 0]
 
-  if(length(NONZERO_BETAS) == 0) {return(function(...) 0)}
+  if(length(NONZERO_BETAS) == 0) {return(function(...) 1)}
 
   function(x) {
     exp(
