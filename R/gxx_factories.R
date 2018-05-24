@@ -316,6 +316,7 @@ calibration_factory <- function(IM, COUNT, DRINKERS, N_GAMMA, LB, BB, UB) {
 
   SLOPE <- OPTR$solution
 
+  ## Should be able to pull INTGRND and integral_up_to one env up...
   function(x) {
     INTGRND <- MASS(SLOPE)
     integral_up_to <- function(up_to) {
