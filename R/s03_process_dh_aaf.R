@@ -53,7 +53,7 @@ join_dh_aaf <- function(dh, aaf) {
     mutate(
       AAF_CMP = pmap(
         list(IM, COUNT, DRINKERS, N_GAMMA, LB, BB, UB),
-        calibration_factory
+        aaf_calibration_factory
       ),
       AAF_FD = 0
     )

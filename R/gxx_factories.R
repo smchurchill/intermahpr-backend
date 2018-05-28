@@ -223,7 +223,7 @@ aaf_fd <- function(LB, UB, RR_FD, P_FD, INTGRND) {
 
 #### Calibrate AAF Computer Factory --------------------------------------------
 
-#' Produce a Conditional Probability curve from the given input
+#' Slope Factory
 #'
 #'@description
 #'Given a list that contains the true count among a given cohort of
@@ -249,45 +249,32 @@ aaf_fd <- function(LB, UB, RR_FD, P_FD, INTGRND) {
 #'This conditional probability is used to portion a 1.00 AAF_TOTAL among the
 #'drinking population.
 #'
-#'@param rr_specs is a tibble that contains the variables:
-#'  IM: chr
-#'  COUNT: dbl
-#'  DRINKERS: dbl
-#'  N_GAMMA: fn
-#'  LB: dbl
-#'  BB: dbl
-#'  UB: dbl
+#'The nonlinear optimization always estimates conservatively.  For conditions
+#'with observed incidence at leats 1.8 per 10,000 drinkers, the AAF will round
+#'to 1 within 2 decimal places.  There is no such guarantee for conditions with
+#'incidence less than 1.8 per 10,000 drinkers.
 #'
-#'@return a function whose values are binge modified.  This affects conditions
-#'  5.2 and 5.5, ischaemic heart disease and stroke respectively, by removing a
-#'  protective effect at low levels of consumption
+#'@param IM InterMAHP condition code
+#'@param COUNT Count of condition events over the relevant time period
+#'@param DRINKERS Estimated # of drinkers in population
+#'@param N_GAMMA Normalized gamma distribution (used as exposure mass function)
+#'@param LB,BB,UB lower, binge, and upper bounds of consumption
 #'
+#'@return slope of loglinear conditional probability mass function for risk as a
+#'result of exposure
 #'
+#'@export
 
-calibration_factory <- function(IM, COUNT, DRINKERS, N_GAMMA, LB, BB, UB) {
-  ## Determine whether we want to return early.
-  # IM <- dh_specs[["IM"]]
-  # COUNT <- dh_specs[["COUNT"]]
-  # LB <- dh_specs[["LB"]]
-  # BB <- dh_specs[["BB"]]
-  # UB <- dh_specs[["UB"]]
+slope_calibration <- function(IM, COUNT, DRINKERS, N_GAMMA, LB, BB, UB) {
+  ## If there's no count to calibrate against, we return early with a function
+  ## that will at least evaluate 1 at the upper bound and 0 below the threshold.
+  if(COUNT <= 0) return(0)
+
+  ## Threshold is binge for all conditions except digestive
   THRESHOLD <- BB
   if(grepl("6", IM)) {
     THRESHOLD <- LB
   }
-
-  ## If there's no count to calibrate against, we return early with a function
-  ## that will at least evaluate 1 at the upper bound and 0 below the threshold.
-  if(COUNT <= 0) {
-    return(
-      function(x) {
-        (x > THRESHOLD)*(x-THRESHOLD)/(UB - THRESHOLD)
-      }
-    )
-  }
-
-  # DRINKERS <- dh_specs[["DRINKERS"]]
-  # N_GAMMA <- dh_specs[["N_GAMMA"]][[1]]
 
   MASS <- function(k) {
     function(x) {
@@ -296,36 +283,89 @@ calibration_factory <- function(IM, COUNT, DRINKERS, N_GAMMA, LB, BB, UB) {
   }
 
   EST_COUNT <- function(k) {
-    DRINKERS*integrate(MASS(k), LB, UB)$value
+    integrate(MASS(k), LB, UB)$value
   }
 
   EST_ERROR <- function(k) {
-    abs(EST_COUNT(k) - COUNT)
+    abs(EST_COUNT(k) - (COUNT/DRINKERS))
   }
 
-  OPTR <- nloptr::nloptr(
+  nloptr::nloptr(
     x0 = 0.01,
     eval_f = EST_ERROR,
     lb = 0,
     ub = 1,
     opts = list(
       "algorithm" = "NLOPT_LN_COBYLA",
-      "xtol_rel"  = 1.0e-10
+      "xtol_rel"  = 1.0e-20
     )
-  )
-
-  SLOPE <- OPTR$solution
-
-  ## Should be able to pull INTGRND and integral_up_to one env up...
-  function(x) {
-    INTGRND <- MASS(SLOPE)
-    integral_up_to <- function(up_to) {
-      DRINKERS*integrate(MASS(SLOPE), lower = LB, upper = up_to)$value/COUNT
-    }
-    vapply(x, integral_up_to, 0)
-  }
+  )$solution
 }
 
+
+#'Conditional Probability Factory
+#'@description Invokes slope_calibration and wraps the result in a loglinear
+#'probability mass function
+#'@inheritParams slope_calibration
+#'@return Conditional probability mass function for risk incurred as a result of
+#'exposure
+#'@export
+
+cond_prob_factory <- function(IM, COUNT, DRINKERS, N_GAMMA, LB, BB, UB) {
+  slope <- slope_calibration(IM, COUNT, DRINKERS, N_GAMMA, LB, BB, UB)
+  ## Threshold is binge for all conditions except digestive
+  THRESHOLD <- BB
+  if(grepl("6", IM)) {
+    THRESHOLD <- LB
+  }
+  function(x) exp(pmax(0, slope*(x-THRESHOLD)))-1
+}
+
+#'Calibrated AAF Factory
+#'@description Invokes cond_prob_factory and wraps the result multiplied by th
+#'@inheritParams slope_calibration
+#'@return AAF_CMP function for distributing harm for wholly attributable
+#'functions
+#'@export
+
+aaf_calibration_factory <- function(IM, COUNT, DRINKERS, N_GAMMA, LB, BB, UB) {
+  ## Threshold is binge for all conditions except digestive
+  THRESHOLD <- BB
+  if(grepl("6", IM)) {
+    THRESHOLD <- LB
+  }
+
+  ## If there's no count to calibrate against, we return early with a function
+  ## that will at least evaluate 1 at the upper bound and 0 below the threshold.
+  if(COUNT <= 0) {
+    return(function(x) (x > THRESHOLD)*(x-THRESHOLD)/(UB - THRESHOLD))
+  }
+
+  COND_PROB <- cond_prob_factory(IM, COUNT, DRINKERS, N_GAMMA, LB, BB, UB)
+  MASS <- function(x) DRINKERS*(N_GAMMA %prod% COND_PROB)(x)/COUNT
+  integral_up_to <- function(x) {
+    integrate(MASS, lower = LB, upper = x)$value
+  }
+
+  function(x) vapply(x, integral_up_to, 0)
+}
+
+#'Pointwise Function Product Factory
+#'@description factory that produces the product of a pair of functions, where
+#'the product used is pointwise multiplication
+#'
+#'@param f,g function that takes a single argument and produces a value that is
+#'a valid argument for the `*` function
+#'
+
+product_factory <- function(f, g) function(x) f(x) * g(x)
+
+#'Pointwise Function Product Factory as Binary Operator
+#'@description binary operator for product_factory
+#'
+#'@inheritParams product_factory
+
+`%prod%` <- function(f,g) product_factory(f,g)
 
 #### Relative Risk Curves ------------------------------------------------------
 

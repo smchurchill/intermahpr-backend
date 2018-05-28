@@ -2,20 +2,20 @@ library(tidyverse)
 library(magrittr)
 library(pryr)
 
-.data <- rr
+.data <- rr_default
 
 names(.data)[grep("[0-9]$", names(.data))]
 
 
 RR <- rr_default %>%
-  format_v1_rr() %>%
-  derive_v1_rr(TRUE)
+  format_rr() %>%
+  derive_rr(TRUE)
 
 pc_big <- readr::read_csv(file.path("data-raw", "impc.csv"))
 
-PC <- pc_big %>%
-  format_v1_pc %>%
-  derive_v1_pc(
+PC <- pc_default %>%
+  format_pc %>%
+  derive_pc(
     bb = list("Female" = 50, "Male" = 60),
     lb = 0.03,
     ub = 250,
@@ -32,9 +32,8 @@ dh_in <- readr::read_csv(
 
 dh <- dh_in %>%
   rename(region = Province) %>%
-  rename(condition = Condition_Alcohol)
-# %>%
-#   filter(region == "10:BC" & Year == 2015)
+  rename(condition = Condition_Alcohol) %>%
+  filter(region == "10:BC" & Year == 2015)
 
 
 dh$Outcome <- "Morbidity"
@@ -42,18 +41,24 @@ dh$Outcome <- "Morbidity"
 dh
 
 DH <- dh %>%
-  intermahpr::format_v1_dh()
+  intermahpr::format_dh()
 
 # %>%
 #   filter(REGION == "10:BC" & YEAR == 2015)
 
 DH$REGION = "BC"
 
-DH %<>% derive_v1_dh(PC)
+DH %<>% derive_dh(PC)
 
 DH
 
 res <- join_dh_aaf(DH, aaf_split)
+
+View(res %>% filter(grepl("^.4", IM)))
+
+View(res %>% filter(IM == "(4).(1)" & GENDER == "Male" & AGE_GROUP == "65+"))
+
+44 * 2 * 3
 
 smlres <- res %>% select(c(IM, CONDITION, REGION, YEAR, GENDER, AGE_GROUP, AAF_CMP, AAF_FD, AAF_TOTAL, COUNT, AA_COUNT, BB))
 
