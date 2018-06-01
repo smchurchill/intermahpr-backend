@@ -1,3 +1,24 @@
+#### Process DH and PC data ----------------------------------------------------
+
+#' Joins DH and PC data
+#'
+#'@param dh Deaths/Hosps as returned by format_dh
+#'@param pc Prev/Cons as returned by derive_pc
+#'
+#'@importFrom magrittr %>% %<>%
+#'
+#'@export
+
+process_dh_pc <- function(dh, pc) {
+  dplyr::inner_join(
+    dh,
+    pc[c("REGION", "YEAR", "GENDER", "AGE_GROUP",
+         "DRINKERS", "BB", "LB", "UB", "N_GAMMA")],
+    by = c("REGION", "YEAR", "GENDER", "AGE_GROUP")
+  )
+}
+
+
 #### Process AAF and DH Data ---------------------------------------------------
 
 #' Joins DH and AAF data, fills in missing aaf_cmps
@@ -18,7 +39,7 @@
 #'
 
 
-join_dh_aaf <- function(dh, aaf) {
+process_dh_aaf <- function(dh, aaf) {
   ## Variables to join DH and AAF by
   SIMILAR <- c("IM", "REGION", "YEAR", "GENDER", "AGE_GROUP", "OUTCOME")
 

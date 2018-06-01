@@ -17,7 +17,7 @@
 #'
 
 
-join_pc_rr <- function(pc, rr) {
+process_pc_rr <- function(pc, rr) {
   JOINT <- dplyr::full_join(pc, rr, by = "GENDER")
 
   if(any(is.na(JOINT))) {
@@ -81,11 +81,11 @@ join_pc_rr <- function(pc, rr) {
 #'
 #'
 
-assemble <- function(pc, rr, ext, lb, ub, bb, gc) {
+assemble <- function(pc, rr, ext, lb, ub, bb) {
   RRD <- derive_rr(.data = rr, ext = ext)
-  PCD <- derive_pc(.data = pc, bb = bb, lb = lb, ub = ub, gc = gc)
+  PCD <- derive_pc(.data = pc, bb = bb, lb = lb, ub = ub)
 
-  join_pc_rr(pc = PCD, rr = RRD)
+  process_pc_rr(pc = PCD, rr = RRD)
 }
 
 

@@ -144,11 +144,11 @@ format_dh <- function(.data) {
 
   .data <- readr::type_convert(.data[EXPECTED])
   SUPPORTED <- paste0(
-        "(7...1",
-        "|3...[12]",
-        "|1...[123]",
-     "|[69]...[1-5]",
-        "|8...[1-6]",
+    "(7...1",
+    "|3...[12]",
+    "|1...[123]",
+    "|[69]...[1-5]",
+    "|8...[1-6]",
     "|[245]...[1-7])")
   IGNORE <- filter(.data, !grepl(SUPPORTED, IM))
   ignore_message <- paste0(
@@ -173,7 +173,7 @@ format_dh <- function(.data) {
 #'@export
 #'
 
-derive_rr <- function(.data, ext) {
+derive_rr <- function(.data, ext = TRUE) {
   NO_B <- .data[-grep("[0-9]", names(.data))]
   YES_B <- .data[grep("[0-9]$", names(.data))]
 
@@ -242,11 +242,13 @@ derive_rr <- function(.data, ext) {
 #'@param bb Gender stratified binge barrier
 #'@param lb Lower bound
 #'@param ub Upper bound
-#'@param gc Gender stratified gamma constants
 #'
-#' Constants used:
-#'  0.002739726 = 1/365
+#' Magic Numbers used:
+#'  0.002739726 = 1/365 (yearly to daily conversion constant)
 #'  0.7893 = unit conversion (millilitres to grams) for ethanol
+#'  1.582564 = 1.258^2, Female gamma constant
+#'  1.371241 = 1.171^2, Male gamma constant
+#'
 #'
 #'@return A tibble with additional variables:
 #'   PCC_G_DAY: Per capita consumption, converted from litres/year to grams/day
@@ -274,22 +276,32 @@ derive_rr <- function(.data, ext) {
 #'@export
 #'
 
-derive_pc <- function(.data,
+derive_pc <- function(
+  .data,
   bb = list("Female" = 53.8, "Male" = 67.25),
   lb = 0.03,
-  ub = 250,
-  gc = list("Female" = 1.258^2, "Male" = 1.171^2)
+  ub = 250
 ) {
+  ## Magic numbers
+  gc = list("Female" = 1.582564, "Male" = 1.371241)
+  yearly_to_daily_conv = 0.002739726
+  litres_to_millilitres_conv = 1000
+  millilitres_to_grams_ethanol_conv = 0.7893
+
   .data %>%
     group_by(REGION, YEAR) %>%
     mutate(
-      PCC_G_DAY = PCC_LITRES_YEAR * 1000 *
-        0.7893 * CORRECTION_FACTOR * 0.002739726,
+      PCC_G_DAY =
+        PCC_LITRES_YEAR *
+        litres_to_millilitres_conv *
+        millilitres_to_grams_ethanol_conv *
+        yearly_to_daily_conv *
+        CORRECTION_FACTOR,
       DRINKERS = POPULATION * P_CD,
       PCAD = PCC_G_DAY * sum(POPULATION) / sum(DRINKERS),
       PCC_AMONG_DRINKERS = RELATIVE_CONSUMPTION * PCAD * sum(DRINKERS) /
         sum(RELATIVE_CONSUMPTION*DRINKERS)
-      )%>%
+    )%>%
     ungroup %>%
     mutate(
       GAMMA_CONSTANT = map_dbl(GENDER, ~`[[`(gc, .x))
@@ -326,35 +338,13 @@ derive_pc <- function(.data,
 }
 
 
-#' Derives count data for use in calibration and portioning
-#'
-#'@param dh Deaths/Hosps as returned by format_dh
-#'@param pc Prev/Cons as returned by derive_pc
-#'
-#'@importFrom magrittr %>% %<>%
-#'
-#'@export
-
-derive_dh <- function(dh, pc) {
-  PC <- pc[
-    c("REGION", "YEAR", "GENDER", "AGE_GROUP",
-      "DRINKERS", "BB", "LB", "UB", "N_GAMMA")]
-  DH <- dh %>%
-  dplyr::inner_join(
-    PC,
-    by = c("REGION", "YEAR", "GENDER", "AGE_GROUP")
-  )
-  DH
-}
-
-
 
 #### Generate new Prev/Cons sheet from consumption reduction -------------------
 
-#' Reduces the per capita consumption and binge drinker prevalence
+#' Scales the per capita consumption and binge drinker prevalence
 #'
 #'@param .data a prev/cons sheet as would be accepted by format_pc
-#'@param reduction a percentage of the current consumption expected in the
+#'@param scale a percentage of the current consumption expected in the
 #'scenario under study
 #'
 #'@importFrom magrittr %>% %<>%
@@ -362,7 +352,7 @@ derive_dh <- function(dh, pc) {
 #'
 
 
-reduce_pc <- function(.data, reduction) {
+scale_pc <- function(.data, scale = 1) {
   base_f <- format_pc(.data)
   name_r <- names(base_f)
   base_d <- derive_pc(base_f)

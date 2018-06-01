@@ -9,7 +9,7 @@ names(.data)[grep("[0-9]$", names(.data))]
 
 RR <- rr_default %>%
   format_rr() %>%
-  derive_rr(TRUE)
+  derive_rr()
 
 pc_big <- readr::read_csv(file.path("data-raw", "impc.csv"))
 
@@ -18,12 +18,11 @@ PC <- pc_default %>%
   derive_pc(
     bb = list("Female" = 50, "Male" = 60),
     lb = 0.03,
-    ub = 250,
-    gc = list("Female" = 1.258^2, "Male" = 1.171^2))
+    ub = 250)
 
-joined <- join_pc_rr(PC, RR)
+joined <- process_pc_rr(PC, RR)
 
-aaf_split <- outcome_splitter(joined)
+aaf_split <- split_outcome(joined)
 
 dh_in <- readr::read_csv(
   file.path("data-raw", "dh.csv"),
@@ -48,11 +47,11 @@ DH <- dh %>%
 
 DH$REGION = "BC"
 
-DH %<>% derive_dh(PC)
+DH <- process_dh_pc(DH, PC)
 
 DH
 
-res <- join_dh_aaf(DH, aaf_split)
+res <- process_dh_aaf(DH, aaf_split)
 
 View(res %>% filter(grepl("^.4", IM)))
 

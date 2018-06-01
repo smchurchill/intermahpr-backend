@@ -190,6 +190,8 @@ aaf_cmp_factory <- function(LB, UB, RR_FD, P_FD, INTGRND) {
   DENOMINATOR <- 1 + FD_FACTOR + CD_FACTOR
   function(x) {
     integral_up_to <- function(up_to) {
+      if(up_to < LB) return(0)
+      if(up_to > UB) up_to <- UB
       integrate(INTGRND, lower = LB, upper = up_to)$value
     }
     NUMERATOR <- vapply(x, integral_up_to, 0)
@@ -322,7 +324,8 @@ cond_prob_factory <- function(IM, COUNT, DRINKERS, N_GAMMA, LB, BB, UB) {
 }
 
 #'Calibrated AAF Factory
-#'@description Invokes cond_prob_factory and wraps the result multiplied by th
+#'@description Invokes cond_prob_factory and wraps the result multiplied by the
+#'given exposure mass function N_GAMMA
 #'@inheritParams slope_calibration
 #'@return AAF_CMP function for distributing harm for wholly attributable
 #'functions
@@ -343,8 +346,9 @@ aaf_calibration_factory <- function(IM, COUNT, DRINKERS, N_GAMMA, LB, BB, UB) {
 
   COND_PROB <- cond_prob_factory(IM, COUNT, DRINKERS, N_GAMMA, LB, BB, UB)
   MASS <- function(x) DRINKERS*(N_GAMMA %prod% COND_PROB)(x)/COUNT
-  integral_up_to <- function(x) {
-    integrate(MASS, lower = LB, upper = x)$value
+  integral_up_to <- function(up_to) {
+    if(up_to >= UB) return(1)
+    integrate(MASS, lower = LB, upper = up_to)$value
   }
 
   function(x) vapply(x, integral_up_to, 0)
