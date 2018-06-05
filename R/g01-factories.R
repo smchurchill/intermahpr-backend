@@ -1,3 +1,11 @@
+##### g01-factories ############################################################
+##
+## Factory functions called from functions in s01-wrangle
+##
+##
+##
+##
+
 #### Relative Risk Choice & Mod Factories --------------------------------------
 
 #' Choose which relative risk function is appropriate from the given input
@@ -135,13 +143,35 @@ normalized_gamma_factory <- function(GAMMA_SHAPE, GAMMA_SCALE, DF) {
 
 #### Base AAF Computer Factories -----------------------------------------------
 
+#' Factory for preventable fractions
+#'
+#'@description Produces the combined and scaled function that respresents the
+#'  preventable fraction of disease that, when integrated against exposure,
+#'  produces an attributable fraction term.
+#'
+#'
+#'@param BB dbl, binge barrier
+#'@param R1 dbl, proportion of drinkers below BB that do not binge
+#'@param R2 dbl, proportion of drinkers below BB that do binge
+#'@param LNXT_RR fn, extrapolated relative risk for nonbingers
+#'@param BNGD_RR fn, extrapolated relative risk for bingers
+#'
+#'@return a function object valid on the domain [LB,UB]
+#'
+
+preventable_fraction_factory <- function(BB, R1, R2, LNXT_RR, BNGD_RR) {
+  function(x) {
+    (x<=BB)*(R1*(LNXT_RR(x)-1) + R2*(BNGD_RR(x)-1)) + (x>BB)*(BNGD_RR(x)-1)
+  }
+}
+
 #' Factory for aaf integrands
 #'
 #'@description Given function data (gamma distribution specs, relative risk
 #'  curves, binge ratios) integrand_factory produces a function for use as an
 #'  integrand in AAF computations
 #'
-#'@param BB dlb, binge barrier
+#'@param BB dbl, binge barrier
 #'@param LB dbl, lower bound of consumption
 #'@param UB dbl, upper bound of consumption
 #'@param R1 dbl, proportion of drinkers below BB that do not binge

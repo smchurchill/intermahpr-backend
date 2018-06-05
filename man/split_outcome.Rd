@@ -4,14 +4,14 @@
 \alias{split_outcome}
 \title{Postprocessing function that tidies base AAF by outcome type}
 \usage{
-split_outcome(aaf_table)
+split_outcome(.data)
 }
 \arguments{
-\item{aaf_table}{Any table with an OUTCOME variable whose levels are:
+\item{.data}{Any table with an OUTCOME variable whose levels are:
 "Mortality", "Morbidity", and "Combined".}
 }
 \value{
-aaf_table with an OUTCOME variable whose levels are: "Mortality" and
+.data with an OUTCOME variable whose levels are: "Mortality" and
  "Morbidity" and 2c+t+b rows, where c is the number of OUTCOME = "Combined"
  rows in aaf_table, t is the number of OUTCOME = "Mortaility", and b is the
  number of OUTCOME  = "Morbidity".

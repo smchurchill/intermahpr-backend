@@ -1,3 +1,11 @@
+##### g02-postprocessors #######################################################
+##
+## Postprocessing functions called from functions in s02-process
+##
+##
+##
+##
+
 #' Compute AAFs for all conditions for current drinkers and totals AAFs
 #'
 #'@param aaf_table A tibble as returned by assemble (i.e. has the following vars
@@ -90,10 +98,10 @@ evaluate_at_cutpoints <- function(aaf_table_cuts) {
 #'@description
 #'  Splits "Combined" levels of an OUTCOME variable into Morbidity and Mortality
 #'
-#'@param aaf_table Any table with an OUTCOME variable whose levels are:
+#'@param .data Any table with an OUTCOME variable whose levels are:
 #'  "Mortality", "Morbidity", and "Combined".
 #'
-#'@return aaf_table with an OUTCOME variable whose levels are: "Mortality" and
+#'@return .data with an OUTCOME variable whose levels are: "Mortality" and
 #'  "Morbidity" and 2c+t+b rows, where c is the number of OUTCOME = "Combined"
 #'  rows in aaf_table, t is the number of OUTCOME = "Mortaility", and b is the
 #'  number of OUTCOME  = "Morbidity".
@@ -104,9 +112,9 @@ evaluate_at_cutpoints <- function(aaf_table_cuts) {
 #'@export
 #'
 
-split_outcome <- function(aaf_table) {
-  mortality <- filter(aaf_table, OUTCOME == "Mortality" | OUTCOME == "Combined")
-  morbidity <- filter(aaf_table, OUTCOME == "Morbidity" | OUTCOME == "Combined")
+split_outcome <- function(.data) {
+  mortality <- filter(.data, OUTCOME == "Mortality" | OUTCOME == "Combined")
+  morbidity <- filter(.data, OUTCOME == "Morbidity" | OUTCOME == "Combined")
 
   mortality$OUTCOME <- "Mortality"
   morbidity$OUTCOME <- "Morbidity"

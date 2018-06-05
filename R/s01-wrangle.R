@@ -1,4 +1,16 @@
-#### Verify and wrangle data ---------------------------------------------------
+##### s01-wrangle ##############################################################
+##
+##
+##
+##
+##
+##
+
+
+
+
+
+#### Format existing variables, impute missing data ----------------------------
 
 #' Format relative risk input data to our desired specifications
 #'
@@ -160,7 +172,7 @@ format_dh <- function(.data) {
   filter(.data, grepl(SUPPORTED, IM))
 }
 
-#### Derive params for initial AAF evaluation ----------------------------------
+#### Derive AAF evaluation variables -------------------------------------------
 
 #' Derives relative risk curves from relative risk data
 #'
@@ -339,7 +351,7 @@ derive_pc <- function(
 
 
 
-#### Generate new Prev/Cons sheet from consumption reduction -------------------
+#### Generate new Prev/Cons sheet from consumption rescaling -------------------
 
 #' Scales the per capita consumption and binge drinker prevalence
 #'
@@ -358,7 +370,7 @@ scale_pc <- function(.data, scale = 1) {
   base_d <- derive_pc(base_f)
 
   .data %>%
-    mutate(PCC_litres_year = reduction * PCC_litres_year) %>%
+    mutate(PCC_litres_year = scale * PCC_litres_year) %>%
     format_pc() %>%
     derive_pc() %>%
     mutate(P_BD = P_BD * P_BAT / base_d$P_BAT) %>%

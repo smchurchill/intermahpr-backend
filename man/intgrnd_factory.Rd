@@ -7,7 +7,7 @@
 intgrnd_factory(BB, LB, UB, R1, R2, LNXT_RR, BNGD_RR, N_GAMMA)
 }
 \arguments{
-\item{BB}{dlb, binge barrier}
+\item{BB}{dbl, binge barrier}
 
 \item{LB}{dbl, lower bound of consumption}
 

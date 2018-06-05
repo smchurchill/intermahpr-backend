@@ -1,3 +1,11 @@
+##### g02-factories ############################################################
+##
+## Factory functions called from functions in s02-process
+##
+##
+##
+##
+
 
 #### Calibrate AAF Computer Factory --------------------------------------------
 
@@ -124,6 +132,7 @@ aaf_calibration_factory <- function(IM, COUNT, DRINKERS, N_GAMMA, LB, BB, UB) {
   MASS <- function(x) DRINKERS*(N_GAMMA %prod% COND_PROB)(x)/COUNT
   integral_up_to <- function(up_to) {
     if(up_to >= UB) return(1)
+    if(up_to <= THRESHOLD) return(0)
     integrate(MASS, lower = LB, upper = up_to)$value
   }
 
