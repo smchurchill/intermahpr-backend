@@ -1,4 +1,10 @@
-library(intermahpr)
+
+in_rr <- read_csv("data-raw/rr_master.csv")
+
+format_rr(in_rr)
+
+
+pastelibrary(intermahpr)
 library(tidyverse)
 library(magrittr)
 

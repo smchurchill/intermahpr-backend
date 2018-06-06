@@ -7,9 +7,6 @@
 ##
 
 
-
-
-
 #### Format existing variables, impute missing data ----------------------------
 
 #' Format relative risk input data to our desired specifications
@@ -20,13 +17,14 @@
 #'
 #'expected variables:
 #'  Gender (paired with PC, DH data)
-#'  Function (FP, Spline, with valid IM, or Step, for HIV only)
-#'  B1-B16 (only if Function == FP. need nonzero betas, rest can be missing)
+#'  Function (Calibrated, FP, Spline, with valid IM, or Step, for HIV only)
+#'  B1-B16 (when Function == FP need numerical betas, rest can be missing)
 #'  IM
 #'  Condition
-#'  Outcome
+#'  Outcome (Combined, Mortality, Morbidity, or Calibrated)
 #'  RR_FD
 #'  BingeF
+#'  Attributability (Wholly or Partially)
 #'
 #'@param .data is a dataset that can be converted to tibble with the expected
 #'  variables
@@ -40,7 +38,7 @@ format_rr <- function(.data) {
   BETAS <- names(.data)[grep("[0-9]$", names(.data))]
   EXPECTED <- c(
     "IM", "CONDITION", "GENDER", "OUTCOME",
-    "RR_FD", "BINGEF", "FUNCTION", BETAS
+    "RR_FD", "BINGEF", "FUNCTION", "ATTRIBUTABILITY", BETAS
   )
   MISSING <- EXPECTED[!(EXPECTED %in% names(.data))]
   if(length(MISSING) > 0) {
@@ -55,6 +53,13 @@ format_rr <- function(.data) {
   }
 
   readr::type_convert(.data[EXPECTED])
+
+  NO_B <- .data[-grep("[0-9]", names(.data))]
+  YES_B <- .data[grep("[0-9]$", names(.data))]
+
+  BLIST <- split(as.matrix(YES_B), 1:nrow(YES_B))
+  NO_B$BETAS <- BLIST
+  NO_B
 }
 
 #' Format prevalence and consumption input data to our desired specifications
@@ -303,49 +308,49 @@ derive_pc <- function(
   .data %>%
     group_by(REGION, YEAR) %>%
     mutate(
-      PCC_G_DAY =
-        PCC_LITRES_YEAR *
+      pcc_g_day =
+        pcc_litres_year *
         litres_to_millilitres_conv *
         millilitres_to_grams_ethanol_conv *
         yearly_to_daily_conv *
-        CORRECTION_FACTOR,
-      DRINKERS = POPULATION * P_CD,
-      PCAD = PCC_G_DAY * sum(POPULATION) / sum(DRINKERS),
-      PCC_AMONG_DRINKERS = RELATIVE_CONSUMPTION * PCAD * sum(DRINKERS) /
-        sum(RELATIVE_CONSUMPTION*DRINKERS)
+        correction_factor,
+      drinkers = population * p_cd,
+      pcad = pcc_g_day * sum(population) / sum(drinkers),
+      pcc_among_drinkers = relative_consumption * pcad * sum(drinkers) /
+        sum(relative_consumption*drinkers)
     )%>%
     ungroup %>%
     mutate(
-      GAMMA_CONSTANT = map_dbl(GENDER, ~`[[`(gc, .x))
+      gamma_constant = map_dbl(gender, ~`[[`(gc, .x))
     ) %>%
     mutate(
-      GAMMA_SHAPE = 1/GAMMA_CONSTANT,
-      GAMMA_SCALE = GAMMA_CONSTANT*PCC_AMONG_DRINKERS,
-      BB = map_dbl(GENDER, ~`[[`(bb, .x)),
-      LB = lb,
-      UB = ub
+      gamma_shape = 1/gamma_constant,
+      gamma_scale = gamma_constant*pcc_among_drinkers,
+      bb = map_dbl(gender, ~`[[`(bb, .x)),
+      lb = lb,
+      ub = ub
     ) %>%
     mutate(
-      GLB = pgamma(q = LB, shape = GAMMA_SHAPE, scale = GAMMA_SCALE),
-      GBB = pgamma(q = BB, shape = GAMMA_SHAPE, scale = GAMMA_SCALE),
-      GUB = pgamma(q = UB, shape = GAMMA_SHAPE, scale = GAMMA_SCALE)
+      glb = pgamma(q = lb, shape = gamma_shape, scale = gamma_scale),
+      gbb = pgamma(q = bb, shape = gamma_shape, scale = gamma_scale),
+      gub = pgamma(q = ub, shape = gamma_shape, scale = gamma_scale)
     ) %>%
     mutate(
-      NC = GUB - GLB
+      nc = gub - glb
     ) %>%
     mutate(
-      DF = P_CD / NC
+      df = p_cd / nc
     ) %>%
     mutate(
-      N_GAMMA = pmap(
-        list(GAMMA_SHAPE, GAMMA_SCALE, DF),
+      n_gamma = pmap(
+        list(shape = gamma_shape, scale = gamma_scale, factor = df),
         normalized_gamma_factory
       ),
-      P_BAT = DF * (GUB - GBB)
+      p_bat = df * (gub - gbb)
     ) %>%
     mutate(
-      R1 = (P_CD - P_BD)  / (P_CD - P_BAT),
-      R2 = (P_BD - P_BAT) / (P_CD - P_BAT)
+      r1 = (p_cd - p_bd)  / (p_cd - p_bat),
+      r2 = (p_bd - p_bat) / (p_cd - p_bat)
     )
 }
 

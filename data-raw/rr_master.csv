@@ -1,4 +1,4 @@
-IM,Condition,Gender,Outcome,RR_FD,BingeF,Function,ATTR,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11,B12,B13,B14,B15,B16
+IM,Condition,Gender,Outcome,RR_FD,BingeF,Form,Attributability,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11,B12,B13,B14,B15,B16
 (1).(1),Tuberculosis,All,Combined,1,1,FP,Partially,0,0,0,0,0,0.0179695,0,0,0,0,0,0,0,0,0,0
 (1).(2),HIV,Male,Combined,1,1,Step,Partially,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 (1).(2),HIV,Female,Combined,1,1,Step,Partially,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0

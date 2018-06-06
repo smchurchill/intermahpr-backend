@@ -1,3 +1,5 @@
+#### Data ----------------------------------------------------------------------
+
 #' Default Prevalence and Consumption Data
 #'
 #' Default prevalence and consumption data from BC and Canada, 2015.
@@ -57,7 +59,7 @@
 #'
 "rr_default"
 
-#' Deafult Relative Risk Curves with Zhao IHD treatment
+#' Default Relative Risk Curves with Zhao IHD treatment
 #'
 #' Default input to generate relative risk curves, uses Zhao IHD treatment.
 #' Standard formatting is described in the InterMAHP user guides
@@ -68,8 +70,7 @@
 #'
 "rr_zhao"
 
-
-#' Deafult Relative Risk Curves with Roerecke IHD treatment
+#' Default Relative Risk Curves with Roerecke IHD treatment
 #'
 #' Default input to generate relative risk curves, uses Roerecke IHD treatment.
 #' Standard formatting is described in the InterMAHP user guides
