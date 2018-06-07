@@ -2,7 +2,7 @@
 #'
 #'
 
-dh_vars <- c(
+dhVars <- c(
   "im",
   "region",
   "year",

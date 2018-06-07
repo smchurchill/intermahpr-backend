@@ -1,9 +1,15 @@
-compute_pc <- function(
-  .data,
-  bb = list("Female" = 53.8, "Male" = 67.25),
-  lb = 0.03,
-  ub = 250
+
+#'@param bb binge barrier
+#'@param lb lower bound of consumption
+#'@param ub upper bound of consumption
+
+setPopnConstants <- function(
+  .data, bb = list("Female" = 53.8, "Male" = 67.25), lb = 0.03, ub = 250
 ) {
+  mutate(.data, lb = lb, bb = map_dbl(gender, ~`[[`(bb, .x)), ub = ub)
+}
+
+computePopnMetrics <- function(.data) {
   ## Magic numbers
   gc = list("Female" = 1.582564, "Male" = 1.371241)
   yearly_to_daily_conv = 0.002739726
@@ -11,7 +17,7 @@ compute_pc <- function(
   millilitres_to_grams_ethanol_conv = 0.7893
 
   .data %>%
-    group_by(REGION, YEAR) %>%
+    group_by(region, year) %>%
     mutate(
       pcc_g_day =
         pcc_litres_year *
@@ -30,10 +36,7 @@ compute_pc <- function(
     ) %>%
     mutate(
       gamma_shape = 1/gamma_constant,
-      gamma_scale = gamma_constant*pcc_among_drinkers,
-      bb = map_dbl(gender, ~`[[`(bb, .x)),
-      lb = lb,
-      ub = ub
+      gamma_scale = gamma_constant*pcc_among_drinkers
     ) %>%
     mutate(
       glb = pgamma(q = lb, shape = gamma_shape, scale = gamma_scale),
@@ -49,7 +52,7 @@ compute_pc <- function(
     mutate(
       n_gamma = pmap(
         list(shape = gamma_shape, scale = gamma_scale, factor = df),
-        normalized_gamma_factory
+        makeNormalizedGamma
       ),
       p_bat = df * (gub - gbb)
     ) %>%
@@ -63,31 +66,20 @@ compute_pc <- function(
 
 #' Scales the per capita consumption and binge drinker prevalence
 #'
+#'@param .data cleaned population data with constants set
 #'@param scale a percentage of the current consumption expected in the
 #'scenario under study
 #'
 #'
 
-scale_pc <- function(
-  .data,
-  scale = 1,
-  bb = list("Female" = 53.8, "Male" = 67.25),
-  lb = 0.03,
-  ub = 250
-) {
-
-
-
-  base_f <- format_pc(.data)
-  name_r <- names(base_f)
-  base_d <- derive_pc(base_f)
+rescale <- function(.data, scale = 1) {
+  scenario0 <- computePopnMetrics(.data)
 
   .data %>%
-    mutate(PCC_litres_year = scale * PCC_litres_year) %>%
-    format_pc() %>%
-    derive_pc() %>%
-    mutate(P_BD = P_BD * P_BAT / base_d$P_BAT) %>%
-    select(name_r)
+    mutate(pcc_litres_year = scale * pcc_litres_year) %>%
+    computePopnMetrics() %>%
+    mutate(p_bd = p_bd * p_bat / scenario0$p_bat) %>%
+    select(pcVars)
 }
 
 
@@ -95,7 +87,7 @@ scale_pc <- function(
 #'
 #'
 
-pc_vars <- c(
+pcVars <- c(
   "region",
   "year",
   "gender",
