@@ -5,18 +5,18 @@
 #'@description
 #'We want easier access to gamma distributions with a wide array of fixed params
 #'
-#'@param sh,sc Gamma parameters to be supplied to dgamma
+#'@param shape,scale Gamma parameters for dgamma
 #'
 #'
 
-makeGamma <- function(sh, sc) {
-  function(x) dgamma(x, shape = sh, scale = sc)
+makeGamma <- function(shape, scale) {
+  function(x) dgamma(x, shape = shape, scale = scale)
 }
 
 #' Factory for normalized gamma distributions
 #'
-#'@param shape,scale Input gamma distribution params
-#'@param factor Factor to scale GAMMA by
+#'@param shape,scale Gamma parameters for dgamma
+#'@param factor Factor to scale distribution by
 #'
 #'
 

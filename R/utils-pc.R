@@ -1,13 +1,54 @@
+#### Population Specific Data Carpentry ----------------------------------------
 
+#' Prepare Population Data
+
+preparePC <- function(.data, ...) {
+  pc %<>%
+    cleanPC() %>%
+    setPopnConstants(...) %>%
+    computePopnMetrics()
+}
+
+#' Clean Population data
+
+cleanPC <- function(.data) {
+  clean(pc, pc_vars)
+}
+
+#' List of variables expected to be in a PC sheet
+#'
+#'
+
+pc_vars <- c(
+  "region",
+  "year",
+  "gender",
+  "age_group",
+  "population",
+  "pcc_litres_year",
+  "correction_factor",
+  "relative_consumption",
+  "p_la",
+  "p_fd",
+  "p_cd",
+  "p_bd"
+)
+
+#### Population metric alterations ---------------------------------------------
+
+#' Set Population Constants
 #'@param bb binge barrier
 #'@param lb lower bound of consumption
 #'@param ub upper bound of consumption
+#'
 
 setPopnConstants <- function(
   .data, bb = list("Female" = 53.8, "Male" = 67.25), lb = 0.03, ub = 250
 ) {
   mutate(.data, lb = lb, bb = map_dbl(gender, ~`[[`(bb, .x)), ub = ub)
 }
+
+#' Compute Population Metrics
 
 computePopnMetrics <- function(.data) {
   ## Magic numbers
@@ -57,14 +98,15 @@ computePopnMetrics <- function(.data) {
       p_bat = df * (gub - gbb)
     ) %>%
     mutate(
-      r1 = (p_cd - p_bd)  / (p_cd - p_bat),
-      r2 = (p_bd - p_bat) / (p_cd - p_bat)
+      n_pgamma = pmap(list(f = n_gamma, lb = lb), makeIntegrator)
+    ) %>%
+    mutate(
+      non_bingers = (p_cd - p_bd)  / (p_cd - p_bat),
+      bingers = (p_bd - p_bat) / (p_cd - p_bat)
     )
 }
 
-
-
-#' Scales the per capita consumption and binge drinker prevalence
+#' Rescale Population Data
 #'
 #'@param .data cleaned population data with constants set
 #'@param scale a percentage of the current consumption expected in the
@@ -79,25 +121,5 @@ rescale <- function(.data, scale = 1) {
     mutate(pcc_litres_year = scale * pcc_litres_year) %>%
     computePopnMetrics() %>%
     mutate(p_bd = p_bd * p_bat / scenario0$p_bat) %>%
-    select(pcVars)
+    select(pc_vars)
 }
-
-
-#' List of variables expected to be in a PC sheet
-#'
-#'
-
-pcVars <- c(
-  "region",
-  "year",
-  "gender",
-  "age_group",
-  "population",
-  "pcc_litres_year",
-  "correction_factor",
-  "relative_consumption",
-  "p_la",
-  "p_fd",
-  "p_cd",
-  "p_bd"
-)

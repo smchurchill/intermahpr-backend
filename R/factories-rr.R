@@ -1,10 +1,7 @@
-##### factories-rr #############################################################
-##
-## Factory functions that produce relative risk functions
-##
-
 #### Relative Risk Choice & Mod Factories --------------------------------------
 
+#' Factory for base well-defined rel. risk
+#'
 #' Choose which relative risk function is appropriate from the given input
 #'
 #'@param im string, Intermahp condition code
@@ -16,40 +13,22 @@
 #'
 
 makeBaseRisk <- function(im, gender, form, betas) {
-  fn <- function(x) 1
-
-  if(form == "FP"){
-    fn <- fractional_polynomial_factory(betas)
-  }
-
-  if(form == "Step" & gender == "Female") {
-    fn <- hiv_f_rr
-  }
-  if(form == "Step" & gender == "Male") {
-    fn <- hiv_m_rr
-  }
-
-  if(form == "Spline") {
-    if(im == "(6).(3)") {
-      fn <- acute_pancreatitis_f_rr
-    }
-    else if(gender == "Female") {
-      fn <- hypertension_f_rr
-    }
-    else {
-      fn <- hypertension_m_rr
-    }
-  }
-  fn
+  if(form == "FP") return(makeFractionalPolynomial(betas))
+  if(form == "Step") return(makeHivRisk(gender))
+  if(im == "(6).(3)" & form == "Spline") return(makeAcutePancreatitisRisk())
+  if(im == "(5).(1)" & form == "Spline") return(makeHypertensionRisk(gender))
+  return(function(x) 1)
 }
 
-#' Produce an extrapolation-modified relative risk curve
+#' Factory for linearly extrapolated well-defined rel. risk
 #'
-#'@description given a relative risk curve and some metadata, produces a
+#'@description
+#'  Produces an extrapolation-modified relative risk curve.
+#'  Given a relative risk curve and some metadata, produces a
 #'  risk curve that has the desired extrapolation behaviour beyond 150 g/day,
 #'  or 100 g/day for IHD.
 #'
-#'@param base_rr continuous function in x as returned by base_rr_factory
+#'@param base_risk continuous function in x as returned by base_rr_factory
 #'@param x2 extrapolate after x = X2
 #'@param y2 Y2 = BASE_RR(X2)
 #'@param slope slope of the extrapolation
@@ -63,13 +42,15 @@ makeExtrapolatedRisk <- function(base_risk, x2, y2, slope) {
   line <- function(x) y2+ slope*(x-x2)
 
   function(x) {
-    ((0 < x) & (x < x2))*base_rr(x) + (x2 <= x)*line(x)
+    ((0 < x) & (x < x2))*base_risk(x) + (x2 <= x)*line(x)
   }
 }
 
-#' Produce a Relative-Risk-For-Bingers curve from the given input
+#' Factory for binge-modified well-defined rel. risk.
 #'
-#'@description given a list that contains the string variable IM and the double
+#'@description
+#' Produces a Relative-Risk-For-Bingers curve from the given input
+#' Given a list that contains the string variable IM and the double
 #'  variable BINGEF, produces a Relative-Risk-For-Bingers curve.  IM is used for
 #'  the curves for IHD and ischaemic stroke, where any protective J-shape is
 #'  forfeited by bingers.  All curves are then multiplied by BINGEF which has
@@ -79,7 +60,7 @@ makeExtrapolatedRisk <- function(base_risk, x2, y2, slope) {
 #'
 #'@param im string, Intermahp condition code
 #'@param bingef double, rescales injuries
-#'@param lnxt_rr continuous vector valued function as returned by lin_ext_fact
+#'@param ext_risk continuous vector valued function as returned by lin_ext_fact
 #'
 #'
 #'@return a function whose values are binge modified.  This affects conditions
@@ -87,23 +68,23 @@ makeExtrapolatedRisk <- function(base_risk, x2, y2, slope) {
 #'  protective effect at low levels of consumption
 #'
 
-makeBingeRisk <- function(im, bingef, extrapolated_risk) {
-  min_rr <- 0
-  if(im == "(5).(2)" | im == "(5).(5)") min_rr <- 1
+makeBingeRisk <- function(im, bingef, ext_risk) {
+  min_risk <- 0
+  if(im == "(5).(2)" | im == "(5).(5)") min_risk <- 1
 
-  function(x) bingef*pmax(min_rr, lnxt_rr(x))
+  function(x) bingef*pmax(min_risk, ext_risk(x))
 }
 
 
-#### Relative Risk Curves ------------------------------------------------------
+#### Special Relative Risk Curves ----------------------------------------------
 
-#' Special HIV Relative Risk Functions
+#' Factory for Special HIV Relative Risk Functions
 #'
 #'@param gender decides which function to return
 #'
 
 makeHivRisk  <- function(gender) {
-  if(gender = "Female") {
+  if(gender == "Female") {
     return(function(x) ((0 < x) & (x < 49))*1 + (x >= 49)*1.54)
   }
   else if(gender == "Male") {
@@ -114,10 +95,8 @@ makeHivRisk  <- function(gender) {
   }
 }
 
-#' Special Spline Female Hypertension Relative Risk Function
-#'
-#'@param gender decides which function to return
-#'
+
+#' The spline for female hypertension
 #'
 #' 0.0025 = 1/400
 #'
@@ -134,6 +113,12 @@ femaleHypertensionSpline <- function(x) {
   )+(x >= 75)*(0.9649937)
 }
 
+#' The spline for male hypertension
+#'
+#' 0.04 = 1/25
+#' 0.0007304602 = 1/(37^2)
+#'
+
 maleHypertensionSpline <- function(x) {
   (x > 0)*(
     0.0150537*x -
@@ -144,6 +129,11 @@ maleHypertensionSpline <- function(x) {
       )*0.0001777778
   )
 }
+
+#' Factory for Special Spline Hypertension Relative Risk Functions
+#'
+#'@param gender decides which function to return
+#'
 
 makeHypertensionRisk <- function(gender) {
   if(gender == "Female") {
@@ -158,10 +148,7 @@ makeHypertensionRisk <- function(gender) {
 
 }
 
-#' Special Spline Female Acute Pancreatitis Relative Risk Function
-#'
-#'@param x A vector of x values at which to evaluate the RR function
-#'
+#' The spline for Female Acute Pancreatitis
 #'
 #' 0.04 = 1/25
 #' 0.0007304602 = 1/(37^2)
@@ -179,18 +166,19 @@ FemaleAcutePancreatitisSpline <- function(x){
     (x >= 108)*(2.327965)
 }
 
-makeFemaleAcutePancreatitisRisk <- function() {
+#' Factory for Special Spline Female Acute Pancreatitis Relative Risk Functions
+#'
+
+makeAcutePancreatitisRisk <- function() {
   return(function(x) exp(FemaleAcutePancreatitisSpline(x)))
 }
 
-#### Fractional polynomial Factory ---------------------------------------------
+#### Fractional Polynomial Relative Risk Curves --------------------------------
 
-#' Get the master list of fractional polynomials
-#'
+#' The master list of fractional polynomials
 #'
 
-makeFractionalPolynomialList <- function() {
-  list(
+fractional_polynomials <- list(
     function(x) 1 / x / x,
     function(x) 1 / x,
     function(x) 1 / sqrt(x),
@@ -207,11 +195,10 @@ makeFractionalPolynomialList <- function() {
     function(x) x*log(x),
     function(x) x*x*log(x),
     function(x) x*x*x*log(x)
-  )
-}
+)
 
 
-#' Get Fractional Polynomial Relative Risk Function
+#' Factory for Fractional Polynomial Relative Risk Functions
 #'
 #'@param betas The numeric vector of Beta values needed to produce a fractional
 #'  polynomial
@@ -219,22 +206,22 @@ makeFractionalPolynomialList <- function() {
 
 makeFractionalPolynomial <- function(betas) {
 
-  NONZERO_FP <- fp_list()[betas != 0]
-  NONZERO_BETAS <- betas[betas != 0]
+  nonzero_fp <- fractional_polynomials[betas != 0]
+  nonzero_b <- betas[betas != 0]
 
-  if(length(NONZERO_BETAS) == 0) {return(function(...) 1)}
+  if(length(nonzero_b) == 0) {return(function(...) 1)}
 
   function(x) {
     exp(
       Reduce(
         x = lapply(
-          X = NONZERO_FP,
+          X = nonzero_fp,
           FUN = function(f) f(x)
         ),
         f = cbind,
         init = numeric(0)
       ) %*%
-        NONZERO_BETAS
+        nonzero_b
     )
   }
 }
