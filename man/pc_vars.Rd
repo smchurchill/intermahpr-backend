@@ -3,12 +3,12 @@
 \docType{data}
 \name{pc_vars}
 \alias{pc_vars}
-\title{List of variables expected to be in a PC sheet}
+\title{List of variables expected to be in an input PC sheet}
 \format{An object of class \code{character} of length 12.}
 \usage{
 pc_vars
 }
 \description{
-List of variables expected to be in a PC sheet
+List of variables expected to be in an input PC sheet
 }
 \keyword{datasets}

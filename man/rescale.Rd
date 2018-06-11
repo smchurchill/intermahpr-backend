@@ -12,6 +12,9 @@ rescale(.data, scale = 1)
 \item{scale}{a percentage of the current consumption expected in the
 scenario under study}
 }
+\value{
+Rescaled consumption data (just pc_vars)
+}
 \description{
 Rescale Population Data
 }

@@ -15,7 +15,7 @@ cleanPC <- function(.data) {
   clean(pc, pc_vars)
 }
 
-#' List of variables expected to be in a PC sheet
+#' List of variables expected to be in an input PC sheet
 #'
 #'
 
@@ -32,6 +32,17 @@ pc_vars <- c(
   "p_fd",
   "p_cd",
   "p_bd"
+)
+
+
+#' List of pc constants
+#'
+#'
+
+pc_constants <- c(
+  "bb",
+  "lb",
+  "ub"
 )
 
 #### Population metric alterations ---------------------------------------------
@@ -112,14 +123,15 @@ computePopnMetrics <- function(.data) {
 #'@param scale a percentage of the current consumption expected in the
 #'scenario under study
 #'
+#'@return Rescaled consumption data (just pc_vars)
 #'
 
 rescale <- function(.data, scale = 1) {
-  scenario0 <- computePopnMetrics(.data)
+  base <- computePopnMetrics(.data)
 
   .data %>%
     mutate(pcc_litres_year = scale * pcc_litres_year) %>%
     computePopnMetrics() %>%
-    mutate(p_bd = p_bd * p_bat / scenario0$p_bat) %>%
-    select(pc_vars)
+    mutate(p_bd = p_bd * p_bat / base$p_bat) %>%
+    select(c(pc_vars, pc_constants))
 }

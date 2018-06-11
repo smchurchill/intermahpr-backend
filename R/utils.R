@@ -93,6 +93,42 @@ isMissing <- function(obs) {
   is.na(obs) | is.null(obs) | obs == "."
 }
 
+
+#' List of variables expected to be in a model
+#'
+#'
+
+model_vars <- c(
+  "region",
+  "year",
+  "gender",
+  "age_group",
+  "im",
+  "condition",
+  "outcome",
+  "incidence",
+  "attributability",
+  "current_fraction_factory",
+  "former_fraction_factory"
+)
+
+#' List of variables expected to be in a scenario
+#'
+#'
+
+scenario_vars <- c(
+  "region",
+  "year",
+  "gender",
+  "age_group",
+  "im",
+  "condition",
+  "outcome",
+  "attributability",
+  "current_fraction",
+  "former_fraction"
+)
+
 #### Factories -----------------------------------------------------------------
 
 #' Factory for integrators
@@ -140,4 +176,4 @@ makeProduct <- function(f, g) {
 #' @importFrom dplyr mutate filter group_by ungroup inner_join
 #' @importFrom purrr pmap map2_dbl map_dbl
 #'
-foo <- function() {print("bar")}
+foo <- function() {return("bar")}

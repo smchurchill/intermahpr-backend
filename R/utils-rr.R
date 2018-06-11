@@ -123,9 +123,6 @@ makeCalibratedFactories <- function(rr, pc, dh) {
 
 #' Factory for AAF computer factories: conditions with well-defined rel. risk
 
-
-
-#### TODO: incorporate wholly-attributable rescaling
 makeFreeFactories <- function(.data) {
   .data %>%
     mutate(

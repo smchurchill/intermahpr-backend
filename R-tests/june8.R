@@ -7,13 +7,43 @@ rr_p <- prepareRR(rr, T)
 pc <- pc_default
 pc_p <- preparePC(pc)
 
+fn <- function() {
+  print(pc)
+}
+
+fn()
+
 dh <- readr::read_csv("data-raw/dh.csv", col_types = "??????dddd????????") %>%
   mutate(outcome = "Morbidity") %>%
   mutate(region = substring(Province, 4))
 dh_p <- prepareDH(dh)
 
+model <- makeNewModel(rr = rr_p, pc = pc_p, dh = dh_p)
 
-scen0 <- makeBaseScenario(rr = rr_p, pc = pc_p, dh = dh_p)
+model$scenarios$base
+
+MUPs <- generateScenarios(
+  model,
+  scenario_names = c("MUP1", "MUP2"),
+  scales = c(0.97, 0.95)
+)
+
+for(i in 1:960) {
+  print(i)
+  print(object.size(model$model$current_fraction_factory[[i]]) / 1000)
+  print(object.size(model$scenarios$base$current_fraction[[i]]) / 1000)
+}
+
+
+new <- generateScenario(model = scenarios, scenario_name = "what", scale = 1)
+
+another <- generateScenario(model = new, scale = 0.97)
+
+another$scenarios$what$current_fraction_factory
+
+
+new
+
 
 scen1 <- scen0 %>%
   left_join(pc_p, by = c("region", "year", "gender", "age_group")) %>%

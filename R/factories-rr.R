@@ -28,9 +28,9 @@ makeBaseRisk <- function(im, gender, form, betas) {
 #'  risk curve that has the desired extrapolation behaviour beyond 150 g/day,
 #'  or 100 g/day for IHD.
 #'
-#'@param base_risk continuous function in x as returned by base_rr_factory
-#'@param x2 extrapolate after x = X2
-#'@param y2 Y2 = BASE_RR(X2)
+#'@param base_risk continuous function in x as returned by makeBaseRisk
+#'@param x2 extrapolate after x = x2
+#'@param y2 y2 = base_risk(x2)
 #'@param slope slope of the extrapolation
 #'
 #'
@@ -60,7 +60,8 @@ makeExtrapolatedRisk <- function(base_risk, x2, y2, slope) {
 #'
 #'@param im string, Intermahp condition code
 #'@param bingef double, rescales injuries
-#'@param ext_risk continuous vector valued function as returned by lin_ext_fact
+#'@param ext_risk continuous vector valued function as returned by
+#' makeExtrapolatedRisk
 #'
 #'
 #'@return a function whose values are binge modified.  This affects conditions

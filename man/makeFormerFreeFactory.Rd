@@ -5,7 +5,7 @@
 \title{Factory for former drinker's AAF computer factory for a condition with
 well-defined relative risk}
 \usage{
-makeFormerFreeFactory(ext_risk, binge_risk, rr_fd)
+makeFormerFreeFactory(ext_risk, binge_risk, rr_fd, attr)
 }
 \description{
 Factory for former drinker's AAF computer factory for a condition with
