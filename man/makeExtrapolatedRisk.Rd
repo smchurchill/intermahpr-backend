@@ -7,11 +7,11 @@
 makeExtrapolatedRisk(base_risk, x2, y2, slope)
 }
 \arguments{
-\item{base_risk}{continuous function in x as returned by base_rr_factory}
+\item{base_risk}{continuous function in x as returned by makeBaseRisk}
 
-\item{x2}{extrapolate after x = X2}
+\item{x2}{extrapolate after x = x2}
 
-\item{y2}{Y2 = BASE_RR(X2)}
+\item{y2}{y2 = base_risk(x2)}
 
 \item{slope}{slope of the extrapolation}
 }

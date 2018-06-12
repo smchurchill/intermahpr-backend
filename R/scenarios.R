@@ -10,15 +10,15 @@ makeNewModel <- function(rr, pc, dh) {
     makeCalibratedFactories(pc = pc, dh = dh)
 
   model <- bind_rows(free_rr, calibrated_rr) %>%
-    select(model_vars)
+    select(getExpectedVars("model"))
 
   list(model = model, scenarios = list(), rr = rr, pc = pc, dh = dh) %>%
-    generateScenario(scenario_name = "base", scale = 1)
+    makeScenario(scenario_name = "base", scale = 1)
 }
 
-#' Generate a scenario from a model object
+#' make a scenario from a model object
 
-generateScenario <- function(.data, scenario_name = NA, scale) {
+makeScenario <- function(.data, scenario_name = NA, scale) {
   pc <- .data$pc
   if(scale != 1) {
     pc <- rescale(.data = pc, scale = scale) %>% computePopnMetrics()
@@ -53,7 +53,7 @@ generateScenario <- function(.data, scenario_name = NA, scale) {
         ~.y(.x)
       )
     ) %>%
-    select(scenario_vars)
+    select(getExpectedVars("scenario"))
 
   if(is.na(scenario_name)) scenario_name <- paste0("rescale_by_", scale)
 
@@ -62,11 +62,11 @@ generateScenario <- function(.data, scenario_name = NA, scale) {
   .data
 }
 
-#' Generate multiple scenarios
+#' make multiple scenarios
 
-generateScenarios <- function(.data, scenario_names = NA, scales) {
+makeScenarios <- function(.data, scenario_names = NA, scales) {
   for(i in 1:length(scales)) {
-    .data <- generateScenario(.data, scenario_names[i], scales[i])
+    .data <- makeScenario(.data, scenario_names[i], scales[i])
   }
   .data
 }

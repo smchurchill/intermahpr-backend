@@ -82,8 +82,8 @@ makeCurrentCalibratedFactory <- function(target, clbr_mass, lb, ub) {
   if(target > 0) reciprocal_target <- 1/target
   else reciprocal_target <- 1
   function(args) {
-    integrand <- function(x) reciprocal_target * (args$mass)(x) * c_prob(x)
-    makeIntegrator(f = integrand, lb = lb)
+    integrand <- function(x) reciprocal_target * (args$mass %prod% c_prob)(x)
+    makeIntegrator(f = integrand, lb = lb, ub = ub)
   }
 }
 

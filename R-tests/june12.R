@@ -16,11 +16,19 @@ model <- makeNewModel(rr = rr_p, pc = pc_p, dh = dh_p)
 
 model$scenarios$base
 
-MUPs <- generateScenarios(
+MUPs <- makeScenarios(
   model,
   scenario_names = c("MUP1", "MUP2"),
   scales = c(0.97, 0.95)
 )
+
+s1 <- MUPs$scenarios$MUP1
+
+base <- MUPs$scenarios$base
+
+base$aaf_cd
+
+map_dbl(MUPs$scenarios$base$current_fraction, ~.x(Inf)) %>% round(digits = 4)
 
 for(i in 1:960) {
   print(i)

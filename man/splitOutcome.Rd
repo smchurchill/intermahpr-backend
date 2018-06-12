@@ -2,10 +2,10 @@
 % Please edit documentation in R/utils-rr.R
 \name{splitOutcome}
 \alias{splitOutcome}
-\title{Split 'Combined' outcomes into Morbidity and Mortality}
+\title{Split 'Combined' and 'Calibrated' outcomes into Morbidity and Mortality}
 \usage{
 splitOutcome(.data)
 }
 \description{
-Split 'Combined' outcomes into Morbidity and Mortality
+Split 'Combined' and 'Calibrated' outcomes into Morbidity and Mortality
 }

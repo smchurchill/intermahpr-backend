@@ -11,7 +11,8 @@ makeBingeRisk(im, bingef, ext_risk)
 
 \item{bingef}{double, rescales injuries}
 
-\item{ext_risk}{continuous vector valued function as returned by lin_ext_fact}
+\item{ext_risk}{continuous vector valued function as returned by
+makeExtrapolatedRisk}
 }
 \value{
 a function whose values are binge modified.  This affects conditions

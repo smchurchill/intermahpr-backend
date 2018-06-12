@@ -3,47 +3,11 @@
 #' Prepare Population Data
 
 preparePC <- function(.data, ...) {
-  pc %<>%
-    cleanPC() %>%
+  .data %<>%
+    clean(getExpectedVars("pc")) %>%
     setPopnConstants(...) %>%
     computePopnMetrics()
 }
-
-#' Clean Population data
-
-cleanPC <- function(.data) {
-  clean(pc, pc_vars)
-}
-
-#' List of variables expected to be in an input PC sheet
-#'
-#'
-
-pc_vars <- c(
-  "region",
-  "year",
-  "gender",
-  "age_group",
-  "population",
-  "pcc_litres_year",
-  "correction_factor",
-  "relative_consumption",
-  "p_la",
-  "p_fd",
-  "p_cd",
-  "p_bd"
-)
-
-
-#' List of pc constants
-#'
-#'
-
-pc_constants <- c(
-  "bb",
-  "lb",
-  "ub"
-)
 
 #### Population metric alterations ---------------------------------------------
 
@@ -133,5 +97,5 @@ rescale <- function(.data, scale = 1) {
     mutate(pcc_litres_year = scale * pcc_litres_year) %>%
     computePopnMetrics() %>%
     mutate(p_bd = p_bd * p_bat / base$p_bat) %>%
-    select(c(pc_vars, pc_constants))
+    select(getExpectedVars("pc", "constants"))
 }

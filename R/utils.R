@@ -93,53 +93,96 @@ isMissing <- function(obs) {
   is.na(obs) | is.null(obs) | obs == "."
 }
 
-
-#' List of variables expected to be in a model
+#' Get variables expected to be in the given object type
 #'
 #'
 
-model_vars <- c(
-  "region",
-  "year",
-  "gender",
-  "age_group",
-  "im",
-  "condition",
-  "outcome",
-  "incidence",
-  "attributability",
-  "current_fraction_factory",
-  "former_fraction_factory"
-)
+getExpectedVars <- function(...) {
+  unlist(map(list(...), getExpectedVars_))
+}
 
-#' List of variables expected to be in a scenario
+#' Get variables expected to be in the given object type
 #'
 #'
 
-scenario_vars <- c(
-  "region",
-  "year",
-  "gender",
-  "age_group",
-  "im",
-  "condition",
-  "outcome",
-  "attributability",
-  "current_fraction",
-  "former_fraction"
-)
+getExpectedVars_ <- function(.obj_type) {
+  switch(
+    .obj_type,
+    rr = c(
+      "im",
+      "condition",
+      "gender",
+      "outcome",
+      "rr_fd",
+      "bingef",
+      "form",
+      "attributability",
+      paste0("b", 1:16)
+    ),
+    pc = c(
+      "region",
+      "year",
+      "gender",
+      "age_group",
+      "population",
+      "pcc_litres_year",
+      "correction_factor",
+      "relative_consumption",
+      "p_la",
+      "p_fd",
+      "p_cd",
+      "p_bd"
+    ),
+    dh = c(
+      "im",
+      "region",
+      "year",
+      "gender",
+      "age_group",
+      "outcome",
+      "count"
+    ),
+    model = c(
+      "region",
+      "year",
+      "gender",
+      "age_group",
+      "im",
+      "condition",
+      "outcome",
+      "incidence",
+      "attributability",
+      "current_fraction_factory",
+      "former_fraction_factory"
+    ),
+    scenario = c(
+      "region",
+      "year",
+      "gender",
+      "age_group",
+      "im",
+      "condition",
+      "outcome",
+      "attributability",
+      "current_fraction",
+      "former_fraction"
+    ),
+    constants = c(
+      "bb",
+      "lb",
+      "ub"
+    )
+  )
+}
 
 #### Factories -----------------------------------------------------------------
 
 #' Factory for integrators
 
-makeIntegrator <- function(f, lb) {
-  force(f)
-  force(lb)
+makeIntegrator <- function(f, lb, ub) {
   integrate_up_to <- function(to) {
-    force(f)
-    force(lb)
-    # if(to <= lb) return(0)
+    if(to <= lb) to = lb
+    if(to >= ub) to = ub
     integrate(f = f, lower = lb, upper = to)$value
   }
 
@@ -173,7 +216,8 @@ makeProduct <- function(f, g) {
 #### Imports -------------------------------------------------------------------
 
 #' @importFrom magrittr %>% %<>%
-#' @importFrom dplyr mutate filter group_by ungroup inner_join
-#' @importFrom purrr pmap map2_dbl map_dbl
+#' @importFrom dplyr
+#' mutate filter group_by ungroup inner_join select bind_rows left_join
+#' @importFrom purrr map pmap map2_dbl map_dbl map2
 #'
 foo <- function() {return("bar")}

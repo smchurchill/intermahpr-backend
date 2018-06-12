@@ -4,7 +4,7 @@
 \alias{makeIntegrator}
 \title{Factory for integrators}
 \usage{
-makeIntegrator(f, lb)
+makeIntegrator(f, lb, ub)
 }
 \description{
 Factory for integrators

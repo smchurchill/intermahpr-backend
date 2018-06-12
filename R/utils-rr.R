@@ -5,27 +5,22 @@
 
 prepareRR <- function(.data, ext) {
   .data %<>%
-    cleanRR() %>%
+    clean(getExpectedVars("rr")) %>%
+    crushBetas() %>%
     mutate(ext = ext) %>%
     splitOutcome() %>%
     splitGender()
 }
 
-#' Clean Relative Risk Data
-
-cleanRR <- function(.data) {
-  crushBetas(clean(.data, rr_vars))
-}
-
-#' Split 'Combined' outcomes into Morbidity and Mortality
+#' Split 'Combined' and 'Calibrated' outcomes into Morbidity and Mortality
 
 splitOutcome <- function(.data) {
   morb <- .data %>%
-    filter(grepl("(b|C)", outcome)) %>%
+    filter(grepl("(Morbidity|Calibrated|Combined)", outcome)) %>%
     mutate(outcome = "Morbidity")
 
   mort <- .data %>%
-    filter(grepl("(t|C)", outcome)) %>%
+    filter(grepl("(Mortality|Calibrated|Combined)", outcome)) %>%
     mutate(outcome = "Mortality")
 
   rbind(morb, mort)
@@ -36,11 +31,11 @@ splitOutcome <- function(.data) {
 
 splitGender <- function(.data) {
   female <- .data %>%
-    filter(grepl("(F|A)", gender)) %>%
+    filter(grepl("(Female|All)", gender)) %>%
     mutate(gender = "Female")
 
   male <- .data %>%
-    filter(grepl("(M|A)", gender)) %>%
+    filter(grepl("(Male|All)", gender)) %>%
     mutate(gender = "Male")
 
   rbind(female, male)
@@ -57,22 +52,6 @@ filterCalibrated <- function(.data) {
 filterFree <- function(.data) {
   filter(.data, form != "Calibrated")
 }
-
-#' List of variables expected to be in an RR sheet
-#'
-#'
-
-rr_vars <- c(
-  "im",
-  "condition",
-  "gender",
-  "outcome",
-  "rr_fd",
-  "bingef",
-  "form",
-  "attributability",
-  paste0("b", 1:16)
-)
 
 #' Crush numbered variables
 #'

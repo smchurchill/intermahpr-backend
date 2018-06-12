@@ -49,7 +49,8 @@ makeCurrentFreeComponentFactory <- function(ext_risk, binge_risk) {
       bingers = args$bingers,
       ext_risk = ext_risk,
       binge_risk = binge_risk)
-    makeIntegrator(f = args$mass %prod% preventable_fraction, lb = args$lb)
+    integrand <- args$mass %prod% preventable_fraction
+    makeIntegrator(f = integrand, lb = args$lb, ub = args$ub)
   }
 }
 
