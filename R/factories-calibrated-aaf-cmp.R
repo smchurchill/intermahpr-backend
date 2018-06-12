@@ -35,7 +35,7 @@
 #'@param mass population exposure mass function to calibrate against
 #'@param lb lower bound of consumption at which condition occurs
 #'@param ub upper bound of consumption
-
+#'
 #'@return slope of loglinear conditional probability mass function for risk as a
 #'result of exposure
 #'

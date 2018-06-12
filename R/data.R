@@ -80,3 +80,10 @@
 #'
 #'
 "rr_roerecke"
+
+#' Master rr list for Version 2 and beyond
+#'
+#' @docType data
+#' @usage data(rr_master)
+#'
+"rr_master"
