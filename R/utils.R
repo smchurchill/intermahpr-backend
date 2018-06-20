@@ -171,6 +171,16 @@ getExpectedVars_ <- function(.obj_type) {
       "bb",
       "lb",
       "ub"
+    ),
+    distill_by = c(
+      "region",
+      "year",
+      "gender",
+      "age_group",
+      "im",
+      "condition",
+      "outcome",
+      "attributability"
     )
   )
 }

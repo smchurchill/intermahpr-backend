@@ -70,3 +70,89 @@ makeScenarios <- function(.data, scenario_names = NA, scales) {
   }
   .data
 }
+
+#' Computes a given scenario's AAF for former drinkers
+computeFormerFraction <- function(.data) {
+  map_dbl(.data$former_fraction, ~.x())
+}
+
+#' Computes a given scenario's AAF for former drinkers and adds it to the
+#' scenario
+
+addFormerFraction <- function(.data, var_name = "aaf_fd") {
+  .data[[var_name]] <- computeFormerFraction(.data)
+  .data
+}
+
+#' Computes a given scenario's AAF for current drinkers in a given interval of
+#' consumption
+
+computeIntervalFraction <- function(.data, lower = -Inf, upper = Inf) {
+  map_dbl(.data$current_fraction, ~.x(upper) - .x(lower))
+}
+
+#' Computes a given scenario's AAF for current drinkers in a given interval of
+#' consumption and adds it to the scenario
+
+addIntervalFraction <- function(.data, lower, upper, var_name = "aaf_xd") {
+  .data[[var_name]] <- computeIntervalFraction(.data, lower, upper)
+  .data
+}
+
+#' Computes a given scenario's AAF for current drinkers
+
+computeCurrentFraction <- function(.data) {
+  computeIntervalFraction(.data)
+}
+
+#' Computes a given scenario's AAF for current drinkers and adds it to the
+#' scenario
+
+addCurrentFraction <- function(.data, var_name = "aaf_cd") {
+  .data[[var_name]] <- computeCurrentFraction(.data)
+  .data
+}
+
+#' Computes a given scenario's Total AAF
+
+computeTotalFraction <- function(.data) {
+  computeFormerFraction(.data) + computeCurrentFraction(.data)
+}
+
+#' Computes a given scenario's Total AAF and adds it to the scenario
+
+addTotalFraction <- function(.data, var_name = "aaf") {
+  .data[[var_name]] <- computeTotalFraction(.data)
+  .data
+}
+
+#' Extracts and derives pertinent comparative scenario data from a model
+distillModel <- function(.data) {
+  scenarios <- .data$scenarios
+  master_name_list <- names(scenarios)
+  aaf_name_list <- paste0("aaf_", master_name_list)
+  for(name in master_name_list) {
+    scenario <- scenarios[[name]]
+    scenario <- addTotalFraction(scenario, var_name = paste0("aaf_", name)) %>%
+      select(-contains("_fraction"))
+    scenarios[[name]] <- scenario
+  }
+
+  by_vars <- getExpectedVars("distill_by")
+  reduction <- reduce(scenarios, left_join, by = by_vars)
+
+  attr <- reduction$attributability == "Wholly"
+
+  for(i in 2:length(master_name_list)) {
+    reduction[[paste0("adj_", master_name_list[i])]] <-
+      reduction[[aaf_name_list[i]]] / reduction[["aaf_base"]]
+
+    reduction[[aaf_name_list[i]]] <-
+      ifelse(attr, 1, reduction[[aaf_name_list[i]]])
+  }
+
+  reduction$aaf_base <-
+    ifelse(attr, 1, reduction$aaf_base)
+
+  reduction
+}
