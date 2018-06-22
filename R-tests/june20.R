@@ -7,10 +7,17 @@ rr_p <- prepareRR(rr, T)
 pc <- pc_default
 pc_p <- preparePC(pc)
 
-dh <- readr::read_csv("data-raw/dh.csv", col_types = "??????dddd????????") %>%
-  mutate(outcome = "Morbidity") %>%
-  mutate(region = substring(Province, 4))
+dh <- readr::read_csv("data-raw/dh_master.csv")
 dh_p <- prepareDH(dh)
+
+
+  # readr::read_csv("data-raw/dh.csv", col_types = "??????dddd????????") %>%
+  # mutate(outcome = "Morbidity") %>%
+  # mutate(region = substring(Province, 4))
+
+shinymodel <- makeNewModel(rr = rr_p, pc = pc_p, dh = dh_p)
+
+af <- formatForShinyOutput(shinymodel$scenarios$base)
 
 scenario_analysis <- makeNewModel(rr = rr_p, pc = pc_p, dh = dh_p) %>%
   makeScenarios(scenario_names = c("MUP1", "MUP2"), scales = c(0.97, 0.95)) %>%

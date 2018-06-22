@@ -2,7 +2,7 @@
 
 #' Prepare Relative Risk Data
 #'
-
+#' @export
 prepareRR <- function(.data, ext) {
   .data %<>%
     clean(getExpectedVars("rr")) %>%
@@ -13,7 +13,7 @@ prepareRR <- function(.data, ext) {
 }
 
 #' Split 'Combined' and 'Calibrated' outcomes into Morbidity and Mortality
-
+#' @export
 splitOutcome <- function(.data) {
   morb <- .data %>%
     filter(grepl("(Morbidity|Calibrated|Combined)", outcome)) %>%
@@ -28,7 +28,7 @@ splitOutcome <- function(.data) {
 
 #' Split 'All' genders into 'Female' and 'Male'
 #'
-
+#' @export
 splitGender <- function(.data) {
   female <- .data %>%
     filter(grepl("(Female|All)", gender)) %>%
@@ -42,13 +42,13 @@ splitGender <- function(.data) {
 }
 
 #' Filter calibrated forms from the rest
-
+#' @export
 filterCalibrated <- function(.data) {
   filter(.data, form == "Calibrated")
 }
 
 #' Filter well-defined forms from the rest
-
+#' @export
 filterFree <- function(.data) {
   filter(.data, form != "Calibrated")
 }
@@ -59,7 +59,7 @@ filterFree <- function(.data) {
 #' Assumes numbered variables are al of numeric type.
 #' New variable is named 'betas'.
 #'
-
+#' @export
 crushBetas <- function(.data) {
   crush <- .data[grep("[0-9]$", names(.data))]
   .data <- .data[-grep("[0-9]", names(.data))]
@@ -73,7 +73,7 @@ crushBetas <- function(.data) {
 
 #' Factory for AAF computer factories: conditions requiring calibration against
 #' population statistics
-
+#' @export
 makeCalibratedFactories <- function(rr, pc, dh) {
   .data <- inner_join(
     x = rr,
@@ -101,7 +101,7 @@ makeCalibratedFactories <- function(rr, pc, dh) {
 
 
 #' Factory for AAF computer factories: conditions with well-defined rel. risk
-
+#' @export
 makeFreeFactories <- function(.data) {
   .data %>%
     mutate(
@@ -144,8 +144,3 @@ makeFreeFactories <- function(.data) {
       )
     )
 }
-
-
-
-
-

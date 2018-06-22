@@ -2,10 +2,10 @@
 % Please edit documentation in R/scenarios.R
 \name{distillModel}
 \alias{distillModel}
-\title{Extracts and derives pertinent comparative scenario data from a model}
+\title{Extract and derive pertinent comparative scenario data from a model}
 \usage{
 distillModel(.data)
 }
 \description{
-Extracts and derives pertinent comparative scenario data from a model
+Extract and derive pertinent comparative scenario data from a model
 }

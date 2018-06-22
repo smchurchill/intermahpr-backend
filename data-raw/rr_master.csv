@@ -16,10 +16,10 @@ IM,Condition,Gender,Outcome,RR_FD,BingeF,Form,Attributability,B1,B2,B3,B4,B5,B6,
 (2).(7),Breast cancer ,Female,Combined,1.03,1,FP,Partially,0,0,0,0,0,0.01018,0,0,0,0,0,0,0,0,0,0
 (3).(1),Diabetes mellitus,Male,Combined,1.18,1,FP,Partially,0,0,0,0,0,0,1.76E-05,-7.28E-08,0,0,0,0,0,0,0,0
 (3).(1),Diabetes mellitus,Female,Combined,1.14,1,FP,Partially,0,0,0,0,-0.1313991,0.01014239,0,0,0,0,0,0,0,0,0,0
-(3).(2),Alcohol-induced pseudo-Cushing's syndrome,All,Calibrated,1,1,Calibrated,Wholly,0,0,0,0,0,0.0122861,0,0,0,0,0,0,0,0,0,0
-(4).(1),Alcoholic psychoses,All,Calibrated,1,1,Calibrated,Wholly,0,0,0,0,0,0.0122861,0,0,0,0,0,0,0,0,0,0
-(4).(2),Alcohol abuse,All,Calibrated,1,1,Calibrated,Wholly,0,0,0,0,0,0.0122861,0,0,0,0,0,0,0,0,0,0
-(4).(3),Alcohol dependence,All,Calibrated,1,1,Calibrated,Wholly,0,0,0,0,0,0.0122861,0,0,0,0,0,0,0,0,0,0
+(3).(2),Alcohol-induced pseudo-Cushing's syndrome,All,Calibrated,1,1,Calibrated,Wholly,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+(4).(1),Alcoholic psychoses,All,Calibrated,1,1,Calibrated,Wholly,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+(4).(2),Alcohol abuse,All,Calibrated,1,1,Calibrated,Wholly,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+(4).(3),Alcohol dependence,All,Calibrated,1,1,Calibrated,Wholly,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 (4).(4),Degeneration of nervous system due to alcohol,All,Combined,1,1,FP,Wholly,0,0,0,0,0,0.0122861,0,0,0,0,0,0,0,0,0,0
 (4).(5),Epilepsy,All,Combined,1,1,FP,Partially,0,0,0,0,0,0.0122861,0,0,0,0,0,0,0,0,0,0
 (4).(6),Alcoholic polyneuropathy,All,Combined,1,1,FP,Wholly,0,0,0,0,0,0.0122861,0,0,0,0,0,0,0,0,0,0

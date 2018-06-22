@@ -2,10 +2,10 @@
 % Please edit documentation in R/scenarios.R
 \name{computeTotalFraction}
 \alias{computeTotalFraction}
-\title{Computes a given scenario's Total AAF}
+\title{Compute a given scenario's Total AAF}
 \usage{
 computeTotalFraction(.data)
 }
 \description{
-Computes a given scenario's Total AAF
+Compute a given scenario's Total AAF
 }

@@ -1,4 +1,5 @@
 #' Make a base interMAHP scenario
+#' @export
 
 makeNewModel <- function(rr, pc, dh) {
   free_rr <- rr %>%
@@ -17,12 +18,10 @@ makeNewModel <- function(rr, pc, dh) {
 }
 
 #' make a scenario from a model object
+#' @export
 
 makeScenario <- function(.data, scenario_name = NA, scale) {
-  pc <- .data$pc
-  if(scale != 1) {
-    pc <- rescale(.data = pc, scale = scale) %>% computePopnMetrics()
-  }
+  pc <- rescale(.data = .data$pc, scale = scale) %>% computePopnMetrics()
 
   new_scenario <- .data$model %>%
     left_join(pc, by = c("region", "year", "gender", "age_group")) %>%
@@ -63,6 +62,7 @@ makeScenario <- function(.data, scenario_name = NA, scale) {
 }
 
 #' make multiple scenarios
+#' @export
 
 makeScenarios <- function(.data, scenario_names = NA, scales) {
   for(i in 1:length(scales)) {
@@ -71,62 +71,64 @@ makeScenarios <- function(.data, scenario_names = NA, scales) {
   .data
 }
 
-#' Computes a given scenario's AAF for former drinkers
+#' Compute a given scenario's AAF for former drinkers
+#' @export
 computeFormerFraction <- function(.data) {
   map_dbl(.data$former_fraction, ~.x())
 }
 
-#' Computes a given scenario's AAF for former drinkers and adds it to the
+#' Compute a given scenario's AAF for former drinkers and adds it to the
 #' scenario
-
+#' @export
 addFormerFraction <- function(.data, var_name = "aaf_fd") {
   .data[[var_name]] <- computeFormerFraction(.data)
   .data
 }
 
-#' Computes a given scenario's AAF for current drinkers in a given interval of
+#' Compute a given scenario's AAF for current drinkers in a given interval of
 #' consumption
-
+#' @export
 computeIntervalFraction <- function(.data, lower = -Inf, upper = Inf) {
   map_dbl(.data$current_fraction, ~.x(upper) - .x(lower))
 }
 
-#' Computes a given scenario's AAF for current drinkers in a given interval of
+#' Compute a given scenario's AAF for current drinkers in a given interval of
 #' consumption and adds it to the scenario
-
+#' @export
 addIntervalFraction <- function(.data, lower, upper, var_name = "aaf_xd") {
   .data[[var_name]] <- computeIntervalFraction(.data, lower, upper)
   .data
 }
 
-#' Computes a given scenario's AAF for current drinkers
-
+#' Compute a given scenario's AAF for current drinkers
+#' @export
 computeCurrentFraction <- function(.data) {
   computeIntervalFraction(.data)
 }
 
-#' Computes a given scenario's AAF for current drinkers and adds it to the
+#' Compute a given scenario's AAF for current drinkers and adds it to the
 #' scenario
-
+#' @export
 addCurrentFraction <- function(.data, var_name = "aaf_cd") {
   .data[[var_name]] <- computeCurrentFraction(.data)
   .data
 }
 
-#' Computes a given scenario's Total AAF
-
+#' Compute a given scenario's Total AAF
+#' @export
 computeTotalFraction <- function(.data) {
   computeFormerFraction(.data) + computeCurrentFraction(.data)
 }
 
-#' Computes a given scenario's Total AAF and adds it to the scenario
-
+#' Compute a given scenario's Total AAF and adds it to the scenario
+#' @export
 addTotalFraction <- function(.data, var_name = "aaf") {
   .data[[var_name]] <- computeTotalFraction(.data)
   .data
 }
 
-#' Extracts and derives pertinent comparative scenario data from a model
+#' Extract and derive pertinent comparative scenario data from a model
+#' @export
 distillModel <- function(.data) {
   scenarios <- .data$scenarios
   master_name_list <- names(scenarios)
@@ -141,7 +143,7 @@ distillModel <- function(.data) {
   by_vars <- getExpectedVars("distill_by")
   reduction <- reduce(scenarios, left_join, by = by_vars)
 
-  attr <- reduction$attributability == "Wholly"
+  attr <- (reduction$attributability == "Wholly")
 
   for(i in 2:length(master_name_list)) {
     reduction[[paste0("adj_", master_name_list[i])]] <-

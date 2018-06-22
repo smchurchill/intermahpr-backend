@@ -2,10 +2,10 @@
 % Please edit documentation in R/scenarios.R
 \name{computeFormerFraction}
 \alias{computeFormerFraction}
-\title{Computes a given scenario's AAF for former drinkers}
+\title{Compute a given scenario's AAF for former drinkers}
 \usage{
 computeFormerFraction(.data)
 }
 \description{
-Computes a given scenario's AAF for former drinkers
+Compute a given scenario's AAF for former drinkers
 }

@@ -3,7 +3,7 @@
 #' Factory for current drinker's AAF computer factory for a condition with
 #'  well-defined relative risk
 #'
-
+#' @export
 makeCurrentFreeFactory <- function(ext_risk, binge_risk, rr_fd) {
   force(ext_risk)
   function(args) {
@@ -21,7 +21,7 @@ makeCurrentFreeFactory <- function(ext_risk, binge_risk, rr_fd) {
 #' Factory for former drinker's AAF computer factory for a condition with
 #' well-defined relative risk
 #'
-
+#' @export
 makeFormerFreeFactory <- function(ext_risk, binge_risk, rr_fd) {
   function(args) {
     former_comp_factory <- makeFormerFreeComponentFactory(rr_fd = rr_fd)
@@ -40,7 +40,7 @@ makeFormerFreeFactory <- function(ext_risk, binge_risk, rr_fd) {
 #' Factory for the current drinker's component in an AAF computer factory for a
 #'  condition with well-defined relative risk
 #'
-
+#' @export
 makeCurrentFreeComponentFactory <- function(ext_risk, binge_risk) {
   function(args) {
     preventable_fraction <- makePreventableFraction(
@@ -57,7 +57,7 @@ makeCurrentFreeComponentFactory <- function(ext_risk, binge_risk) {
 #' Factory for the former drinker's component in an AAF computer factory for a
 #'  condition with well-defined relative risk
 #'
-
+#' @export
 makeFormerFreeComponentFactory <- function(rr_fd){
   function(p_fd) {
     function(...) {
@@ -80,7 +80,7 @@ makeFormerFreeComponentFactory <- function(rr_fd){
 #'@param binge_risk fn, extrapolated relative risk for bingers
 #'
 #'
-
+#' @export
 makePreventableFraction <- function(
   bb, non_bingers, bingers, ext_risk, binge_risk
 ) {

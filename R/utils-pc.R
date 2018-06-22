@@ -1,9 +1,9 @@
 #### Population Specific Data Carpentry ----------------------------------------
 
 #' Prepare Population Data
-
+#' @export
 preparePC <- function(.data, ...) {
-  .data %<>%
+  .data %>%
     clean(getExpectedVars("pc")) %>%
     setPopnConstants(...) %>%
     computePopnMetrics()
@@ -16,7 +16,7 @@ preparePC <- function(.data, ...) {
 #'@param lb lower bound of consumption
 #'@param ub upper bound of consumption
 #'
-
+#' @export
 setPopnConstants <- function(
   .data, bb = list("Female" = 53.8, "Male" = 67.25), lb = 0.03, ub = 250
 ) {
@@ -24,7 +24,7 @@ setPopnConstants <- function(
 }
 
 #' Compute Population Metrics
-
+#' @export
 computePopnMetrics <- function(.data) {
   ## Magic numbers
   gc = list("Female" = 1.582564, "Male" = 1.371241)
@@ -89,7 +89,7 @@ computePopnMetrics <- function(.data) {
 #'
 #'@return Rescaled consumption data (just pc_vars)
 #'
-
+#' @export
 rescale <- function(.data, scale = 1) {
   base <- computePopnMetrics(.data)
 

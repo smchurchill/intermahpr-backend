@@ -39,7 +39,7 @@
 #'@return slope of loglinear conditional probability mass function for risk as a
 #'result of exposure
 #'
-
+#' @export
 calibrateSlope <- function(target, mass, lb, ub) {
   if(target <= 0) return(0)
 
@@ -65,7 +65,7 @@ calibrateSlope <- function(target, mass, lb, ub) {
 #'probability mass function
 #'@return Conditional probability mass function for risk incurred as a result of
 #'exposure
-
+#' @export
 makeConditionalProbability <- function(slope, lb) {
   function(x) {
     exp(pmax(0, slope*(x-lb)))-1
@@ -75,7 +75,7 @@ makeConditionalProbability <- function(slope, lb) {
 #' Factory for current drinker's AAF computer factory for a condition with
 #'  calibrated incidence estimator
 #'
-
+#' @export
 makeCurrentCalibratedFactory <- function(target, clbr_mass, lb, ub) {
   slope <- calibrateSlope(target = target, mass = clbr_mass, lb = lb, ub = ub)
   c_prob <- makeConditionalProbability(slope = slope, lb = lb)
@@ -93,7 +93,7 @@ makeCurrentCalibratedFactory <- function(target, clbr_mass, lb, ub) {
 #' The relative risk for former drinkers is 1 by definition, so these functions
 #'  are identically zero.
 #'
-
+#' @export
 makeFormerCalibratedFactory <- function(...) {
   function(...) {
     function(x) {

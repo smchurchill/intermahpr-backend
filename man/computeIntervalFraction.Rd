@@ -2,12 +2,12 @@
 % Please edit documentation in R/scenarios.R
 \name{computeIntervalFraction}
 \alias{computeIntervalFraction}
-\title{Computes a given scenario's AAF for current drinkers in a given interval of
+\title{Compute a given scenario's AAF for current drinkers in a given interval of
 consumption}
 \usage{
 computeIntervalFraction(.data, lower = -Inf, upper = Inf)
 }
 \description{
-Computes a given scenario's AAF for current drinkers in a given interval of
+Compute a given scenario's AAF for current drinkers in a given interval of
 consumption
 }

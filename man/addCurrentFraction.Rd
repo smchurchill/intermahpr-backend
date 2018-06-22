@@ -2,12 +2,12 @@
 % Please edit documentation in R/scenarios.R
 \name{addCurrentFraction}
 \alias{addCurrentFraction}
-\title{Computes a given scenario's AAF for current drinkers and adds it to the
+\title{Compute a given scenario's AAF for current drinkers and adds it to the
 scenario}
 \usage{
 addCurrentFraction(.data, var_name = "aaf_cd")
 }
 \description{
-Computes a given scenario's AAF for current drinkers and adds it to the
+Compute a given scenario's AAF for current drinkers and adds it to the
 scenario
 }

@@ -11,7 +11,7 @@
 #'
 #'@return a function object that describes a base relative risk curve
 #'
-
+#' @export
 makeBaseRisk <- function(im, gender, form, betas) {
   if(form == "FP") return(makeFractionalPolynomial(betas))
   if(form == "Step") return(makeHivRisk(gender))
@@ -37,7 +37,7 @@ makeBaseRisk <- function(im, gender, form, betas) {
 #'@return a function whose values after x2 are are linearly extrapolated
 #'  (see InterMAHP guide for details)
 #'
-
+#' @export
 makeExtrapolatedRisk <- function(base_risk, x2, y2, slope) {
   line <- function(x) y2+ slope*(x-x2)
 
@@ -68,12 +68,12 @@ makeExtrapolatedRisk <- function(base_risk, x2, y2, slope) {
 #'  5.2 and 5.5, ischaemic heart disease and stroke respectively, by removing a
 #'  protective effect at low levels of consumption
 #'
-
+#' @export
 makeBingeRisk <- function(im, bingef, ext_risk) {
   min_risk <- 0
-  if(im == "(5).(2)" | im == "(5).(5)") min_risk <- 1
+  if(im == "(5).(2)" | im == "(5).(5)") {min_risk <- 1}
 
-  function(x) bingef*pmax(min_risk, ext_risk(x))
+  function(x) {bingef*pmax(min_risk, ext_risk(x))}
 }
 
 
@@ -83,7 +83,7 @@ makeBingeRisk <- function(im, bingef, ext_risk) {
 #'
 #'@param gender decides which function to return
 #'
-
+#' @export
 makeHivRisk  <- function(gender) {
   if(gender == "Female") {
     return(function(x) ((0 < x) & (x < 49))*1 + (x >= 49)*1.54)
@@ -101,7 +101,7 @@ makeHivRisk  <- function(gender) {
 #'
 #' 0.0025 = 1/400
 #'
-
+#' @export
 femaleHypertensionSpline <- function(x) {
   (x < 75)*(
     (x > 0)*0*x +
@@ -119,7 +119,7 @@ femaleHypertensionSpline <- function(x) {
 #' 0.04 = 1/25
 #' 0.0007304602 = 1/(37^2)
 #'
-
+#' @export
 maleHypertensionSpline <- function(x) {
   (x > 0)*(
     0.0150537*x -
@@ -135,7 +135,7 @@ maleHypertensionSpline <- function(x) {
 #'
 #'@param gender decides which function to return
 #'
-
+#' @export
 makeHypertensionRisk <- function(gender) {
   if(gender == "Female") {
     return(function(x) exp(femaleHypertensionSpline(x)))
@@ -154,7 +154,7 @@ makeHypertensionRisk <- function(gender) {
 #' 0.04 = 1/25
 #' 0.0007304602 = 1/(37^2)
 #'
-
+#' @export
 FemaleAcutePancreatitisSpline <- function(x){
   (x < 108)*(
     (x > 0)*(-0.0272886)*x +
@@ -169,7 +169,7 @@ FemaleAcutePancreatitisSpline <- function(x){
 
 #' Factory for Special Spline Female Acute Pancreatitis Relative Risk Functions
 #'
-
+#' @export
 makeAcutePancreatitisRisk <- function() {
   return(function(x) exp(FemaleAcutePancreatitisSpline(x)))
 }
@@ -179,7 +179,8 @@ makeAcutePancreatitisRisk <- function() {
 #' The master list of fractional polynomials
 #'
 
-fractional_polynomials <- list(
+getFPList <- function() {
+  list(
     function(x) 1 / x / x,
     function(x) 1 / x,
     function(x) 1 / sqrt(x),
@@ -196,18 +197,18 @@ fractional_polynomials <- list(
     function(x) x*log(x),
     function(x) x*x*log(x),
     function(x) x*x*x*log(x)
-)
-
+  )
+}
 
 #' Factory for Fractional Polynomial Relative Risk Functions
 #'
 #'@param betas The numeric vector of Beta values needed to produce a fractional
 #'  polynomial
 #'
-
+#' @export
 makeFractionalPolynomial <- function(betas) {
 
-  nonzero_fp <- fractional_polynomials[betas != 0]
+  nonzero_fp <- getFPList()[betas != 0]
   nonzero_b <- betas[betas != 0]
 
   if(length(nonzero_b) == 0) {return(function(...) 1)}

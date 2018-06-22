@@ -2,10 +2,10 @@
 % Please edit documentation in R/scenarios.R
 \name{computeCurrentFraction}
 \alias{computeCurrentFraction}
-\title{Computes a given scenario's AAF for current drinkers}
+\title{Compute a given scenario's AAF for current drinkers}
 \usage{
 computeCurrentFraction(.data)
 }
 \description{
-Computes a given scenario's AAF for current drinkers
+Compute a given scenario's AAF for current drinkers
 }

@@ -11,7 +11,7 @@
 #'
 #' @return The cleaned dataset
 #'
-
+#' @export
 clean <- function(.data, expected) {
   .data %>%
     lowerVars() %>%
@@ -28,7 +28,7 @@ clean <- function(.data, expected) {
 #'
 #' @return The dataset with variable names in lower case
 #'
-
+#' @export
 lowerVars <- function(.data) {
   names(.data) <- stringr::str_to_lower(names(.data))
   .data
@@ -41,7 +41,7 @@ lowerVars <- function(.data) {
 #'
 #' @inheritParams clean
 #'
-
+#' @export
 checkVars <- function(.data, expected) {
   missing <- expected[!(expected %in% names(.data))]
   if(length(missing) > 0) {
@@ -65,7 +65,7 @@ checkVars <- function(.data, expected) {
 #' imputation value if the variable is
 #'
 #'
-
+#' @export
 imputeWith <- function(var) {
   if(grepl("[0-9]", var)) {var = "beta"}
   switch(
@@ -78,7 +78,7 @@ imputeWith <- function(var) {
 }
 
 #' Impute missing values over entire dataset
-
+#' @export
 imputeMissing <- function(.data) {
   for(var in names(.data)) {
     .data[var][isMissing(.data[var])] <- imputeWith(var)
@@ -88,7 +88,7 @@ imputeMissing <- function(.data) {
 
 #' Define missing data
 #'
-
+#' @export
 isMissing <- function(obs) {
   is.na(obs) | is.null(obs) | obs == "."
 }
@@ -96,7 +96,7 @@ isMissing <- function(obs) {
 #' Get variables expected to be in the given object type
 #'
 #'
-
+#' @export
 getExpectedVars <- function(...) {
   unlist(map(list(...), getExpectedVars_))
 }
@@ -104,7 +104,7 @@ getExpectedVars <- function(...) {
 #' Get variables expected to be in the given object type
 #'
 #'
-
+#' @export
 getExpectedVars_ <- function(.obj_type) {
   switch(
     .obj_type,
@@ -188,7 +188,7 @@ getExpectedVars_ <- function(.obj_type) {
 #### Factories -----------------------------------------------------------------
 
 #' Factory for integrators
-
+#' @export
 makeIntegrator <- function(f, lb, ub) {
   integrate_up_to <- function(to) {
     if(to <= lb) to = lb
@@ -208,7 +208,7 @@ makeIntegrator <- function(f, lb, ub) {
 #'@param f,g function that takes a single argument and produces a value that is
 #'a valid argument for the `*` function
 #'
-
+#' @export
 makeProduct <- function(f, g) {
   function(x) f(x) * g(x)
 }
@@ -220,7 +220,7 @@ makeProduct <- function(f, g) {
 #'@describeIn makeProduct
 #'
 #'@inheritParams makeProduct
-
+#' @export
 `%prod%` <- function(f,g) makeProduct(f,g)
 
 #### Imports -------------------------------------------------------------------
