@@ -9,6 +9,14 @@ preparePC <- function(.data, ...) {
     computePopnMetrics()
 }
 
+#' Extract display variables
+#' @export
+displayPC <- function(.data) {
+  .data %>%
+    select(getExpectedVars("pc_display")) %>%
+    rename("gamma_normalizer" = "nc")
+}
+
 #### Population metric alterations ---------------------------------------------
 
 #' Set Population Constants
@@ -42,7 +50,9 @@ computePopnMetrics <- function(.data) {
         yearly_to_daily_conv *
         correction_factor,
       drinkers = population * p_cd,
+      ## alcohol consumption over all age groups
       pcad = pcc_g_day * sum(population) / sum(drinkers),
+      ## mean consumption per age group
       pcc_among_drinkers = relative_consumption * pcad * sum(drinkers) /
         sum(relative_consumption*drinkers)
     )%>%

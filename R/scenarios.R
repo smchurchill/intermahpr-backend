@@ -53,6 +53,8 @@ makeScenario <- function(.data, scenario_name = NA, scale) {
       )
     ) %>%
     select(getExpectedVars("scenario"))
+  ## TODO: Add youngest x-y (into) 0-(x-1) agegroup.  partially/former = 0,
+  ## wholly = copy
 
   if(is.na(scenario_name)) scenario_name <- paste0("rescale_by_", scale)
 
@@ -97,6 +99,23 @@ computeIntervalFraction <- function(.data, lower = -Inf, upper = Inf) {
 #' @export
 addIntervalFraction <- function(.data, lower, upper, var_name = "aaf_xd") {
   .data[[var_name]] <- computeIntervalFraction(.data, lower, upper)
+  .data
+}
+
+addIntervalFractions <- function(.data, lower, upper, grp_names) {
+  n <- length(grp_names)
+  if(!all(c(n == length(lower), n == length(upper)))) {
+    warning("Groups not processed due to length mismatch")
+    return(.data)
+  }
+  for(i in seq_len(n)) {
+    .data <- addIntervalFraction(
+      .data,
+      lower[i],
+      upper[i],
+      paste0("aaf_", grp_names[i])
+    )
+  }
   .data
 }
 

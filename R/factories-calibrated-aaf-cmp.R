@@ -41,7 +41,7 @@
 #'
 #' @export
 calibrateSlope <- function(target, mass, lb, ub) {
-  if(target <= 0) return(0)
+  if(is.na(target) | target <= 0) return(0)
 
   integrand <- function(k) function(x) mass(x) * (exp(pmax(0, k*(x-lb)))-1)
   estimate <- function(k) integrate(integrand(k), lb, ub)$value

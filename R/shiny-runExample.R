@@ -1,11 +1,15 @@
 #' Format a scenario table for shiny output
 #' @export
 formatForShinyOutput <- function(.data) {
-  .data$aaf_fd <- computeFormerFraction(.data)
-  .data$aaf_cd <- computeCurrentFraction(.data)
-  .data$aaf <- computeTotalFraction(.data)
+  .data <- addFormerFraction(.data)
+  .data <- addCurrentFraction(.data)
+  .data <- addTotalFraction(.data)
   .data[c("current_fraction", "former_fraction")] <- NULL
-  attr <- ((.data$attributability == "Wholly") / .data$aaf) + (.data$attributability == "Partially")
+  attr <-ifelse(
+    .data$aaf == 0, 1,
+    ((.data$attributability == "Wholly") / .data$aaf) +
+      (.data$attributability == "Partially")
+  )
   .data$aaf_cd <- .data$aaf_cd * attr
   .data$aaf <- .data$aaf * attr
   .data

@@ -133,6 +133,21 @@ getExpectedVars_ <- function(.obj_type) {
       "p_cd",
       "p_bd"
     ),
+    pc_display = c(
+      "region",
+      "year",
+      "gender",
+      "age_group",
+      "population",
+      "pcc_among_drinkers",
+      "gamma_shape",
+      "gamma_scale",
+      "nc",
+      "p_la",
+      "p_fd",
+      "p_cd",
+      "p_bd"
+    ),
     dh = c(
       "im",
       "region",

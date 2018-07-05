@@ -211,7 +211,7 @@ makeFractionalPolynomial <- function(betas) {
   nonzero_fp <- getFPList()[betas != 0]
   nonzero_b <- betas[betas != 0]
 
-  if(length(nonzero_b) == 0) {return(function(...) 1)}
+  if(length(nonzero_b) == 0) {return(function(x) rep(1, times = length(x)))}
 
   function(x) {
     exp(
