@@ -45,13 +45,7 @@ lowerVars <- function(.data) {
 checkVars <- function(.data, expected) {
   missing <- expected[!(expected %in% names(.data))]
   if(length(missing) > 0) {
-    message <- paste(
-      "The following variables were expected: ",
-      paste(expected, collapse = ", "),
-      "\n",
-      "The following variables were supplied: ",
-      paste(names(.data), collapse = ", ")
-    )
+    message <- "A supplied file was missing necessary variables."
     stop(message)
   }
   .data[expected]

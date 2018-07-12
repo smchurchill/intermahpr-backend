@@ -9,9 +9,9 @@ preparePC <- function(.data, ...) {
     computePopnMetrics()
 }
 
-#' Extract display variables
+#' Return PC dataset for viewing in wide format
 #' @export
-displayPC <- function(.data) {
+renderPCWide <- function(.data) {
   .data %>%
     select(getExpectedVars("pc_display")) %>%
     rename("gamma_normalizer" = "nc")

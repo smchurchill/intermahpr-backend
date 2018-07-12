@@ -43,4 +43,12 @@ scenario_analysis <- makeNewModel(rr = rr_p, pc = pc_p, dh = dh_p) %>%
   distillModel()
 
 
+tryCatch(
+  {
+    print("first")
+    stop("second")
+    print("third")
+    stop("fourth")
+  }, error = function(e) {e$message}
+)
 

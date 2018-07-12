@@ -1,6 +1,6 @@
 #' Format a scenario table for shiny output
 #' @export
-formatForShinyOutput <- function(.data) {
+renderScenarioWide <- function(.data) {
   .data <- addFormerFraction(.data)
   .data <- addCurrentFraction(.data)
   .data <- addTotalFraction(.data)
@@ -15,7 +15,10 @@ formatForShinyOutput <- function(.data) {
   .data
 }
 
+renderScenarioLong <- function(.data) {
 
+
+}
 
 #' @export
 runExample <- function() {
