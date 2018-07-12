@@ -42,9 +42,4 @@ of ethanol/day, averaged over 1yr).
 
 This conditional probability is used to portion a 1.00 AAF_TOTAL among the
 drinking population.
-
-The nonlinear optimization always estimates conservatively.  For conditions
-with observed incidence at leats 1.8 per 10,000 drinkers, the AAF will round
-to 1 within 2 decimal places.  There is no such guarantee for conditions with
-incidence less than 1.8 per 10,000 drinkers.
 }

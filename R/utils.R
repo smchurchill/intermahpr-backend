@@ -49,8 +49,8 @@ checkVars <- function(.data, expected) {
       "The following variables were expected: ",
       paste(expected, collapse = ", "),
       "\n",
-      "The following variables were missing: ",
-      paste(missing, collapse = ", ")
+      "The following variables were supplied: ",
+      paste(names(.data), collapse = ", ")
     )
     stop(message)
   }
