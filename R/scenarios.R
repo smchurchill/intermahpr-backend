@@ -87,6 +87,27 @@ addFormerFraction <- function(.data, var_name = "aaf_fd") {
   .data
 }
 
+#' Compute a given scenario's AAF for current drinkers in the given intervals of
+#' consumption, stratified over the given values of the gender variable, and add
+#' it to the scenario.
+#'
+#'@param .data a scenario
+#'@param strata a list where names(list) intersects with .data$gender, and each
+#' entry of strata is a list with a "lower" and "upper" bound of consumption
+#'@param var_name the name of the new variable to be added
+addGenderStratifiedIntervalFraction <- function(.data, lower_strata, upper_strata, var_name = "aaf_xd") {
+  .data %<>%
+    mutate(
+      x_lower = map_dbl(gender, ~`[[`(lower_strata, .x)),
+      x_upper = map_dbl(gender, ~`[[`(upper_strata, .x)))
+
+  .data$upper <- map2_dbl(.data$x_upper, .data$current_fraction , ~.y(.x))
+  .data$lower <- map2_dbl(.data$x_lower, .data$current_fraction , ~.y(.x))
+  .data[[var_name]] <- .data$upper - .data$lower
+
+  select(.data, -c("x_lower", "x_upper", "lower", "upper"))
+}
+
 #' Compute a given scenario's AAF for current drinkers in a given interval of
 #' consumption
 #' @export
