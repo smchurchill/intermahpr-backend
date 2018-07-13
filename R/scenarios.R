@@ -13,8 +13,8 @@ makeNewModel <- function(rr, pc, dh) {
   model <- bind_rows(free_rr, calibrated_rr) %>%
     select(getExpectedVars("model"))
 
-  list(model = model, scenarios = list(), rr = rr, pc = pc, dh = dh) %>%
-    makeScenario(scenario_name = "base", scale = 1)
+  list(model = model, scenarios = list(), rr = rr, pc = pc, dh = dh)
+  # %>% makeScenario(scenario_name = "Base", scale = 1)
 }
 
 #' make a scenario from a model object
@@ -96,7 +96,7 @@ addFormerFraction <- function(.data, var_name = "aaf_fd") {
 #' entry of strata is a list with a "lower" and "upper" bound of consumption
 #'@param var_name the name of the new variable to be added
 #'@export
-addGenderStratifiedIntervalFraction <- function(.data, lower_strata, upper_strata, var_name = "aaf_xd") {
+computeGenderStratifiedIntervalFraction <- function(.data, lower_strata, upper_strata) {
   .data %<>%
     mutate(
       x_lower = map_dbl(gender, ~`[[`(lower_strata, .x)),
@@ -104,9 +104,18 @@ addGenderStratifiedIntervalFraction <- function(.data, lower_strata, upper_strat
 
   .data$upper <- map2_dbl(.data$x_upper, .data$current_fraction , ~.y(.x))
   .data$lower <- map2_dbl(.data$x_lower, .data$current_fraction , ~.y(.x))
-  .data[[var_name]] <- .data$upper - .data$lower
+  .data$upper - .data$lower
+}
 
-  select(.data, -c("x_lower", "x_upper", "lower", "upper"))
+#' Compute a given scenario's AAF for current drinkers in the given intervals of
+#' consumption, stratified over the given values of the gender variable, and add
+#' it to the scenario.
+#'
+#'@inheritParams computeGenderStratifiedIntervalFraction
+#'@param var_name the name of the new variable to be added
+#'@export
+addGenderStratifiedIntervalFraction <- function(.data, lower_strata, upper_strata, var_name = "aaf_xd") {
+  .data[[var_name]] <- computeGenderStratifiedIntervalFraction(.data, lower_strata, upper_strata)
 }
 
 #' Compute a given scenario's AAF for current drinkers in a given interval of

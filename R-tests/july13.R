@@ -12,7 +12,9 @@ dh_p <- prepareDH(dh)
 
 shinymodel <- makeNewModel(rr = rr_p, pc = pc_p, dh = dh_p)
 
-base_scen <- shinymodel$scenarios$base
+shinymodel <- makeScenario(shinymodel, "Base", 1)
+
+base_scen <- shinymodel$scenarios$Base
 
 b2frac <- addGenderStratifiedIntervalFraction(
   base_scen,
