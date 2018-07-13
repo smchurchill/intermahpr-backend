@@ -95,6 +95,7 @@ addFormerFraction <- function(.data, var_name = "aaf_fd") {
 #'@param strata a list where names(list) intersects with .data$gender, and each
 #' entry of strata is a list with a "lower" and "upper" bound of consumption
 #'@param var_name the name of the new variable to be added
+#'@export
 addGenderStratifiedIntervalFraction <- function(.data, lower_strata, upper_strata, var_name = "aaf_xd") {
   .data %<>%
     mutate(
