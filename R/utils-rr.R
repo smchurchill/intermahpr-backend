@@ -4,12 +4,17 @@
 #'
 #' @export
 prepareRR <- function(.data, ext) {
+  message("Preparing relative risk input... ", appendLF = FALSE)
   .data %<>%
     clean(getExpectedVars("rr")) %>%
     crushBetas() %>%
     mutate(ext = ext) %>%
     splitOutcome() %>%
     splitGender()
+
+  message("Done")
+
+  .data
 }
 
 #' Split 'Combined' and 'Calibrated' outcomes into Morbidity and Mortality
@@ -30,15 +35,26 @@ splitOutcome <- function(.data) {
 #'
 #' @export
 splitGender <- function(.data) {
-  female <- .data %>%
-    filter(grepl("(Female|All)", gender)) %>%
-    mutate(gender = "Female")
+  assigned <- filter(.data, grepl("[^All]", gender))
+  genders <- unique(assigned$gender)
 
-  male <- .data %>%
-    filter(grepl("(Male|All)", gender)) %>%
-    mutate(gender = "Male")
+  all <- filter(.data, grepl("All", gender))
+  for(value in genders) {
+    assigned <- rbind(assigned, mutate(all, gender = value))
+  }
 
-  rbind(female, male)
+  assigned
+#
+#
+#   female <- .data %>%
+#     filter(grepl("(Female|All)", gender)) %>%
+#     mutate(gender = "Female")
+#
+#   male <- .data %>%
+#     filter(grepl("(Male|All)", gender)) %>%
+#     mutate(gender = "Male")
+#
+#   rbind(female, male)
 }
 
 #' Filter calibrated forms from the rest
@@ -75,6 +91,8 @@ crushBetas <- function(.data) {
 #' population statistics
 #' @export
 makeCalibratedFactories <- function(rr, pc, mm) {
+  message("Building and calibrating constrained factories... ", appendLF = FALSE)
+
   .data <- inner_join(
     x = rr,
     y = inner_join(
@@ -96,6 +114,10 @@ makeCalibratedFactories <- function(rr, pc, mm) {
         makeFormerCalibratedFactory
       )
     )
+
+  message("Done")
+
+  .data
 }
 
 
@@ -103,7 +125,8 @@ makeCalibratedFactories <- function(rr, pc, mm) {
 #' Factory for AAF computer factories: conditions with well-defined rel. risk
 #' @export
 makeFreeFactories <- function(.data) {
-  .data %>%
+  message("Building unconstrained factories... ", appendLF = F)
+  .data %<>%
     mutate(
       base_risk = pmap(
         list(im  = im, gender = gender, form = form, betas = betas),
@@ -143,4 +166,8 @@ makeFreeFactories <- function(.data) {
         makeFormerFreeFactory
       )
     )
+
+  message("Done")
+
+  .data
 }

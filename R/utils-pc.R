@@ -3,10 +3,14 @@
 #' Prepare Population Data
 #' @export
 preparePC <- function(.data, ...) {
-  .data %>%
+  message("Preparing prevalence and consumption input... ", appendLF = FALSE)
+  .data %<>%
     clean(getExpectedVars("pc")) %>%
     setPopnConstants(...) %>%
     computePopnMetrics()
+
+  message("Done")
+  .data
 }
 
 #' Return PC dataset for viewing in wide format
@@ -35,7 +39,6 @@ setPopnConstants <- function(
 #' @export
 computePopnMetrics <- function(.data) {
   ## Magic numbers
-  gc = list("Female" = 1.582564, "Male" = 1.371241)
   yearly_to_daily_conv = 0.002739726
   litres_to_millilitres_conv = 1000
   millilitres_to_grams_ethanol_conv = 0.7893
@@ -57,9 +60,6 @@ computePopnMetrics <- function(.data) {
         sum(relative_consumption*drinkers)
     )%>%
     ungroup %>%
-    mutate(
-      gamma_constant = map_dbl(gender, ~`[[`(gc, .x))
-    ) %>%
     mutate(
       gamma_shape = 1/gamma_constant,
       gamma_scale = gamma_constant*pcc_among_drinkers

@@ -2,13 +2,15 @@ library(tidyverse)
 library(magrittr)
 
 rr <- readr::read_csv("C:/Users/samuelch.UVIC/Documents/shiny-inputs/rr_master.csv")
-rr_p <- prepareRR(rr, T)
-
 pc <- readr::read_csv("C:/Users/samuelch.UVIC/Documents/shiny-inputs/pc_master.csv")
-pc_p <- preparePC(pc, bb = list("Female" = 10, "Male" = 15))
-
 mm <- readr::read_csv("C:/Users/samuelch.UVIC/Documents/shiny-inputs/mm_master.csv")
-mm_p <- preparemm(mm)
+
+pc_nogc <- pc
+pc_nogc$gamma_constant <- NULL
+
+rr_p <- prepareRR(rr, T)
+pc_p <- preparePC(pc_nogc, bb = list("Female" = 10, "Male" = 15))
+mm_p <- prepareMM(mm)
 
 shinymodel <- makeNewModel(rr = rr_p, pc = pc_p, mm = mm_p)
 

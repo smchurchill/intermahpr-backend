@@ -13,11 +13,12 @@
 #'
 #' @export
 clean <- function(.data, expected) {
-  .data %>%
+  .data %<>%
     lowerVars() %>%
     checkVars(expected) %>%
-    imputeMissing() %>%
-    readr::type_convert()
+    imputeMissing()
+
+  suppressMessages(readr::type_convert(.data))
 }
 
 #' Converts data variable names to lower case and returns data
@@ -45,8 +46,15 @@ lowerVars <- function(.data) {
 checkVars <- function(.data, expected) {
   missing <- expected[!(expected %in% names(.data))]
   if(length(missing) > 0) {
+    if(length(missing) ==1 && missing == "gamma_constant" && setequal(.data$gender, c("Male", "Female"))){
+      gc = list("Female" = 1.582564, "Male" = 1.371241)
+      .data %<>% mutate(
+        gamma_constant = map_dbl(gender, ~`[[`(gc, .x))
+      )
+    } else {
     message <- "A supplied file was missing necessary variables."
     stop(message)
+    }
   }
   .data[expected]
 }
@@ -117,6 +125,7 @@ getExpectedVars_ <- function(.obj_type) {
       "region",
       "year",
       "gender",
+      "gamma_constant",
       "age_group",
       "population",
       "pcc_litres_year",

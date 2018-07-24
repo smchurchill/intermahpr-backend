@@ -4,9 +4,15 @@
 #'
 #' @export
 prepareMM <- function(.data) {
-  .data %>%
+  message("Preparing morbidity and mortality input... ", appendLF = FALSE)
+
+  .data %<>%
     clean(getExpectedVars("mm")) %>%
     collapseDeprecated()
+
+  message("Done")
+
+  .data
 }
 
 
