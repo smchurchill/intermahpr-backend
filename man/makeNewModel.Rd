@@ -4,7 +4,7 @@
 \alias{makeNewModel}
 \title{Make a base interMAHP scenario}
 \usage{
-makeNewModel(rr, pc, dh)
+makeNewModel(rr, pc, mm)
 }
 \description{
 Make a base interMAHP scenario

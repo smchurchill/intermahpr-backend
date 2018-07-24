@@ -5,7 +5,7 @@
 \title{Factory for AAF computer factories: conditions requiring calibration against
 population statistics}
 \usage{
-makeCalibratedFactories(rr, pc, dh)
+makeCalibratedFactories(rr, pc, mm)
 }
 \description{
 Factory for AAF computer factories: conditions requiring calibration against
