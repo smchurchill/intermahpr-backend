@@ -1,19 +1,19 @@
 #' Make a base interMAHP scenario
 #' @export
 
-makeNewModel <- function(rr, pc, dh) {
+makeNewModel <- function(rr, pc, mm) {
   free_rr <- rr %>%
     filterFree() %>%
     makeFreeFactories() %>%
     inner_join(pc, by = c("gender"))
   calibrated_rr <- rr %>%
     filterCalibrated() %>%
-    makeCalibratedFactories(pc = pc, dh = dh)
+    makeCalibratedFactories(pc = pc, mm = mm)
 
   model <- bind_rows(free_rr, calibrated_rr) %>%
     select(getExpectedVars("model"))
 
-  list(model = model, scenarios = list(), rr = rr, pc = pc, dh = dh)
+  list(model = model, scenarios = list(), rr = rr, pc = pc, mm = mm)
   # %>% makeScenario(scenario_name = "Base", scale = 1)
 }
 

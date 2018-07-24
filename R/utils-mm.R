@@ -3,9 +3,9 @@
 #' Prepare Death/Hospitalization Data
 #'
 #' @export
-prepareDH <- function(.data) {
+prepareMM <- function(.data) {
   .data %>%
-    clean(getExpectedVars("dh")) %>%
+    clean(getExpectedVars("mm")) %>%
     collapseDeprecated()
 }
 

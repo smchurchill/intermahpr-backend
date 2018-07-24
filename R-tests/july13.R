@@ -7,10 +7,10 @@ rr_p <- prepareRR(rr, T)
 pc <- readr::read_csv("C:/Users/samuelch.UVIC/Documents/shiny-inputs/pc_master.csv")
 pc_p <- preparePC(pc, bb = list("Female" = 10, "Male" = 15))
 
-dh <- readr::read_csv("C:/Users/samuelch.UVIC/Documents/shiny-inputs/dh_master.csv")
-dh_p <- prepareDH(dh)
+mm <- readr::read_csv("C:/Users/samuelch.UVIC/Documents/shiny-inputs/mm_master.csv")
+mm_p <- preparemm(mm)
 
-shinymodel <- makeNewModel(rr = rr_p, pc = pc_p, dh = dh_p)
+shinymodel <- makeNewModel(rr = rr_p, pc = pc_p, mm = mm_p)
 
 shinymodel <- makeScenario(shinymodel, "Base", 1)
 
@@ -36,7 +36,7 @@ af <- formatForShinyOutput(shinymodel$scenarios$base)
 
 names(shinymodel$scenarios)
 
-scenario_analysis <- makeNewModel(rr = rr_p, pc = pc_p, dh = dh_p) %>%
+scenario_analysis <- makeNewModel(rr = rr_p, pc = pc_p, mm = mm_p) %>%
   makeScenarios(scenario_names = c("MUP1", "MUP2"), scales = c(0.97, 0.95)) %>%
   distillModel()
 

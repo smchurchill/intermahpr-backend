@@ -142,7 +142,7 @@ getExpectedVars_ <- function(.obj_type) {
       "p_cd",
       "p_bd"
     ),
-    dh = c(
+    mm = c(
       "im",
       "region",
       "year",

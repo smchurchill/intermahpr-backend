@@ -74,11 +74,11 @@ crushBetas <- function(.data) {
 #' Factory for AAF computer factories: conditions requiring calibration against
 #' population statistics
 #' @export
-makeCalibratedFactories <- function(rr, pc, dh) {
+makeCalibratedFactories <- function(rr, pc, mm) {
   .data <- inner_join(
     x = rr,
     y = inner_join(
-      x = pc, y = dh, by = c("region", "year", "gender", "age_group")
+      x = pc, y = mm, by = c("region", "year", "gender", "age_group")
     ),
     by = c("im", "gender", "outcome")
     ) %>%
