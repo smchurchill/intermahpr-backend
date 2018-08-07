@@ -53,7 +53,8 @@ makeScenario <- function(.data, scenario_name = NA, scale) {
       )
     ) %>%
     select(getExpectedVars("scenario"))
-  ## TODO: Add youngest x-y (into) 0-(x-1) agegroup.  partially/former = 0,
+  ## TODO: Add youngest x-y (into) 0-(x-1) agegroup.
+  ## partially/former = 0,
   ## wholly = copy
 
   if(is.na(scenario_name)) scenario_name <- paste0("rescale_by_", scale)
@@ -182,10 +183,10 @@ addTotalFraction <- function(.data, var_name = "aaf") {
 distillModel <- function(.data) {
   scenarios <- .data$scenarios
   master_name_list <- names(scenarios)
-  aaf_name_list <- paste0("aaf_", master_name_list)
+  aaf_name_list <- paste0("AAF: ", master_name_list)
   for(name in master_name_list) {
     scenario <- scenarios[[name]]
-    scenario <- addTotalFraction(scenario, var_name = paste0("aaf_", name)) %>%
+    scenario <- addTotalFraction(scenario, var_name = paste0("AAF: ", name)) %>%
       select(-contains("_fraction"))
     scenarios[[name]] <- scenario
   }
@@ -196,15 +197,15 @@ distillModel <- function(.data) {
   attr <- (reduction$attributability == "Wholly")
 
   for(i in 2:length(master_name_list)) {
-    reduction[[paste0("adj_", master_name_list[i])]] <-
-      reduction[[aaf_name_list[i]]] / reduction[["aaf_base"]]
+    reduction[[paste0("Relative AAF: ", master_name_list[i])]] <-
+      reduction[[aaf_name_list[i]]] / reduction[["AAF: Base"]]
 
     reduction[[aaf_name_list[i]]] <-
       ifelse(attr, 1, reduction[[aaf_name_list[i]]])
   }
 
-  reduction$aaf_base <-
-    ifelse(attr, 1, reduction$aaf_base)
+  reduction$`AAF: Base` <-
+    ifelse(attr, 1, reduction$`AAF: Base`)
 
   reduction
 }
