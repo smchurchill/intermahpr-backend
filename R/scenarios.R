@@ -57,8 +57,25 @@ makeScenario <- function(.data, scenario_name = NA, scale) {
   ## partially/former = 0,
   ## wholly = copy
 
+  young <- queryYoung(.data)
 
+  if(!is.null(young)) {
+    young_scenario <- filter(new_scenario, age_group == young$young) %>%
+      mutate(
+        age_group = young$missing,
+        current_fraction = map2(
+          im, current_fraction,
+          ~switch(
+            checkAttributability(.x),
+            "Partially" = function(...) 0,
+            "Wholly" = .y
+          )
+        ),
+        former_fraction = map(former_fraction, ~function(...) 0)
+      )
 
+    new_scenario <- bind_rows(young_scenario, new_scenario)
+  }
 
   if(is.na(scenario_name)) scenario_name <- paste0("rescale_by_", scale)
 
@@ -67,13 +84,25 @@ makeScenario <- function(.data, scenario_name = NA, scale) {
   .data
 }
 
-youngest_groups <- function(groups) {
-  cuts <- gsub("([0-9]+)[[:punct:]].*", "\\1", groups) %>%
-    as.numeric %>%
-    unique %>%
-    sort
+#' Get age-groups present in morbidity/mortality dataset but absent in prev-cons
+#' dataset.
+#'
+#' @export
+queryYoung <- function(.data) {
+  mm_groups <- unique(.data$mm$age_group)
+  pc_groups <- unique(.data$pc$age_group)
 
-  list(paste0("00-", cuts[1]-1), paste0(cuts[1], "-", cuts[2]))
+  missing <- setdiff(mm_groups, pc_groups)
+
+  if(length(missing) == 0) {
+    return(NULL)
+  } else if(length(missing) > 1) {
+    missing <- sort(missing)[1]
+  }
+
+  young <- sort(pc_groups)[1]
+
+  list(missing = missing, young = young)
 }
 
 #' make multiple scenarios
