@@ -1,6 +1,6 @@
 Package: intermahpr
 Title: The International Model of Alcohol Harms and Policies
-Version: 0.0.1.9000
+Version: 0.0.2.0
 Authors@R:
   person(
     "Sam",
@@ -10,22 +10,20 @@ Authors@R:
   )
 Description:
   R Implementation of CISUR's International Model of Alcohol Harms and Policies.
-  Backend to shiny-intermahpr.  Includes base functionality of Group-stratified 
-  AAF Computation along with application to user-input Morbididty/Mortality 
-  counts and comparison of expected consumption scenarios.
+  Intended mainly as a backend to the iInterMAHP shiny app.
+  Includes base functionality of group-stratified AAF Computation along with
+  application to user-input Morbididty/Mortality counts and comparison of
+  expected consumption scenarios.
 Imports:
-  nloptr,
-  tidyr,
-  reshape2,
-  magrittr,
-  tibble,
-  dplyr,
-  readr,
-  purrr,
-  shiny,
-  shinyjs
+  nloptr (>= 1.0.4),
+  tidyr (>= 0.8.1),
+  reshape2 (>= 1.4.3),
+  magrittr (>= 1.5),
+  tibble (>= 1.4.2),
+  dplyr (>= 0.7.5),
+  readr (>= 1.1.1),
+  purrr (>= 0.2.5)
 License: Creative Commons
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1
-Suggests: testthat

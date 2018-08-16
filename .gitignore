@@ -2,3 +2,7 @@
 .Rhistory
 .RData
 dep/
+R-tests/
+tests/
+dep/
+data-raw/
