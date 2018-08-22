@@ -64,9 +64,9 @@ makeScenario <- function(.data, scenario_name = NA, scale) {
       mutate(
         age_group = young$missing,
         current_fraction = map2(
-          im, current_fraction,
+          attributability, current_fraction,
           ~switch(
-            checkAttributability(.x),
+            .x,
             "Partially" = function(...) 0,
             "Wholly" = .y
           )

@@ -133,7 +133,7 @@ makeFreeFactories <- function(.data) {
         makeBaseRisk
       )
     ) %>%
-    mutate(x1 = ifelse(grepl("5...2", im), 50, 100)) %>%
+    mutate(x1 = ifelse(grepl("5...[2ZR]", im), 50, 100)) %>%
     mutate(x2 = x1 + 50) %>%
     mutate(y1 = map2_dbl(x1, base_risk, ~.y(.x)),
            y2 = map2_dbl(x2, base_risk, ~.y(.x))) %>%

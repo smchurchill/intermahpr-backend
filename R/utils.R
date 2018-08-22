@@ -95,15 +95,6 @@ isMissing <- function(obs) {
   is.na(obs) | is.null(obs) | obs == "."
 }
 
-#' Check the attributability of a given vector of intermahp codes
-#'
-#' Uses internal master attributability list (see rr_master)
-#'
-#' @export
-checkAttributability <- function(im) {
-  attr_master[im]
-}
-
 #' Get variables expected to be in the given object type
 #'
 #'
