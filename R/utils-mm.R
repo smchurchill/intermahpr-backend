@@ -16,6 +16,9 @@ prepareMM <- function(.data) {
 }
 
 
+#' Collapse deprecated IM designations
+#'
+#'
 collapseDeprecated <- function(.data) {
   .data %>%
     mutate(im = substring(text = im, first = 1, last = 7)) %>%

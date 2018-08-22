@@ -28,7 +28,6 @@ renderPCWide <- function(.data) {
 #'@param lb lower bound of consumption
 #'@param ub upper bound of consumption
 #'
-#' @export
 setPopnConstants <- function(
   .data, bb = list("Female" = 53.8, "Male" = 67.25), lb = 0.03, ub = 250
 ) {
@@ -36,9 +35,8 @@ setPopnConstants <- function(
 }
 
 #' Compute Population Metrics
-#' @export
 computePopnMetrics <- function(.data) {
-  ## Magic numbers
+  ## 'Magic' numbers
   yearly_to_daily_conv = 0.002739726
   litres_to_millilitres_conv = 1000
   millilitres_to_grams_ethanol_conv = 0.7893
@@ -99,7 +97,6 @@ computePopnMetrics <- function(.data) {
 #'
 #'@return Rescaled consumption data (just pc_vars)
 #'
-#' @export
 rescale <- function(.data, scale = 1) {
   base <- computePopnMetrics(.data)
 

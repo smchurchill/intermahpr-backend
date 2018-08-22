@@ -87,7 +87,6 @@ makeScenario <- function(.data, scenario_name = NA, scale) {
 #' Get age-groups present in morbidity/mortality dataset but absent in prev-cons
 #' dataset.
 #'
-#' @export
 queryYoung <- function(.data) {
   mm_groups <- unique(.data$mm$age_group)
   pc_groups <- unique(.data$pc$age_group)
@@ -167,14 +166,17 @@ computeIntervalFraction <- function(.data, lower = -Inf, upper = Inf) {
   map_dbl(.data$current_fraction, ~.x(upper) - .x(lower))
 }
 
-#' Compute a given scenario's AAF for current drinkers in a given interval of
-#' consumption and adds it to the scenario
+#' Compute a given scenario's AAF over the given interval (not gender
+#'  stratified) and add it to the scenario
 #' @export
 addIntervalFraction <- function(.data, lower, upper, var_name = "aaf_xd") {
   .data[[var_name]] <- computeIntervalFraction(.data, lower, upper)
   .data
 }
 
+#' Compute a given scenario's AAF over the given intervals (not gender
+#'  stratified) and add it to the scenario
+#' @export
 addIntervalFractions <- function(.data, lower, upper, grp_names) {
   n <- length(grp_names)
   if(!all(c(n == length(lower), n == length(upper)))) {

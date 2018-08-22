@@ -8,7 +8,6 @@
 #'@param shape,scale Gamma parameters for dgamma
 #'
 #'
-#' @export
 makeGamma <- function(shape, scale) {
   function(x) dgamma(x, shape = shape, scale = scale)
 }
@@ -19,7 +18,6 @@ makeGamma <- function(shape, scale) {
 #'@param factor Factor to scale distribution by
 #'
 #'
-#' @export
 makeNormalizedGamma <- function(shape, scale, factor) {
   function(x) factor * dgamma(x, shape = shape, scale = scale)
 }

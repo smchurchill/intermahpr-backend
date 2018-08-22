@@ -18,7 +18,6 @@ prepareRR <- function(.data, ext) {
 }
 
 #' Split 'Combined' and 'Calibrated' outcomes into Morbidity and Mortality
-#' @export
 splitOutcome <- function(.data) {
   morb <- .data %>%
     filter(grepl("(Morbidity|Calibrated|Combined)", outcome)) %>%
@@ -33,7 +32,6 @@ splitOutcome <- function(.data) {
 
 #' Split 'All' genders into 'Female' and 'Male'
 #'
-#' @export
 splitGender <- function(.data) {
   assigned <- filter(.data, grepl("[^All]", gender))
   genders <- unique(assigned$gender)
@@ -44,17 +42,6 @@ splitGender <- function(.data) {
   }
 
   assigned
-#
-#
-#   female <- .data %>%
-#     filter(grepl("(Female|All)", gender)) %>%
-#     mutate(gender = "Female")
-#
-#   male <- .data %>%
-#     filter(grepl("(Male|All)", gender)) %>%
-#     mutate(gender = "Male")
-#
-#   rbind(female, male)
 }
 
 #' Filter calibrated forms from the rest
@@ -75,7 +62,6 @@ filterFree <- function(.data) {
 #' Assumes numbered variables are al of numeric type.
 #' New variable is named 'betas'.
 #'
-#' @export
 crushBetas <- function(.data) {
   crush <- .data[grep("[0-9]$", names(.data))]
   .data <- .data[-grep("[0-9]", names(.data))]

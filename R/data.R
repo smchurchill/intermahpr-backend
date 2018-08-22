@@ -2,88 +2,35 @@
 
 #' Default Prevalence and Consumption Data
 #'
-#' Default prevalence and consumption data from BC and Canada, 2015.
+#' Default prevalence and consumption data for Canada, 2007-2016.
 #' Standard formatting is described in the InterMAHP user guides
 #'
 #' @docType data
+#' @usage data(intermahpr_sample_pc)
 #'
-#' @usage data(pc_default)
 #'
-#'
-"pc_default"
+"intermahpr_sample_pc"
 
-#' Default Prevalence and Consumption Data restricted to BC
-#'
-#' Default prevalence and consumption data from BC, 2015.
-#' Standard formatting is described in the InterMAHP user guides
-#'
-#' @docType data
-#'
-#' @usage data(pc_bc)
-#'
-#'
-"pc_bc"
-
-#' Default Prevalence and Consumption Data restricted to Canada
-#'
-#' Default prevalence and consumption data from Canada, 2015.
-#' Standard formatting is described in the InterMAHP user guides
-#'
-#' @docType data
-#'
-#' @usage data(pc_can)
-#'
-#'
-"pc_can"
-
-#' Default Prevalence and Consumption Data
-#'
-#' Default prevalence and consumption data from BC and Canada, 2015.
-#' Standard formatting is described in the InterMAHP user guides
-#'
-#' @docType data
-#'
-#' @usage data(pc_bc_can)
-#'
-#'
-"pc_bc_can"
-
-#' Default Relative Risk Curve Definition
+#' Default Relative Risk Curve Data
 #'
 #' Default input to generate relative risk curves.  Standard formatting is
 #' described in the InterMAHP user guides
 #'
 #'@docType data
-#'@usage data(rr_default)
+#'@usage data(intermahpr_sample_rr)
 #'
 #'
-"rr_default"
+"intermahpr_sample_rr"
 
-#' Default Relative Risk Curves with Zhao IHD treatment
+
+#' Default Morbidity and Mortality Data
 #'
-#' Default input to generate relative risk curves, uses Zhao IHD treatment.
+#' Default morbidity and mortality data for Canada, 2007-2016.  Obtained from
+#' CANSIM databases.
 #' Standard formatting is described in the InterMAHP user guides
 #'
 #'@docType data
-#'@usage data(rr_zhao)
+#'@usage data(intermahpr_sample_mm)
 #'
 #'
-"rr_zhao"
-
-#' Default Relative Risk Curves with Roerecke IHD treatment
-#'
-#' Default input to generate relative risk curves, uses Roerecke IHD treatment.
-#' Standard formatting is described in the InterMAHP user guides
-#'
-#'@docType data
-#'@usage data(rr_roerecke)
-#'
-#'
-"rr_roerecke"
-
-#' Master rr list for Version 2 and beyond
-#'
-#' @docType data
-#' @usage data(rr_master)
-#'
-"rr_master"
+"intermahpr_sample_mm"
