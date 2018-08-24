@@ -30,7 +30,7 @@ splitOutcome <- function(.data) {
   rbind(morb, mort)
 }
 
-#' Split 'All' genders into 'Female' and 'Male'
+#' Split 'All' genders into specified levels
 #'
 splitGender <- function(.data) {
   assigned <- filter(.data, grepl("[^All]", gender))
@@ -45,12 +45,18 @@ splitGender <- function(.data) {
 }
 
 #' Filter calibrated forms from the rest
+#'
+#' Exported for use in shiny app
+#'
 #' @export
 filterCalibrated <- function(.data) {
   filter(.data, form == "Calibrated")
 }
 
-#' Filter well-defined forms from the rest
+#' Filter well-defined (i.e. "free") forms from the rest
+#'
+#' Exported for use in shiny app
+#'
 #' @export
 filterFree <- function(.data) {
   filter(.data, form != "Calibrated")
@@ -75,6 +81,9 @@ crushBetas <- function(.data) {
 
 #' Factory for AAF computer factories: conditions requiring calibration against
 #' population statistics
+#'
+#' Exported for use in shiny app
+#'
 #' @export
 makeCalibratedFactories <- function(rr, pc, mm) {
   message("Building and calibrating constrained factories... ", appendLF = FALSE)
@@ -109,6 +118,9 @@ makeCalibratedFactories <- function(rr, pc, mm) {
 
 
 #' Factory for AAF computer factories: conditions with well-defined rel. risk
+#'
+#' Exported for use in shiny app
+#'
 #' @export
 makeFreeFactories <- function(.data) {
   message("Building unconstrained factories... ", appendLF = F)

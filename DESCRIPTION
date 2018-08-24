@@ -10,7 +10,7 @@ Authors@R:
   )
 Description:
   R Implementation of CISUR's International Model of Alcohol Harms and Policies.
-  Intended mainly as a backend to the iInterMAHP shiny app.
+  Intended mainly as a backend to the InterMAHP shiny app.
   Includes base functionality of group-stratified AAF Computation along with
   application to user-input Morbididty/Mortality counts and comparison of
   expected consumption scenarios.

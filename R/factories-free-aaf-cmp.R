@@ -1,7 +1,9 @@
 #### Well-defined AAF Computer Factories ---------------------------------------
 
 #' Factory for current drinker's AAF computer factory for a condition with
-#'  well-defined relative risk
+#' well-defined relative risk
+#'
+#' Exported for use in shiny app
 #'
 #' @export
 makeCurrentFreeFactory <- function(ext_risk, binge_risk, rr_fd) {
@@ -20,6 +22,8 @@ makeCurrentFreeFactory <- function(ext_risk, binge_risk, rr_fd) {
 
 #' Factory for former drinker's AAF computer factory for a condition with
 #' well-defined relative risk
+#'
+#' Exported for use in shiny app
 #'
 #' @export
 makeFormerFreeFactory <- function(ext_risk, binge_risk, rr_fd) {
