@@ -7,5 +7,5 @@
 makeFreeFactories(.data)
 }
 \description{
-Factory for AAF computer factories: conditions with well-defined rel. risk
+Exported for use in shiny app
 }

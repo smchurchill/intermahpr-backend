@@ -2,10 +2,10 @@
 % Please edit documentation in R/utils-rr.R
 \name{splitGender}
 \alias{splitGender}
-\title{Split 'All' genders into 'Female' and 'Male'}
+\title{Split 'All' genders into specified levels}
 \usage{
 splitGender(.data)
 }
 \description{
-Split 'All' genders into 'Female' and 'Male'
+Split 'All' genders into specified levels
 }

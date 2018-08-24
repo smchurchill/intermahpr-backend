@@ -8,6 +8,5 @@ population statistics}
 makeCalibratedFactories(rr, pc, mm)
 }
 \description{
-Factory for AAF computer factories: conditions requiring calibration against
-population statistics
+Exported for use in shiny app
 }

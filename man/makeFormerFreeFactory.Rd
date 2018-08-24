@@ -8,6 +8,5 @@ well-defined relative risk}
 makeFormerFreeFactory(ext_risk, binge_risk, rr_fd)
 }
 \description{
-Factory for former drinker's AAF computer factory for a condition with
-well-defined relative risk
+Exported for use in shiny app
 }

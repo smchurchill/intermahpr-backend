@@ -7,5 +7,5 @@
 filterCalibrated(.data)
 }
 \description{
-Filter calibrated forms from the rest
+Exported for use in shiny app
 }

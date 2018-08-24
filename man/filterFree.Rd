@@ -2,10 +2,10 @@
 % Please edit documentation in R/utils-rr.R
 \name{filterFree}
 \alias{filterFree}
-\title{Filter well-defined forms from the rest}
+\title{Filter well-defined (i.e. "free") forms from the rest}
 \usage{
 filterFree(.data)
 }
 \description{
-Filter well-defined forms from the rest
+Exported for use in shiny app
 }
