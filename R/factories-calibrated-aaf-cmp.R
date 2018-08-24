@@ -1,3 +1,6 @@
+## intermahpr - R package backend for the intermahp shiny app
+## Copyright (C) 2018 Samuel Churchill
+
 #### Incidence Calibraition ----------------------------------------------------
 
 #' Calibrate a loglinear Slope

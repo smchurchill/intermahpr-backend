@@ -2,10 +2,10 @@
 % Please edit documentation in R/utils-mm.R
 \name{prepareMM}
 \alias{prepareMM}
-\title{Prepare Death/Hospitalization Data}
+\title{Prepare Morb/Mort Data}
 \usage{
 prepareMM(.data)
 }
 \description{
-Prepare Death/Hospitalization Data
+Prepare Morb/Mort Data
 }

@@ -2,10 +2,10 @@
 % Please edit documentation in R/scenarios.R
 \name{makeNewModel}
 \alias{makeNewModel}
-\title{Make a base interMAHP scenario}
+\title{Construct a new intermahp model object}
 \usage{
 makeNewModel(rr, pc, mm)
 }
 \description{
-Make a base interMAHP scenario
+Construct a new intermahp model object
 }

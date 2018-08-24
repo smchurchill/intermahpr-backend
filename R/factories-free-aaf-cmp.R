@@ -1,3 +1,6 @@
+## intermahpr - R package backend for the intermahp shiny app
+## Copyright (C) 2018 Samuel Churchill
+
 #### Well-defined AAF Computer Factories ---------------------------------------
 
 #' Factory for current drinker's AAF computer factory for a condition with

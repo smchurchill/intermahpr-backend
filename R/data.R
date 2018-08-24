@@ -1,3 +1,6 @@
+## intermahpr - R package backend for the intermahp shiny app
+## Copyright (C) 2018 Samuel Churchill
+
 #### Data ----------------------------------------------------------------------
 
 #' Default Prevalence and Consumption Data

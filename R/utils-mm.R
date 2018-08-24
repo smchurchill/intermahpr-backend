@@ -1,6 +1,9 @@
-#### Deaths/Hosps Specific Data Carpentry --------------------------------------
+## intermahpr - R package backend for the intermahp shiny app
+## Copyright (C) 2018 Samuel Churchill
 
-#' Prepare Death/Hospitalization Data
+#### Morbidity and Mortality  Specific Data Carpentry --------------------------
+
+#' Prepare Morb/Mort Data
 #'
 #' @export
 prepareMM <- function(.data) {

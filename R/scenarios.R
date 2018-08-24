@@ -1,4 +1,9 @@
-#' Make a base interMAHP scenario
+## intermahpr - R package backend for the intermahp shiny app
+## Copyright (C) 2018 Samuel Churchill
+
+#### Model and scenario interface ----------------------------------------------
+
+#' Construct a new intermahp model object
 #' @export
 
 makeNewModel <- function(rr, pc, mm) {
