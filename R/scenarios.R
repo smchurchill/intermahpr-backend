@@ -1,5 +1,5 @@
 ## intermahpr - R package backend for the intermahp shiny app
-## Copyright (C) 2018 Samuel Churchill
+## Copyright (C) 2018 Canadian Institute for Substance Use Research
 
 #### Model and scenario interface ----------------------------------------------
 
