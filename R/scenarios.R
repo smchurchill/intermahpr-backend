@@ -84,6 +84,8 @@ makeScenario <- function(.data, scenario_name = NA, scale) {
 
   if(is.na(scenario_name)) scenario_name <- paste0("rescale_by_", scale)
 
+  new_scenario %<>% arrange(region, year, gender, age_group, im)
+
   .data$scenarios[[scenario_name]] <- new_scenario
 
   .data
@@ -98,7 +100,7 @@ queryYoung <- function(.data) {
 
   missing <- setdiff(mm_groups, pc_groups)
 
-  if(length(missing) == 0) {
+  if(length(missing) == 0 || missing == "None") {
     return(NULL)
   } else if(length(missing) > 1) {
     missing <- sort(missing)[1]
