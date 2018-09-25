@@ -47,8 +47,8 @@ lowerVars <- function(.data) {
 checkVars <- function(.data, expected) {
   missing <- expected[!(expected %in% names(.data))]
   if(length(missing) > 0) {
-    if(length(missing) ==1 && missing == "gamma_constant" && setequal(.data$gender, c("Male", "Female"))){
-      gc = list("Female" = 1.582564, "Male" = 1.371241)
+    if(length(missing) == 1 && missing == "gamma_constant" && setequal(.data$gender, c("Male", "Female"))){
+      gc = list("Female" = 1.258, "Male" = 1.171)
       .data %<>% mutate(
         gamma_constant = map_dbl(gender, ~`[[`(gc, .x))
       )
