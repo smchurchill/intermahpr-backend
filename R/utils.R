@@ -47,13 +47,16 @@ lowerVars <- function(.data) {
 checkVars <- function(.data, expected) {
   missing <- expected[!(expected %in% names(.data))]
   if(length(missing) > 0) {
-    if(length(missing) == 1 && missing == "gamma_constant" && setequal(.data$gender, c("Male", "Female"))){
-      gc = list("Female" = 1.258, "Male" = 1.171)
+    if(length(missing) == 2 && setequal(missing, c("gamma_constant", "gamma_stderror")) && setequal(.data$gender, c("Male", "Female"))){
+      gc = list("Female" = 1.258, "Male" = 1.171) # Means, Kehoe et al. (2012)
+      gs = list("Female" = (1.293-1.223) / 2 / 1.96,
+                "Male" = (1.197 - 1.144) / 2 / 1.96) # Bounds on 95% CI, Kehoe et al. (2012)
       .data %<>% mutate(
-        gamma_constant = map_dbl(gender, ~`[[`(gc, .x))
+        gamma_constant = map_dbl(gender, ~`[[`(gc, .x)),
+        gamma_stderror = map_dbl(gender, ~`[[`(gs, .x))
       )
     } else {
-    message <- "A supplied file was missing necessary variables."
+    message <- paste("A supplied file was missing necessary variables:", missing)
     stop(message)
     }
   }
@@ -121,6 +124,7 @@ getExpectedVars_ <- function(.obj_type) {
       "year",
       "gender",
       "gamma_constant",
+      "gamma_stderror",
       "age_group",
       "population",
       "pcc_litres_year",
