@@ -8,6 +8,7 @@
 #' @export
 prepareRR <- function(.data, ext) {
   message("Preparing relative risk input... ", appendLF = FALSE)
+
   .data %<>%
     clean(getExpectedVars("rr")) %>%
     crushBetas() %>%

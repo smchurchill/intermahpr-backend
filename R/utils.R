@@ -47,6 +47,14 @@ lowerVars <- function(.data) {
 checkVars <- function(.data, expected) {
   missing <- expected[!(expected %in% names(.data))]
   if(length(missing) > 0) {
+
+    ## This logic is getting a bit convoluted.
+    ##
+    ## The idea behind this is to make it easier to adapt intermahp to future
+    ## research in distributions that describe group drinking patterns.
+    ## Currently, if there are no gamma_constant or gamma_stderror variables,
+    ## but the supplied genders are "Female" and "Male", intermahpr will supply
+    ## relationships for the assumed gamma distribution.
     if(length(missing) == 2 && setequal(missing, c("gamma_constant", "gamma_stderror")) && setequal(.data$gender, c("Male", "Female"))){
       gc = list("Female" = 1.258, "Male" = 1.171) # Means, Kehoe et al. (2012)
       gs = list("Female" = (1.293-1.223) / 2 / 1.96,
@@ -55,9 +63,22 @@ checkVars <- function(.data, expected) {
         gamma_constant = map_dbl(gender, ~`[[`(gc, .x)),
         gamma_stderror = map_dbl(gender, ~`[[`(gs, .x))
       )
+    } else if (length(missing) == 1 && setequal(missing, c("gamma_constant")) && setequal(.data$gender, c("Male", "Female"))) {
+      gc = list("Female" = 1.258, "Male" = 1.171) # Means, Kehoe et al. (2012)
+      .data %<>% mutate(
+        gamma_constant = map_dbl(gender, ~`[[`(gc, .x))
+      )
+    } else if (length(missing) == 1 && setequal(missing, c("gamma_stderror")) && setequal(.data$gender, c("Male", "Female"))) {
+      gs = list("Female" = (1.293-1.223) / 2 / 1.96,
+                "Male" = (1.197 - 1.144) / 2 / 1.96) # Bounds on 95% CI, Kehoe et al. (2012)
+      .data %<>% mutate(
+        gamma_stderror = map_dbl(gender, ~`[[`(gs, .x))
+      )
     } else {
-    message <- paste("A supplied file was missing necessary variables:", missing)
-    stop(message)
+      missing <- setdiff(missing,  c("gamma_constant", "gamma_stderror"))
+      msg <- c("A supplied table was missing necessary variables:\n", paste0("\t", missing, "\n"))
+      message(msg)
+      stop(msg)
     }
   }
   .data[expected]
