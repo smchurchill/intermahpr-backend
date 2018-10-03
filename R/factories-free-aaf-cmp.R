@@ -53,6 +53,7 @@ makeCurrentFreeComponentFactory <- function(ext_risk, binge_risk) {
       bb = args$bb,
       non_bingers = args$non_bingers,
       bingers = args$bingers,
+      p_bat_error_correction = args$p_bat_error_correction,
       ext_risk = ext_risk,
       binge_risk = binge_risk)
     integrand <- args$mass %prod% preventable_fraction
@@ -86,10 +87,10 @@ makeFormerFreeComponentFactory <- function(rr_fd){
 #'
 #'
 makePreventableFraction <- function(
-  bb, non_bingers, bingers, ext_risk, binge_risk
+  bb, non_bingers, bingers, p_bat_error_correction, ext_risk, binge_risk
 ) {
   function(x) {
     (x<=bb)*(non_bingers*(ext_risk(x)-1) + bingers*(binge_risk(x)-1)) +
-    (x>bb)*(binge_risk(x)-1)
+    (x>bb)*(p_bat_error_correction*(binge_risk(x)-1))
   }
 }

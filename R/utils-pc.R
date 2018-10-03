@@ -71,6 +71,11 @@ computePopnMetrics <- function(.data) {
       gub = pgamma(q = ub, shape = gamma_shape, scale = gamma_scale)
     ) %>%
     mutate(
+      ## For low consumption regions, integral may converge when full area of
+      ## the gamma distribution is below binge level
+      ub = ifelse(gbb == 1, bb, ub)
+    ) %>%
+    mutate(
       nc = gub - glb
     ) %>%
     mutate(
@@ -84,9 +89,18 @@ computePopnMetrics <- function(.data) {
       p_bat = df * (gub - gbb)
     ) %>%
     mutate(
+      ## p_bat is "bingers above threshold", i.e. daily bingers on average.
+      ## If p_bat >= p_bd, we must fix this by deflating the tail of the gamma
+      ## distribution above the binge barrier and setting p_bat equal to p_bd.
+      p_bat_error_correction = ifelse(p_bat > p_bd, p_bd / p_bat, 1),
+      p_bat = ifelse(p_bat > p_bd, p_bd, p_bat)
+    ) %>%
+    mutate(
       n_pgamma = pmap(list(f = n_gamma, lb = lb), makeIntegrator)
     ) %>%
     mutate(
+      ## proportion of nonbingers and bingers "below threshold", i.e.
+      ## that are not daily bingers on average.
       non_bingers = (p_cd - p_bd)  / (p_cd - p_bat),
       bingers = (p_bd - p_bat) / (p_cd - p_bat)
     )
@@ -106,6 +120,13 @@ rescale <- function(.data, scale = 1) {
   .data %>%
     mutate(pcc_litres_year = scale * pcc_litres_year) %>%
     computePopnMetrics() %>%
-    mutate(p_bd = p_bd * p_bat / base$p_bat) %>%
+    mutate(
+      ## We're ensuring the ratio of bingers above threshold satys the same,
+      ## so if either p_bat is 0 we just hold p_bd constant.
+      p_bd = ifelse(
+        base$p_bat > 0 & p_bat > 0,
+        p_bd * p_bat / base$p_bat,
+        p_bd)
+      ) %>%
     select(getExpectedVars("pc", "constants"))
 }

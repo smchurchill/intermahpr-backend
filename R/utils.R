@@ -230,7 +230,7 @@ makeIntegrator <- function(f, lb, ub) {
   integrate_up_to <- function(to) {
     if(to <= lb) to = lb
     if(to >= ub) to = ub
-    integrate(f = f, lower = lb, upper = to)$value
+    integrate(f = f, lower = lb, upper = to, abs.tol = 10E-6, subdivisions = 100L)$value
   }
 
   function(x) {

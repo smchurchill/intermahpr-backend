@@ -37,6 +37,7 @@ makeScenario <- function(.data, scenario_name = NA, scale) {
           mass = n_gamma,
           non_bingers = non_bingers,
           bingers = bingers,
+          p_bat_error_correction = p_bat_error_correction,
           lb = lb,
           bb = bb,
           ub = ub),

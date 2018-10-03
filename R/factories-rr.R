@@ -71,7 +71,7 @@ makeExtrapolatedRisk <- function(base_risk, x2, y2, slope) {
 #'
 makeBingeRisk <- function(im, bingef, ext_risk) {
   min_risk <- 0
-  if(grepl("^.5...[2RZ5].", im)) {min_risk <- 1}
+  if(grepl("^.5...[2RZ6].", im)) {min_risk <- 1}
 
   function(x) {bingef*pmax(min_risk, ext_risk(x))}
 }
