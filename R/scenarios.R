@@ -245,18 +245,38 @@ distillModel <- function(.data) {
   by_vars <- getExpectedVars("distill_by")
   reduction <- reduce(scenarios, left_join, by = by_vars)
 
-  attr <- (reduction$attributability == "Wholly")
+  ## We form adjustments from base total aafs
+  ## Provide adjustment ratios to estimate harms for alternative scenarios
+  ## For wholly attributable conditions, this is 1 / base aaf total
+  ## For partially attributable conditions, this is (1 - base_aaf) / (1 - scenario_aaf),
+  base_total <- reduction[["AAF: Base"]]
+
+  ## Adjustments are different for wholly and partially attributable conditions,
+  ## so we get this data once
+  r.attr <- (reduction$attributability == "Wholly")
+
+  ## 0 aafs can occur under some computation circumstances for both partially
+  ## and wholly attributable conditions.  They are fine when adjusting partial
+  ## conditions but must be replaced for whole conditions.
+  base_total <- ifelse(
+    (base_total == 0) & (reduction$attributability == "Wholly"),
+    1, base_total
+  )
 
   for(i in 2:length(master_name_list)) {
     reduction[[paste0("Relative AAF: ", master_name_list[i])]] <-
-      reduction[[aaf_name_list[i]]] / reduction[["AAF: Base"]]
+      ifelse(
+        r.attr,
+        reduction[[aaf_name_list[i]]] / base_total,
+        (1 - base_total) / (1 - reduction[[aaf_name_list[i]]])
+      )
 
     reduction[[aaf_name_list[i]]] <-
-      ifelse(attr, 1, reduction[[aaf_name_list[i]]])
+      ifelse(r.attr, 1, reduction[[aaf_name_list[i]]])
   }
 
   reduction$`AAF: Base` <-
-    ifelse(attr, 1, reduction$`AAF: Base`)
+    ifelse(r.attr, 1, reduction$`AAF: Base`)
 
   reduction
 }
