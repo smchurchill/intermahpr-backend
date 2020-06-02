@@ -4,7 +4,14 @@
 \alias{makePreventableFraction}
 \title{Factory for preventable fraction functions}
 \usage{
-makePreventableFraction(bb, non_bingers, bingers, ext_risk, binge_risk)
+makePreventableFraction(
+  bb,
+  non_bingers,
+  bingers,
+  p_bat_error_correction,
+  ext_risk,
+  binge_risk
+)
 }
 \arguments{
 \item{bb}{dbl, binge barrier}

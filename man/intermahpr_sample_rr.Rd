@@ -4,7 +4,9 @@
 \name{intermahpr_sample_rr}
 \alias{intermahpr_sample_rr}
 \title{Default Relative Risk Curve Data}
-\format{An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 67 rows and 24 columns.}
+\format{
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 67 rows and 24 columns.
+}
 \usage{
 data(intermahpr_sample_rr)
 }
