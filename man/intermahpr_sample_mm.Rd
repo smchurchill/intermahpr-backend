@@ -4,7 +4,9 @@
 \name{intermahpr_sample_mm}
 \alias{intermahpr_sample_mm}
 \title{Default Morbidity and Mortality Data}
-\format{An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 3360 rows and 7 columns.}
+\format{
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 3360 rows and 7 columns.
+}
 \usage{
 data(intermahpr_sample_mm)
 }

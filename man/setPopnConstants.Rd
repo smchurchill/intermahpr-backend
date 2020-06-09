@@ -4,8 +4,12 @@
 \alias{setPopnConstants}
 \title{Set Population Constants}
 \usage{
-setPopnConstants(.data, bb = list(Female = 53.8, Male = 67.25),
-  lb = 0.03, ub = 250)
+setPopnConstants(
+  .data,
+  bb = list(Female = 53.8, Male = 67.25),
+  lb = 0.03,
+  ub = 250
+)
 }
 \arguments{
 \item{bb}{binge barrier}

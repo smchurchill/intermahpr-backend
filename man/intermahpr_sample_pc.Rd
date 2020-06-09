@@ -4,7 +4,9 @@
 \name{intermahpr_sample_pc}
 \alias{intermahpr_sample_pc}
 \title{Default Prevalence and Consumption Data}
-\format{An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 60 rows and 12 columns.}
+\format{
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 60 rows and 12 columns.
+}
 \usage{
 data(intermahpr_sample_pc)
 }

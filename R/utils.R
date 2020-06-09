@@ -252,10 +252,10 @@ makeProduct <- function(f, g) {
 #' Binary operator for Pointwise Function Products
 #'
 #'@description binary operator for product_factory
+#'@param f,g function that takes a single argument and produces a value that is
+#'a valid argument for the `*` function
 #'
-#'@describeIn makeProduct
-#'
-#'@inheritParams makeProduct
+
 `%prod%` <- function(f,g) makeProduct(f,g)
 
 #### Imports -------------------------------------------------------------------

@@ -6,8 +6,12 @@
 consumption, stratified over the given values of the gender variable, and add
 it to the scenario.}
 \usage{
-addGenderStratifiedIntervalFraction(.data, lower_strata, upper_strata,
-  var_name = "aaf_xd")
+addGenderStratifiedIntervalFraction(
+  .data,
+  lower_strata,
+  upper_strata,
+  var_name = "aaf_xd"
+)
 }
 \arguments{
 \item{.data}{a scenario}
