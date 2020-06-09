@@ -53,13 +53,21 @@ computePopnMetrics <- function(.data) {
         millilitres_to_grams_ethanol_conv *
         yearly_to_daily_conv *
         correction_factor,
-      drinkers = population * p_cd,
+      drinkers = population * p_cd
+    ) %>% mutate(
+      ## Deprecated along with the pcc_among_drinkers variable
       ## alcohol consumption over all age groups
-      pcad = pcc_g_day * sum(population) / sum(drinkers),
+      #   pcad = pcc_g_day * sum(population) / sum(drinkers)
+      # ) %>% mutate(
       ## mean consumption per age group
-      pcc_among_drinkers = relative_consumption * pcad * sum(drinkers) /
-        sum(relative_consumption*drinkers)
-    )%>%
+      pcc_among_popn = pcc_g_day * sum(population) * relative_consumption /
+        sum(relative_consumption * population)
+      ## WHO definition gives Ac among drinkers, intermahp defintions want
+      ## AC among population
+      ## The following is deprecated, as is the pcad variable.
+      # pcc_among_drinkers = relative_consumption * pcad * sum(drinkers) /
+      # sum(relative_consumption*drinkers)
+    ) %>%
     ungroup %>%
     mutate(
       gamma_shape = 1/gamma_constant/gamma_constant,
