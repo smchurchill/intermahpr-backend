@@ -162,7 +162,7 @@ getExpectedVars_ <- function(.obj_type) {
       "gender",
       "age_group",
       "population",
-      "pcc_among_drinkers",
+      "pcc_among_popn",
       "gamma_shape",
       "gamma_scale",
       "nc",

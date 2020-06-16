@@ -71,7 +71,7 @@ computePopnMetrics <- function(.data) {
     ungroup %>%
     mutate(
       gamma_shape = 1/gamma_constant/gamma_constant,
-      gamma_scale = gamma_constant*gamma_constant*pcc_among_drinkers
+      gamma_scale = gamma_constant*gamma_constant*pcc_among_popn
     ) %>%
     mutate(
       glb = pgamma(q = lb, shape = gamma_shape, scale = gamma_scale),
