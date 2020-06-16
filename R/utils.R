@@ -18,8 +18,9 @@
 clean <- function(.data, expected) {
   .data %<>%
     lowerVars() %>%
-    checkVars(expected) %>%
-    imputeMissing()
+    checkVars(expected)
+  # %>%
+  #   imputeMissing()
 
   suppressMessages(readr::type_convert(.data))
 }
